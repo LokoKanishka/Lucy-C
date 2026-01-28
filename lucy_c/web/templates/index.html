@@ -32,6 +32,7 @@
                 <div class="model-info">
                     <span class="label">Model:</span>
                     <span id="current-model" class="value">Loading...</span>
+                    <span id="current-provider" class="value" style="margin-top:0.25rem; color: var(--accent-purple);">…</span>
                 </div>
             </div>
         </aside>
@@ -86,10 +87,18 @@
             </div>
             
             <div class="settings-section">
-                <h4>Model</h4>
-                <select id="model-selector" class="model-dropdown">
-                    <option>Loading models...</option>
+                <h4>Brain</h4>
+                <select id="provider-selector" class="model-dropdown">
+                    <option value="ollama">Ollama (local)</option>
+                    <option value="clawdbot">lucy (Clawdbot)</option>
                 </select>
+
+                <div style="margin-top: 1rem;">
+                    <h4 style="margin-bottom: 0.75rem;">Ollama model</h4>
+                    <select id="model-selector" class="model-dropdown">
+                        <option>Loading models...</option>
+                    </select>
+                </div>
             </div>
 
             <div class="settings-section">

@@ -3,16 +3,26 @@
 # ASR
 asr:
   model: "Systran/faster-whisper-small"
-  device: "cpu"           # fallback-safe (CUDA runtime libs missing on this system)
-  compute_type: "int8"    # good speed/compat on CPU
+  device: "cpu"           # fallback-safe
+  compute_type: "int8"
   language: "es"
   task: "transcribe"
   force_language: true
+
+# LLM
+llm:
+  provider: "ollama"       # ollama | clawdbot
 
 # LLM (Ollama)
 ollama:
   host: "http://127.0.0.1:11434"
   model: "gpt-oss:20b"
+
+# LLM (Clawdbot Gateway)
+clawdbot:
+  host: "http://127.0.0.1:18789"
+  agent_id: "main"
+  # token: ""   # leave empty; run_web_ui.sh will try to export CLAWDBOT_GATEWAY_TOKEN
 
 # TTS (Mimic3 CLI)
 tts:

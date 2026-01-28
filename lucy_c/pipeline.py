@@ -4,6 +4,7 @@ import logging
 from dataclasses import dataclass
 
 from lucy_c.asr import FasterWhisperASR
+from lucy_c.clawdbot_llm import ClawdbotLLM
 from lucy_c.config import LucyConfig
 from lucy_c.mimic3_tts import Mimic3TTS
 from lucy_c.ollama_llm import OllamaLLM
@@ -22,15 +23,26 @@ class LucyPipeline:
         self.cfg = cfg
         self.log = logging.getLogger("LucyC.Pipeline")
         self.asr = FasterWhisperASR(cfg.asr)
-        self.llm = OllamaLLM(cfg.ollama)
+
+        self.ollama = OllamaLLM(cfg.ollama)
+        self.clawdbot = ClawdbotLLM(cfg.clawdbot)
+
         self.tts = Mimic3TTS(cfg.tts)
 
-    def run_turn_from_text(self, text: str) -> TurnResult:
+    def _generate_reply(self, text: str, *, session_user: str | None = None) -> str:
+        provider = (self.cfg.llm.provider or "ollama").lower()
+        if provider == "clawdbot":
+            if not self.cfg.clawdbot.token:
+                return "Clawdbot token no configurado (CLAWDBOT_GATEWAY_TOKEN)."
+            return self.clawdbot.generate(text, user=session_user).text
+        return self.ollama.generate(text).text
+
+    def run_turn_from_text(self, text: str, *, session_user: str | None = None) -> TurnResult:
         transcript = (text or "").strip()
         if not transcript:
             reply = "Decime algo."
         else:
-            reply = self.llm.generate(transcript).text
+            reply = self._generate_reply(transcript, session_user=session_user)
 
         reply_wav = b""
         reply_sr = 0
@@ -45,13 +57,13 @@ class LucyPipeline:
 
         return TurnResult(transcript=transcript, reply=reply, reply_wav=reply_wav, reply_sr=reply_sr)
 
-    def run_turn_from_audio(self, audio_f32) -> TurnResult:
+    def run_turn_from_audio(self, audio_f32, *, session_user: str | None = None) -> TurnResult:
         asr_res = self.asr.transcribe(audio_f32)
         transcript = asr_res.text.strip()
         if not transcript:
             reply = "No escuché nada."
         else:
-            reply = self.llm.generate(transcript).text
+            reply = self._generate_reply(transcript, session_user=session_user)
 
         reply_wav = b""
         reply_sr = 0

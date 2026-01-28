@@ -2,13 +2,33 @@
 const chatMessages = document.getElementById('chat-messages');
 const userInput = document.getElementById('user-input');
 const sendBtn = document.getElementById('send-btn');
+const providerSelector = document.getElementById('provider-selector');
 const modelSelector = document.getElementById('model-selector');
 const currentModelDisplay = document.getElementById('current-model');
+const currentProviderDisplay = document.getElementById('current-provider');
+
+// stable per-browser id to keep the Clawdbot session consistent
+function getSessionUser() {
+  let id = localStorage.getItem('lucy_session_user');
+  if (!id) {
+    id = 'lucy-c:' + crypto.randomUUID();
+    localStorage.setItem('lucy_session_user', id);
+  }
+  return id;
+}
 
 async function loadModels() {
   try {
     const response = await fetch('/api/models');
     const data = await response.json();
+
+    if (data.provider && providerSelector) {
+      providerSelector.value = data.provider;
+      currentProviderDisplay.textContent = `provider: ${data.provider}`;
+      // Hide/show model selector depending on provider
+      modelSelector.disabled = (data.provider !== 'ollama');
+      modelSelector.style.opacity = (data.provider !== 'ollama') ? '0.5' : '1';
+    }
 
     if (data.models && data.models.length > 0) {
       modelSelector.innerHTML = '';
@@ -26,6 +46,15 @@ async function loadModels() {
     modelSelector.innerHTML = '<option>Error loading models</option>';
   }
 }
+
+providerSelector?.addEventListener('change', () => {
+  const provider = providerSelector.value;
+  currentProviderDisplay.textContent = `provider: ${provider}`;
+  modelSelector.disabled = (provider !== 'ollama');
+  modelSelector.style.opacity = (provider !== 'ollama') ? '0.5' : '1';
+  lucySocket.emit('update_config', { llm_provider: provider });
+  updateStatus(`Provider changed to ${provider}`, 'success');
+});
 
 modelSelector.addEventListener('change', () => {
   const selectedModel = modelSelector.value;
@@ -64,8 +93,10 @@ async function sendMessage() {
   userInput.style.height = 'auto';
 
   // Prefer Socket.IO when connected; fallback to HTTP if not.
+  const session_user = getSessionUser();
+
   if (window.lucySocket && window.lucySocket.connected) {
-    lucySocket.emit('chat_message', { message });
+    lucySocket.emit('chat_message', { message, session_user });
     updateStatus('Thinking...', 'info');
     return;
   }
@@ -77,7 +108,7 @@ async function sendMessage() {
     const r = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message })
+      body: JSON.stringify({ message, session_user })
     });
     const data = await r.json();
     if (!data.ok) throw new Error(data.error || 'HTTP chat failed');
@@ -118,5 +149,8 @@ userInput.addEventListener('input', () => {
   userInput.style.height = 'auto';
   userInput.style.height = userInput.scrollHeight + 'px';
 });
+
+// expose for voice.js
+window.getSessionUser = getSessionUser;
 
 loadModels();

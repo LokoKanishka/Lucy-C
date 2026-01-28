@@ -26,6 +26,9 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
     cfg_path = os.environ.get("LUCY_C_CONFIG", str(root / "config" / "config.yaml"))
     cfg = LucyConfig.load(cfg_path)
 
+    # Pull Clawdbot token from env if present (recommended)
+    cfg.clawdbot.token = os.environ.get("CLAWDBOT_GATEWAY_TOKEN", cfg.clawdbot.token)
+
     pipeline = LucyPipeline(cfg)
 
     @app.route("/")
@@ -39,10 +42,10 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
     @app.route("/api/models")
     def models():
         try:
-            models = pipeline.llm.list_models()
+            models = pipeline.ollama.list_models()
         except Exception as e:
             return jsonify({"models": [], "current": pipeline.cfg.ollama.model, "error": str(e)})
-        return jsonify({"models": models, "current": pipeline.cfg.ollama.model})
+        return jsonify({"models": models, "current": pipeline.cfg.ollama.model, "provider": pipeline.cfg.llm.provider})
 
     @app.route("/api/chat", methods=["POST"])
     def chat_http():
@@ -52,7 +55,8 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
         if not text:
             return jsonify({"ok": False, "error": "empty message"}), 400
 
-        result = pipeline.run_turn_from_text(text)
+        session_user = (payload.get("session_user") or "").strip() or None
+        result = pipeline.run_turn_from_text(text, session_user=session_user)
         resp = {"ok": True, "reply": result.reply}
         if result.reply_wav:
             resp["audio"] = {
@@ -69,12 +73,19 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
     @socketio.on("update_config")
     def on_update_config(data):
         try:
-            model = (data or {}).get("ollama_model")
+            data = data or {}
+            provider = data.get("llm_provider")
+            if provider:
+                pipeline.cfg.llm.provider = str(provider)
+                emit("status", {"message": f"Provider set to {provider}", "type": "success"})
+
+            model = data.get("ollama_model")
             if model:
                 pipeline.cfg.ollama.model = model
-                pipeline.llm.cfg.model = model
+                pipeline.ollama.cfg.model = model
                 emit("status", {"message": f"Model set to {model}", "type": "success"})
-            else:
+
+            if not provider and not model:
                 emit("status", {"message": "No config changes", "type": "info"})
         except Exception as e:
             emit("error", {"message": str(e)})
@@ -90,7 +101,8 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
             emit("message", {"type": "user", "content": text})
             emit("status", {"message": "Thinking...", "type": "info"})
 
-            result = pipeline.run_turn_from_text(text)
+            session_user = (data or {}).get("session_user")
+            result = pipeline.run_turn_from_text(text, session_user=session_user)
 
             emit("message", {"type": "assistant", "content": result.reply})
             if result.reply_wav:
@@ -122,7 +134,8 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
             decoded = decode_audio_bytes_to_f32_mono(raw_bytes, target_sr=pipeline.cfg.audio.sample_rate)
 
             emit("status", {"message": "Transcribing...", "type": "info"})
-            result = pipeline.run_turn_from_audio(decoded.audio)
+            session_user = (data or {}).get("session_user")
+            result = pipeline.run_turn_from_audio(decoded.audio, session_user=session_user)
 
             if result.transcript:
                 emit("message", {"type": "user", "content": result.transcript})

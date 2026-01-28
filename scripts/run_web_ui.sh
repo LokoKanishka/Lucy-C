@@ -17,6 +17,22 @@ export LUCY_C_CONFIG="$ROOT/config/config.yaml"
 # Ensure venv executables (e.g., mimic3) are on PATH
 export PATH="$VENV/bin:$PATH"
 
+# If Clawdbot Gateway token isn't set, try to read it locally.
+# This enables switching LLM provider to "lucy (Clawdbot)" without manual env setup.
+if [[ -z "${CLAWDBOT_GATEWAY_TOKEN:-}" && -f "$HOME/.clawdbot/clawdbot.json" ]]; then
+  CLAWDBOT_GATEWAY_TOKEN="$($PY - <<'PY'
+import json, os
+p=os.path.expanduser('~/.clawdbot/clawdbot.json')
+try:
+  data=json.load(open(p,'r',encoding='utf-8'))
+  print((data.get('gateway',{}) or {}).get('auth',{}).get('token','') or '')
+except Exception:
+  print('')
+PY
+)"
+  export CLAWDBOT_GATEWAY_TOKEN
+fi
+
 # Port selection
 BASE_PORT="${PORT:-5000}"
 PORT_CHOSEN="$BASE_PORT"

@@ -81,11 +81,19 @@ async function startRecording(streamOverride = null) {
   mediaRecorder.onstop = async () => {
     try {
       const blob = new Blob(audioChunks, { type: mimeType || 'audio/webm' });
+
+      // Guardrail: Firefox can produce tiny/empty blobs if stop happens too fast.
+      if (blob.size < 2048) {
+        updateStatus('No se capturó audio (muy corto). Probá de nuevo.', 'warning');
+        return;
+      }
+
       const buf = await blob.arrayBuffer();
       const uint8 = new Uint8Array(buf);
 
-      // Send bytes to server
-      lucySocket.emit('voice_input', { audio: Array.from(uint8) });
+      // Send bytes to server (+ stable session)
+      const session_user = (window.getSessionUser && window.getSessionUser()) || null;
+      lucySocket.emit('voice_input', { audio: Array.from(uint8), session_user });
       updateStatus('Procesando voz...', 'info');
 
     } finally {
