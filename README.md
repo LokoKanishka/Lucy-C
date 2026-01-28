@@ -14,7 +14,7 @@ git clone https://github.com/LokoKanishka/Lucy-C.git
 cd Lucy-C
 ./scripts/install.sh
 ./scripts/run_web_ui.sh
-# open http://127.0.0.1:5000
+# open the URL it prints (default http://127.0.0.1:5000)
 ```
 
 ## System requirements
