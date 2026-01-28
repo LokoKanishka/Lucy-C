@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import logging
 import os
+import time
 from pathlib import Path
 
 from flask import Flask, jsonify, render_template, request
@@ -10,6 +11,7 @@ from flask_socketio import SocketIO, emit
 
 from lucy_c.audio_codec import decode_audio_bytes_to_f32_mono
 from lucy_c.config import LucyConfig
+from lucy_c.history_store import HistoryItem, HistoryStore, default_history_dir
 from lucy_c.pipeline import LucyPipeline
 
 
@@ -30,6 +32,7 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
     cfg.clawdbot.token = os.environ.get("CLAWDBOT_GATEWAY_TOKEN", cfg.clawdbot.token)
 
     pipeline = LucyPipeline(cfg)
+    history = HistoryStore(default_history_dir())
 
     @app.route("/")
     def index():
@@ -55,8 +58,22 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
         if not text:
             return jsonify({"ok": False, "error": "empty message"}), 400
 
-        session_user = (payload.get("session_user") or "").strip() or None
+        session_user = (payload.get("session_user") or "").strip() or "lucy-c:anonymous"
         result = pipeline.run_turn_from_text(text, session_user=session_user)
+
+        history.append(
+            HistoryItem(
+                ts=time.time(),
+                session_user=session_user,
+                kind="text",
+                llm_provider=pipeline.cfg.llm.provider,
+                ollama_model=pipeline.cfg.ollama.model,
+                user_text=text,
+                transcript=text,
+                reply=result.reply,
+            )
+        )
+
         resp = {"ok": True, "reply": result.reply}
         if result.reply_wav:
             resp["audio"] = {
@@ -65,6 +82,13 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
                 "wav_base64": base64.b64encode(result.reply_wav).decode("ascii"),
             }
         return jsonify(resp)
+
+    @app.route("/api/history")
+    def history_api():
+        session_user = (request.args.get("session_user") or "").strip() or "lucy-c:anonymous"
+        limit = int(request.args.get("limit") or "200")
+        items = history.read(session_user=session_user, limit=limit)
+        return jsonify({"ok": True, "session_user": session_user, "items": items})
 
     @socketio.on("connect")
     def on_connect():
@@ -105,6 +129,21 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
             result = pipeline.run_turn_from_text(text, session_user=session_user)
 
             emit("message", {"type": "assistant", "content": result.reply})
+
+            session_user = session_user or "lucy-c:anonymous"
+            history.append(
+                HistoryItem(
+                    ts=time.time(),
+                    session_user=session_user,
+                    kind="text",
+                    llm_provider=pipeline.cfg.llm.provider,
+                    ollama_model=pipeline.cfg.ollama.model,
+                    user_text=text,
+                    transcript=text,
+                    reply=result.reply,
+                )
+            )
+
             if result.reply_wav:
                 emit(
                     "audio",
@@ -134,13 +173,26 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
             decoded = decode_audio_bytes_to_f32_mono(raw_bytes, target_sr=pipeline.cfg.audio.sample_rate)
 
             emit("status", {"message": "Transcribing...", "type": "info"})
-            session_user = (data or {}).get("session_user")
+            session_user = (data or {}).get("session_user") or "lucy-c:anonymous"
             result = pipeline.run_turn_from_audio(decoded.audio, session_user=session_user)
 
             if result.transcript:
                 emit("message", {"type": "user", "content": result.transcript})
 
             emit("message", {"type": "assistant", "content": result.reply})
+
+            history.append(
+                HistoryItem(
+                    ts=time.time(),
+                    session_user=session_user,
+                    kind="voice",
+                    llm_provider=pipeline.cfg.llm.provider,
+                    ollama_model=pipeline.cfg.ollama.model,
+                    user_text="",
+                    transcript=result.transcript,
+                    reply=result.reply,
+                )
+            )
 
             if result.reply_wav:
                 emit(
