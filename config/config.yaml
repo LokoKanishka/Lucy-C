@@ -1,0 +1,23 @@
+# Lucy-C configuration
+
+# ASR
+asr:
+  model: "Systran/faster-whisper-small"
+  device: "cpu"          # "cuda" if you want GPU
+  compute_type: "int8"   # e.g. "float16" on GPU
+  language: "es"
+  task: "transcribe"
+  force_language: true
+
+# LLM (Ollama)
+ollama:
+  host: "http://127.0.0.1:11434"
+  model: "gpt-oss:20b"
+
+# TTS (Mimic3 CLI)
+tts:
+  voice: "es_ES/m-ailabs_low#karen_savage"
+
+# Audio
+audio:
+  sample_rate: 16000

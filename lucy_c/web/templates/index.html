@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Lucy-C Voice</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Lucy-C</h1>
+      <div class="status"><span id="dot"></span><span id="status">Booting…</span></div>
+    </header>
+
+    <main>
+      <div id="chat" class="chat"></div>
+
+      <div class="controls">
+        <button id="ptt" class="ptt" aria-label="Push to talk">
+          <span id="pttLabel">Mantener para hablar</span>
+        </button>
+        <p class="hint">Mantené apretado el botón, hablá, y soltá para enviar.</p>
+      </div>
+    </main>
+  </div>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
