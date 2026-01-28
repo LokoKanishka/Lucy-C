@@ -32,11 +32,18 @@ class LucyPipeline:
         else:
             reply = self.llm.generate(transcript).text
 
-        tts_res = self.tts.synthesize(reply)
-        from lucy_c.audio_codec import encode_wav_bytes
+        reply_wav = b""
+        reply_sr = 0
+        try:
+            tts_res = self.tts.synthesize(reply)
+            from lucy_c.audio_codec import encode_wav_bytes
 
-        wav = encode_wav_bytes(tts_res.audio_f32, tts_res.sample_rate)
-        return TurnResult(transcript=transcript, reply=reply, reply_wav=wav, reply_sr=tts_res.sample_rate)
+            reply_wav = encode_wav_bytes(tts_res.audio_f32, tts_res.sample_rate)
+            reply_sr = tts_res.sample_rate
+        except Exception as e:
+            self.log.warning("TTS failed (%s). Continuing with text-only.", e)
+
+        return TurnResult(transcript=transcript, reply=reply, reply_wav=reply_wav, reply_sr=reply_sr)
 
     def run_turn_from_audio(self, audio_f32) -> TurnResult:
         asr_res = self.asr.transcribe(audio_f32)
@@ -46,8 +53,15 @@ class LucyPipeline:
         else:
             reply = self.llm.generate(transcript).text
 
-        tts_res = self.tts.synthesize(reply)
-        from lucy_c.audio_codec import encode_wav_bytes
+        reply_wav = b""
+        reply_sr = 0
+        try:
+            tts_res = self.tts.synthesize(reply)
+            from lucy_c.audio_codec import encode_wav_bytes
 
-        wav = encode_wav_bytes(tts_res.audio_f32, tts_res.sample_rate)
-        return TurnResult(transcript=transcript, reply=reply, reply_wav=wav, reply_sr=tts_res.sample_rate)
+            reply_wav = encode_wav_bytes(tts_res.audio_f32, tts_res.sample_rate)
+            reply_sr = tts_res.sample_rate
+        except Exception as e:
+            self.log.warning("TTS failed (%s). Continuing with text-only.", e)
+
+        return TurnResult(transcript=transcript, reply=reply, reply_wav=reply_wav, reply_sr=reply_sr)

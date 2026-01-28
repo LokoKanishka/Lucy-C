@@ -14,6 +14,8 @@ fi
 
 export PYTHONPATH="$ROOT"
 export LUCY_C_CONFIG="$ROOT/config/config.yaml"
+# Ensure venv executables (e.g., mimic3) are on PATH
+export PATH="$VENV/bin:$PATH"
 
 # Port selection
 BASE_PORT="${PORT:-5000}"

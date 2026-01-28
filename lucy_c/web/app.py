@@ -53,17 +53,14 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
             return jsonify({"ok": False, "error": "empty message"}), 400
 
         result = pipeline.run_turn_from_text(text)
-        return jsonify(
-            {
-                "ok": True,
-                "reply": result.reply,
-                "audio": {
-                    "mime": "audio/wav",
-                    "sample_rate": result.reply_sr,
-                    "wav_base64": base64.b64encode(result.reply_wav).decode("ascii"),
-                },
+        resp = {"ok": True, "reply": result.reply}
+        if result.reply_wav:
+            resp["audio"] = {
+                "mime": "audio/wav",
+                "sample_rate": result.reply_sr,
+                "wav_base64": base64.b64encode(result.reply_wav).decode("ascii"),
             }
-        )
+        return jsonify(resp)
 
     @socketio.on("connect")
     def on_connect():
@@ -96,14 +93,15 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
             result = pipeline.run_turn_from_text(text)
 
             emit("message", {"type": "assistant", "content": result.reply})
-            emit(
-                "audio",
-                {
-                    "mime": "audio/wav",
-                    "sample_rate": result.reply_sr,
-                    "wav_base64": base64.b64encode(result.reply_wav).decode("ascii"),
-                },
-            )
+            if result.reply_wav:
+                emit(
+                    "audio",
+                    {
+                        "mime": "audio/wav",
+                        "sample_rate": result.reply_sr,
+                        "wav_base64": base64.b64encode(result.reply_wav).decode("ascii"),
+                    },
+                )
             emit("status", {"message": "Ready", "type": "success"})
 
         except Exception as e:
@@ -131,14 +129,15 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
 
             emit("message", {"type": "assistant", "content": result.reply})
 
-            emit(
-                "audio",
-                {
-                    "mime": "audio/wav",
-                    "sample_rate": result.reply_sr,
-                    "wav_base64": base64.b64encode(result.reply_wav).decode("ascii"),
-                },
-            )
+            if result.reply_wav:
+                emit(
+                    "audio",
+                    {
+                        "mime": "audio/wav",
+                        "sample_rate": result.reply_sr,
+                        "wav_base64": base64.b64encode(result.reply_wav).decode("ascii"),
+                    },
+                )
 
             emit("status", {"message": "Ready", "type": "success"})
 
