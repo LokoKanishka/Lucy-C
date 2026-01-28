@@ -3,8 +3,8 @@
 # ASR
 asr:
   model: "Systran/faster-whisper-small"
-  device: "cpu"          # "cuda" if you want GPU
-  compute_type: "int8"   # e.g. "float16" on GPU
+  device: "cuda"          # GPU (NVIDIA)
+  compute_type: "float16" # fast + good quality on RTX 5090
   language: "es"
   task: "transcribe"
   force_language: true

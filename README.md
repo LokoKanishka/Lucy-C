@@ -24,6 +24,15 @@ cd Lucy-C
 - `ollama` running locally (default: http://127.0.0.1:11434)
 - `mimic3` CLI available for TTS (`pipx install mycroft-mimic3-tts` or via pip)
 
+### GPU note (recommended)
+If you have an NVIDIA GPU, set ASR to CUDA in `config/config.yaml`:
+
+```yaml
+asr:
+  device: "cuda"
+  compute_type: "float16"
+```
+
 ## Notes
 
 This project is intentionally self-contained: code + scripts live in this repo.

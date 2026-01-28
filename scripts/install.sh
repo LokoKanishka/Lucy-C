@@ -26,10 +26,19 @@ fi
 "$VENV/bin/python" -m pip install --upgrade pip wheel
 "$VENV/bin/python" -m pip install -r requirements.txt
 
+# Mimic3 CLI (TTS)
 if ! command -v mimic3 >/dev/null 2>&1; then
-  echo "[install] WARNING: mimic3 CLI not found. Install (one option):" >&2
-  echo "  $VENV/bin/python -m pip install mycroft-mimic3-tts" >&2
-  echo "Then ensure 'mimic3' is on PATH (or activate venv)." >&2
+  echo "[install] mimic3 CLI not found. Installing into venv..." >&2
+  "$VENV/bin/python" -m pip install mycroft-mimic3-tts
+  echo "[install] NOTE: run Lucy-C using ./scripts/run_web_ui.sh (it uses the venv)," >&2
+  echo "so mimic3 should be available without touching your system PATH." >&2
+fi
+
+# GPU hint
+if command -v nvidia-smi >/dev/null 2>&1; then
+  echo "[install] NVIDIA GPU detected. Recommended ASR settings:" >&2
+  echo "  asr.device: cuda" >&2
+  echo "  asr.compute_type: float16" >&2
 fi
 
 echo "[install] Done. Next: ./scripts/run_web_ui.sh"
