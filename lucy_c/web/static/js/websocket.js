@@ -28,6 +28,10 @@ socket.on('audio', (data) => {
   if (!b64) return;
 
   const audio = new Audio(`data:${data.mime || 'audio/wav'};base64,${b64}`);
+
+  // Let voice.js coordinate listening/playing (for hands-free)
+  window.__lucy_lastAudio = audio;
+
   audio.play().catch(err => console.warn('Audio play failed:', err));
 });
 
