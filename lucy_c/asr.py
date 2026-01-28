@@ -49,13 +49,34 @@ class FasterWhisperASR:
         language = self.cfg.language if self.cfg.force_language else None
         task = self.cfg.task or "transcribe"
 
-        segments, info = self.model.transcribe(
-            audio_f32,
-            beam_size=1,
-            vad_filter=False,
-            language=language,
-            task=task,
-        )
+        try:
+            segments, info = self.model.transcribe(
+                audio_f32,
+                beam_size=1,
+                vad_filter=False,
+                language=language,
+                task=task,
+            )
+        except RuntimeError as e:
+            # Some CUDA lib problems only show up at first encode.
+            msg = str(e)
+            if "libcublas" in msg and str(self.cfg.device).lower() == "cuda":
+                self.log.warning(
+                    "CUDA runtime missing at transcribe-time (%s). Switching ASR to CPU.",
+                    e,
+                )
+                self.cfg.device = "cpu"
+                self.cfg.compute_type = "int8"
+                self.model = WhisperModel(self.cfg.model, device="cpu", compute_type="int8")
+                segments, info = self.model.transcribe(
+                    audio_f32,
+                    beam_size=1,
+                    vad_filter=False,
+                    language=language,
+                    task=task,
+                )
+            else:
+                raise
 
         chunks = [seg.text.strip() for seg in segments if seg.text and seg.text.strip()]
         text = " ".join(chunks).strip()
