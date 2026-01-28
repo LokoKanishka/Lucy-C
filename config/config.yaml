@@ -3,8 +3,8 @@
 # ASR
 asr:
   model: "Systran/faster-whisper-small"
-  device: "cuda"          # GPU (NVIDIA)
-  compute_type: "float16" # fast + good quality on RTX 5090
+  device: "cpu"           # fallback-safe (CUDA runtime libs missing on this system)
+  compute_type: "int8"    # good speed/compat on CPU
   language: "es"
   task: "transcribe"
   force_language: true
