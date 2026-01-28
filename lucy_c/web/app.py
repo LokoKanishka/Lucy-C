@@ -5,7 +5,7 @@ import logging
 import os
 from pathlib import Path
 
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO, emit
 
 from lucy_c.audio_codec import decode_audio_bytes_to_f32_mono
@@ -43,6 +43,27 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
         except Exception as e:
             return jsonify({"models": [], "current": pipeline.cfg.ollama.model, "error": str(e)})
         return jsonify({"models": models, "current": pipeline.cfg.ollama.model})
+
+    @app.route("/api/chat", methods=["POST"])
+    def chat_http():
+        """HTTP fallback for when Socket.IO is blocked or flaky."""
+        payload = request.get_json(silent=True) or {}
+        text = (payload.get("message") or "").strip()
+        if not text:
+            return jsonify({"ok": False, "error": "empty message"}), 400
+
+        result = pipeline.run_turn_from_text(text)
+        return jsonify(
+            {
+                "ok": True,
+                "reply": result.reply,
+                "audio": {
+                    "mime": "audio/wav",
+                    "sample_rate": result.reply_sr,
+                    "wav_base64": base64.b64encode(result.reply_wav).decode("ascii"),
+                },
+            }
+        )
 
     @socketio.on("connect")
     def on_connect():

@@ -56,15 +56,46 @@ function addMessage(type, content) {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function sendMessage() {
+async function sendMessage() {
   const message = userInput.value.trim();
   if (!message) return;
 
   userInput.value = '';
   userInput.style.height = 'auto';
 
-  lucySocket.emit('chat_message', { message });
-  updateStatus('Thinking...', 'info');
+  // Prefer Socket.IO when connected; fallback to HTTP if not.
+  if (window.lucySocket && window.lucySocket.connected) {
+    lucySocket.emit('chat_message', { message });
+    updateStatus('Thinking...', 'info');
+    return;
+  }
+
+  // HTTP fallback
+  addMessage('user', message);
+  updateStatus('Thinking (HTTP)...', 'info');
+  try {
+    const r = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error || 'HTTP chat failed');
+
+    addMessage('assistant', data.reply);
+
+    const autoSpeak = document.getElementById('auto-speak-toggle');
+    if (autoSpeak && autoSpeak.checked && data.audio && data.audio.wav_base64) {
+      const audio = new Audio(`data:${data.audio.mime || 'audio/wav'};base64,${data.audio.wav_base64}`);
+      window.__lucy_lastAudio = audio;
+      audio.play().catch(() => {});
+    }
+
+    updateStatus('Ready', 'success');
+  } catch (e) {
+    console.error(e);
+    updateStatus(`Error: ${e.message}`, 'error');
+  }
 }
 
 lucySocket.on('message', (data) => {
