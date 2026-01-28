@@ -26,7 +26,23 @@ class FasterWhisperASR:
             cfg.device,
             cfg.compute_type,
         )
-        self.model = WhisperModel(cfg.model, device=cfg.device, compute_type=cfg.compute_type)
+        try:
+            self.model = WhisperModel(cfg.model, device=cfg.device, compute_type=cfg.compute_type)
+        except Exception as e:
+            # Common on fresh Linux installs: CUDA runtime libs (e.g. libcublas) not present.
+            # Fall back to CPU so the app remains usable.
+            if str(cfg.device).lower() == "cuda":
+                self.log.warning(
+                    "Failed to init Whisper on CUDA (%s). Falling back to CPU.\n"
+                    "Tip: install CUDA 12 runtime (libcublas.so.12) to re-enable GPU.",
+                    e,
+                )
+                self.cfg.device = "cpu"
+                # int8 is the typical fast/compatible CPU compute type
+                self.cfg.compute_type = "int8"
+                self.model = WhisperModel(cfg.model, device="cpu", compute_type="int8")
+            else:
+                raise
 
     def transcribe(self, audio_f32: np.ndarray) -> ASRResult:
         audio_f32 = np.asarray(audio_f32, dtype=np.float32)
