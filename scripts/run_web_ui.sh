@@ -17,6 +17,12 @@ export LUCY_C_CONFIG="$ROOT/config/config.yaml"
 # Ensure venv executables (e.g., mimic3) are on PATH
 export PATH="$VENV/bin:$PATH"
 
+# CUDA runtime fallback: Ollama ships CUDA 12 libs here.
+# If system CUDA runtime isn't installed, this makes libcublas.so.12 visible.
+if [[ -d "/usr/local/lib/ollama/cuda_v12" ]]; then
+  export LD_LIBRARY_PATH="/usr/local/lib/ollama/cuda_v12${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+fi
+
 # If Clawdbot Gateway token isn't set, try to read it locally.
 # This enables switching LLM provider to "lucy (Clawdbot)" without manual env setup.
 if [[ -z "${CLAWDBOT_GATEWAY_TOKEN:-}" && -f "$HOME/.clawdbot/clawdbot.json" ]]; then
