@@ -304,35 +304,13 @@ function handsfreeStop() {
   updateStatus('Hands‑free: off', 'info');
 }
 
-// ===== Toggle compatibility guards =====
-// Raw mic + hands-free is a bad combo for VAD: background noise/echo can prevent silence detection,
-// leading to “escuchando/grabando” forever. We guard with a friendly prompt.
-let __toggleGuard = false;
+// ===== Toggle behavior =====
+// Diego wants Raw mic + Hands-free simultaneously.
+// When Raw mic is toggled while Hands-free is running, we restart capture so the
+// new constraints apply immediately.
 
 handsfreeToggle?.addEventListener('change', async (e) => {
-  if (__toggleGuard) return;
-
   const wantsHandsFree = !!e.target.checked;
-  const rawOn = !!(rawMicToggle && rawMicToggle.checked);
-
-  if (wantsHandsFree && rawOn) {
-    const ok = window.confirm(
-      'Hands‑free + Raw mic (sin supresión) puede quedar grabando infinito por el VAD.\n\n¿Desactivar “Raw mic (no suppression)” para usar hands‑free?'
-    );
-    if (!ok) {
-      __toggleGuard = true;
-      handsfreeToggle.checked = false;
-      __toggleGuard = false;
-      updateStatus('Hands‑free: cancelado (Raw mic activo).', 'info');
-      return;
-    }
-
-    __toggleGuard = true;
-    rawMicToggle.checked = false;
-    __toggleGuard = false;
-    updateStatus('Raw mic desactivado para hands‑free.', 'info');
-  }
-
   if (wantsHandsFree) {
     await handsfreeStart();
   } else {
@@ -340,33 +318,13 @@ handsfreeToggle?.addEventListener('change', async (e) => {
   }
 });
 
-rawMicToggle?.addEventListener('change', (e) => {
-  if (__toggleGuard) return;
-
-  const wantsRaw = !!e.target.checked;
-  const hfOn = !!(handsfreeToggle && handsfreeToggle.checked);
-
-  if (wantsRaw && hfOn) {
-    const ok = window.confirm(
-      'Raw mic (sin supresión) con Hands‑free suele impedir que “corte” por silencio.\n\n¿Desactivar Hands‑free y usar “mantener apretado 🎤” (push‑to‑talk)?'
-    );
-
-    if (!ok) {
-      __toggleGuard = true;
-      rawMicToggle.checked = false;
-      __toggleGuard = false;
-      updateStatus('Raw mic: cancelado (Hands‑free activo).', 'info');
-      return;
-    }
-
-    __toggleGuard = true;
-    handsfreeToggle.checked = false;
-    __toggleGuard = false;
-    handsfreeStop();
-    updateStatus('Hands‑free desactivado. Raw mic activo (push‑to‑talk recomendado).', 'info');
-  }
-
-  // If not in hands-free, raw mic applies next time we call getUserMedia.
+rawMicToggle?.addEventListener('change', async () => {
+  // Raw mic constraints only apply when (re)starting getUserMedia.
+  if (!hfEnabled) return;
+  updateStatus('Reiniciando mic…', 'info');
+  handsfreeStop();
+  await new Promise(r => setTimeout(r, 120));
+  await handsfreeStart();
 });
 
 // Make it easy to tweak from console
