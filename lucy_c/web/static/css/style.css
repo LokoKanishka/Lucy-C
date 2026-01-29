@@ -174,9 +174,10 @@ body {
 .chat-messages:focus { outline: none; }
 
 .scroll-fab {
-    position: absolute;
-    right: 22px;
-    bottom: 110px;
+    position: fixed;
+    /* keep it visible even if layout/containers are weird */
+    right: 340px; /* account for right sidebar (300px) + padding */
+    bottom: 24px;
     width: 56px;
     height: 56px;
     border-radius: 999px;
