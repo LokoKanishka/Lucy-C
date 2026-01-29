@@ -177,30 +177,31 @@ body {
 
 .scroll-slider {
     position: fixed;
-    right: 320px; /* just left of settings panel */
-    bottom: 24px;
-    width: 160px;
+    left: 16px;
+    bottom: 16px;
+    width: 120px;
     z-index: 9999;
+    opacity: 0.9;
 }
 
 .scroll-fab {
     position: fixed;
-    /* keep it visible even if layout/containers are weird */
-    right: 340px; /* account for right sidebar (300px) + padding */
-    bottom: 24px;
-    width: 56px;
-    height: 56px;
+    left: 16px;
+    width: 28px;
+    height: 28px;
     border-radius: 999px;
-    border: 2px solid var(--accent-purple);
-    background: rgba(17, 24, 39, 0.92);
+    border: 1px solid var(--accent-purple);
+    background: rgba(17, 24, 39, 0.80);
     color: white;
     cursor: pointer;
-    display: block; /* always visible */
-    font-size: 22px;
-    z-index: 9999; /* stay above chat + input */
+    display: block;
+    font-size: 14px;
+    z-index: 9999;
     pointer-events: auto;
+    line-height: 26px;
+    text-align: center;
 }
-.scroll-fab:hover { background: rgba(11, 18, 32, 0.95); }
+.scroll-fab:hover { background: rgba(11, 18, 32, 0.90); }
 
 .welcome-message {
     max-width: 600px;
