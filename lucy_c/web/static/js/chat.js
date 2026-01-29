@@ -65,12 +65,34 @@ modelSelector.addEventListener('change', () => {
 
 // Wheel scrolling: let the browser handle it (our forced handler can break some devices)
 
-// Scroll-to-bottom button (always visible)
-const scrollBtn = document.getElementById('scroll-bottom');
-scrollBtn?.addEventListener('click', () => {
+function scrollChatToTop() {
   if (!chatMessages) return;
-  chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
+  chatMessages.scrollTop = 0;
+}
+
+function scrollChatToBottom() {
+  if (!chatMessages) return;
+  // More compatible than Element.scrollTo in some Firefox setups
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  // double-tap in next frame in case layout updates after DOM paint
+  requestAnimationFrame(() => { chatMessages.scrollTop = chatMessages.scrollHeight; });
+}
+
+// Scroll buttons (always visible)
+const scrollBottomBtn = document.getElementById('scroll-bottom');
+const scrollTopBtn = document.getElementById('scroll-top');
+scrollBottomBtn?.addEventListener('click', (e) => {
+  e.preventDefault();
+  scrollChatToBottom();
 });
+scrollTopBtn?.addEventListener('click', (e) => {
+  e.preventDefault();
+  scrollChatToTop();
+});
+
+// Expose for debugging
+window.scrollChatToBottom = scrollChatToBottom;
+window.scrollChatToTop = scrollChatToTop;
 
 function addMessage(type, content) {
   const welcomeMsg = chatMessages.querySelector('.welcome-message');
