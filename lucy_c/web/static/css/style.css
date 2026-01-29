@@ -177,16 +177,17 @@ body {
     position: absolute;
     right: 16px;
     bottom: 90px;
-    width: 42px;
-    height: 42px;
+    width: 56px;
+    height: 56px;
     border-radius: 999px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
+    border: 2px solid var(--accent-purple);
+    background: #111827;
+    color: white;
     cursor: pointer;
-    display: none;
+    display: block; /* always visible */
+    font-size: 22px;
 }
-.scroll-fab:hover { border-color: var(--accent-purple); }
+.scroll-fab:hover { background: #0b1220; }
 
 .welcome-message {
     max-width: 600px;

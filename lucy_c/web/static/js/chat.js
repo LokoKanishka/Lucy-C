@@ -63,11 +63,7 @@ modelSelector.addEventListener('change', () => {
   updateStatus(`Model changed to ${selectedModel}`, 'success');
 });
 
-// Make wheel scrolling robust (some setups don't scroll unless the div is focusable)
-chatMessages?.addEventListener('wheel', (e) => {
-  chatMessages.scrollTop += e.deltaY;
-  e.preventDefault();
-}, { passive: false });
+// Wheel scrolling: let the browser handle it (our forced handler can break some devices)
 
 // Scroll-to-bottom button
 const scrollBtn = document.getElementById('scroll-bottom');

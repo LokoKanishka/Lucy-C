@@ -21,6 +21,8 @@ log = logging.getLogger("LucyC.Web")
 def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.config["SECRET_KEY"] = os.environ.get("LUCY_C_SECRET", "lucy-c")
+    # Disable caching so UI updates appear immediately after reload
+    app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 
     socketio = SocketIO(app, cors_allowed_origins="*")
 
