@@ -26,6 +26,8 @@ const HF = {
   // Conservative defaults (reduce false triggers)
   // Higher => less sensitive
   rmsThreshold: 0.035,
+  // When Raw mic is ON, RMS is usually lower (no AGC). Use a lower threshold.
+  rmsThresholdRaw: 0.015,
   // Don’t trigger on tiny clicks / short bursts
   minSpeechMs: 600,
   // End of utterance after this much silence
@@ -216,8 +218,20 @@ async function handsfreeStart() {
 
     hfAnalyser.getFloatTimeDomainData(buf);
     const rms = computeRMS(buf);
-    const loud = rms >= HF.rmsThreshold;
+
+    const rawOn = !!(rawMicToggle && rawMicToggle.checked);
+    const thr = rawOn ? HF.rmsThresholdRaw : HF.rmsThreshold;
+    const loud = rms >= thr;
     const loudBarge = rms >= HF.bargeInThreshold;
+
+    // Debug hint in status every ~1s (helps tune thresholds)
+    if (!window.__lucy_lastRmsTs || (now - window.__lucy_lastRmsTs) > 1000) {
+      window.__lucy_lastRmsTs = now;
+      // Only show when idle
+      if (!hfSpeechActive && !isPlaying && !inCooldown) {
+        updateStatus(`Hands‑free: escuchando… (rms=${rms.toFixed(3)} thr=${thr.toFixed(3)})`, 'success');
+      }
+    }
 
     // Barge-in: if Lucy is speaking and user starts speaking, cut TTS.
     if (isPlaying && loudBarge) {
