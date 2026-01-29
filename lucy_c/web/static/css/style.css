@@ -175,18 +175,19 @@ body {
 
 .chat-messages:focus { outline: none; }
 
+.scroll-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
 .scroll-slider {
-    position: fixed;
-    left: 16px;
-    bottom: 16px;
-    width: 120px;
-    z-index: 9999;
+    width: 140px;
     opacity: 0.9;
 }
 
 .scroll-fab {
-    position: fixed;
-    left: 16px;
     width: 28px;
     height: 28px;
     border-radius: 999px;
@@ -194,13 +195,13 @@ body {
     background: rgba(17, 24, 39, 0.80);
     color: white;
     cursor: pointer;
-    display: block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-size: 14px;
-    z-index: 9999;
-    pointer-events: auto;
-    line-height: 26px;
-    text-align: center;
+    line-height: 1;
 }
+
 .scroll-fab:hover { background: rgba(11, 18, 32, 0.90); }
 
 .welcome-message {
