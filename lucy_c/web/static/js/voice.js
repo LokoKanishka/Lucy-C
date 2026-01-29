@@ -22,14 +22,17 @@ let hfLastLoudMs = 0;
 
 // Tunables (these are the parameters you asked for)
 const HF = {
+  // Conservative defaults (reduce false triggers)
   // Higher => less sensitive
-  rmsThreshold: 0.02,
-  // Don’t trigger on tiny clicks
-  minSpeechMs: 250,
+  rmsThreshold: 0.04,
+  // Don’t trigger on tiny clicks / short bursts
+  minSpeechMs: 600,
   // End of utterance after this much silence
-  endSilenceMs: 650,
+  endSilenceMs: 900,
   // Safety cap: stop a too-long utterance
-  maxUtteranceMs: 12000,
+  maxUtteranceMs: 15000,
+  // Barge-in: interrupt Lucy TTS if user starts speaking
+  bargeInMs: 180,
 };
 
 async function initMicrophone() {
@@ -175,46 +178,59 @@ async function handsfreeStart() {
 
   const buf = new Float32Array(hfAnalyser.fftSize);
 
+  let bargeInStart = 0;
+
   const loop = () => {
     if (!hfEnabled) return;
 
-    // If TTS audio is playing, pause listening decisions (avoid feedback loop)
     const a = window.__lucy_lastAudio;
     const isPlaying = !!(a && !a.paused);
 
     hfAnalyser.getFloatTimeDomainData(buf);
     const rms = computeRMS(buf);
+    const loud = rms >= HF.rmsThreshold;
 
     const now = performance.now();
 
-    if (!isPlaying) {
-      const loud = rms >= HF.rmsThreshold;
-
-      if (loud) {
-        hfLastLoudMs = now;
-        if (!hfSpeechActive) {
-          hfSpeechActive = true;
-          hfSpeechStartMs = now;
-          // Start recording when speech starts
-          startRecording(stream);
-          updateStatus('Hands‑free: grabando…', 'warning');
-        }
+    // Barge-in: if Lucy is speaking and user starts speaking, cut TTS.
+    if (isPlaying && loud) {
+      if (!bargeInStart) bargeInStart = now;
+      if (now - bargeInStart >= HF.bargeInMs) {
+        try {
+          a.pause();
+          a.currentTime = 0;
+        } catch {}
+        window.__lucy_lastAudio = null;
+        bargeInStart = 0;
+        updateStatus('Interrumpido. Te escucho…', 'success');
       }
+    } else {
+      bargeInStart = 0;
+    }
 
-      // End utterance conditions
-      if (hfSpeechActive) {
-        const speechDur = now - hfSpeechStartMs;
-        const silenceDur = now - hfLastLoudMs;
+    // Normal hands-free VAD logic
+    if (loud) {
+      hfLastLoudMs = now;
+      if (!hfSpeechActive) {
+        hfSpeechActive = true;
+        hfSpeechStartMs = now;
+        startRecording(stream);
+        updateStatus('Hands‑free: grabando…', 'warning');
+      }
+    }
 
-        const enoughSpeech = speechDur >= HF.minSpeechMs;
-        const endBySilence = enoughSpeech && silenceDur >= HF.endSilenceMs;
-        const endByMax = speechDur >= HF.maxUtteranceMs;
+    if (hfSpeechActive) {
+      const speechDur = now - hfSpeechStartMs;
+      const silenceDur = now - hfLastLoudMs;
 
-        if (endBySilence || endByMax) {
-          hfSpeechActive = false;
-          stopRecording();
-          updateStatus('Pensando…', 'info');
-        }
+      const enoughSpeech = speechDur >= HF.minSpeechMs;
+      const endBySilence = enoughSpeech && silenceDur >= HF.endSilenceMs;
+      const endByMax = speechDur >= HF.maxUtteranceMs;
+
+      if (endBySilence || endByMax) {
+        hfSpeechActive = false;
+        stopRecording();
+        updateStatus('Pensando…', 'info');
       }
     }
 
