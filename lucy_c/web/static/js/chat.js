@@ -74,7 +74,8 @@ function updateScrollBtn() {
 }
 chatMessages?.addEventListener('scroll', updateScrollBtn);
 scrollBtn?.addEventListener('click', () => {
-  chatMessages.scrollTop = chatMessages.scrollHeight;
+  if (!chatMessages) return;
+  chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
 });
 setInterval(updateScrollBtn, 500);
 

@@ -175,19 +175,21 @@ body {
 
 .scroll-fab {
     position: absolute;
-    right: 16px;
-    bottom: 90px;
+    right: 22px;
+    bottom: 110px;
     width: 56px;
     height: 56px;
     border-radius: 999px;
     border: 2px solid var(--accent-purple);
-    background: #111827;
+    background: rgba(17, 24, 39, 0.92);
     color: white;
     cursor: pointer;
     display: block; /* always visible */
     font-size: 22px;
+    z-index: 9999; /* stay above chat + input */
+    pointer-events: auto;
 }
-.scroll-fab:hover { background: #0b1220; }
+.scroll-fab:hover { background: rgba(11, 18, 32, 0.95); }
 
 .welcome-message {
     max-width: 600px;
