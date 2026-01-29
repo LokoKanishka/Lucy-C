@@ -4,6 +4,7 @@
 
 const voiceBtn = document.getElementById('voice-btn');
 const handsfreeToggle = document.getElementById('handsfree-toggle');
+const rawMicToggle = document.getElementById('raw-mic-toggle');
 
 let isRecording = false;
 let mediaRecorder = null;
@@ -44,8 +45,13 @@ const HF = {
 
 async function initMicrophone() {
   try {
+    const raw = !!(rawMicToggle && rawMicToggle.checked);
     return await navigator.mediaDevices.getUserMedia({
-      audio: {
+      audio: raw ? {
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false,
+      } : {
         echoCancellation: true,
         noiseSuppression: true,
         autoGainControl: true,

@@ -52,7 +52,8 @@ class FasterWhisperASR:
         try:
             segments, info = self.model.transcribe(
                 audio_f32,
-                beam_size=5,
+                beam_size=2,
+                best_of=5,
                 vad_filter=False,
                 language=language,
                 task=task,
@@ -70,7 +71,8 @@ class FasterWhisperASR:
                 self.model = WhisperModel(self.cfg.model, device="cpu", compute_type="int8")
                 segments, info = self.model.transcribe(
                     audio_f32,
-                    beam_size=5,
+                    beam_size=2,
+                    best_of=5,
                     vad_filter=False,
                     language=language,
                     task=task,
