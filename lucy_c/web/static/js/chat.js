@@ -65,19 +65,12 @@ modelSelector.addEventListener('change', () => {
 
 // Wheel scrolling: let the browser handle it (our forced handler can break some devices)
 
-// Scroll-to-bottom button
+// Scroll-to-bottom button (always visible)
 const scrollBtn = document.getElementById('scroll-bottom');
-function updateScrollBtn() {
-  if (!chatMessages || !scrollBtn) return;
-  const nearBottom = (chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight) < 80;
-  scrollBtn.style.display = nearBottom ? 'none' : 'block';
-}
-chatMessages?.addEventListener('scroll', updateScrollBtn);
 scrollBtn?.addEventListener('click', () => {
   if (!chatMessages) return;
   chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
 });
-setInterval(updateScrollBtn, 500);
 
 function addMessage(type, content) {
   const welcomeMsg = chatMessages.querySelector('.welcome-message');
