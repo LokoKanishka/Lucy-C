@@ -32,9 +32,10 @@ const HF = {
   // Safety cap: stop a too-long utterance
   maxUtteranceMs: 15000,
   // Barge-in: interrupt Lucy TTS if user starts speaking
-  bargeInMs: 120,
+  // Barge-in: as soon as mic detects speech over threshold, cut TTS.
+  bargeInMs: 0,
   // Separate threshold for barge-in (more sensitive than normal VAD)
-  bargeInThreshold: 0.012,
+  bargeInThreshold: 0.008,
 };
 
 async function initMicrophone() {
@@ -205,8 +206,9 @@ async function handsfreeStart() {
 
     // Barge-in: if Lucy is speaking and user starts speaking, cut TTS.
     if (isPlaying && loudBarge) {
+      // Cut immediately (or after bargeInMs if configured)
       if (!bargeInStart) bargeInStart = now;
-      if (now - bargeInStart >= HF.bargeInMs) {
+      if (HF.bargeInMs === 0 || (now - bargeInStart) >= HF.bargeInMs) {
         try {
           a.pause();
           a.currentTime = 0;
