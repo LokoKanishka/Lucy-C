@@ -1,14 +1,15 @@
 // Voice input controls
 // - Push-to-talk: hold 🎤
-// - Hands-free: simple client-side VAD (energy threshold) + auto-send on silence
+// - Hands-free: client-side VAD (RMS threshold) + auto-send on silence
+//   Includes continuous MediaRecorder with preroll to avoid clipping first syllables.
 
 const voiceBtn = document.getElementById('voice-btn');
 const handsfreeToggle = document.getElementById('handsfree-toggle');
 const rawMicToggle = document.getElementById('raw-mic-toggle');
 
-let isRecording = false;
-let mediaRecorder = null;
-let audioChunks = [];
+let isRecording = false;          // push-to-talk recorder state
+let mediaRecorder = null;         // push-to-talk MediaRecorder
+let audioChunks = [];             // push-to-talk chunks
 let currentStream = null;
 
 // Hands-free state
@@ -21,27 +22,38 @@ let hfSpeechActive = false;
 let hfSpeechStartMs = 0;
 let hfLastLoudMs = 0;
 
-// Tunables (these are the parameters you asked for)
+// Hands-free continuous recorder
+let hfRecorder = null;
+let hfMimeType = '';
+/** @type {Array<{t:number, blob:Blob}>} */
+let hfRing = [];
+let hfUtterStartT = 0;
+
 const HF = {
-  // Conservative defaults (reduce false triggers)
   // Higher => less sensitive
   rmsThreshold: 0.025,
-  // When Raw mic is ON, RMS is usually lower (no AGC). Use a lower threshold.
+  // When Raw mic is ON, RMS is usually lower (no AGC)
   rmsThresholdRaw: 0.010,
+
   // Don’t trigger on tiny clicks / short bursts
   minSpeechMs: 800,
   // End of utterance after this much silence
-  endSilenceMs: 1300,
-  // Safety cap: stop a too-long utterance
-  maxUtteranceMs: 15000,
+  endSilenceMs: 1600,
+  // Safety cap
+  maxUtteranceMs: 18000,
 
   // After Lucy finishes speaking, wait a bit before re-arming VAD
-  // (prevents immediate re-trigger from room echo / tail)
   postTtsCooldownMs: 500,
 
-  // Barge-in: as soon as mic detects speech over threshold, cut TTS.
+  // Preroll to avoid clipping first syllables
+  prerollMs: 500,
+  // MediaRecorder chunk size (hands-free)
+  chunkMs: 250,
+  // Keep at most this much in ring buffer
+  ringKeepMs: 20000,
+
+  // Barge-in
   bargeInMs: 0,
-  // Separate threshold for barge-in (more sensitive than normal VAD)
   bargeInThreshold: 0.008,
 };
 
@@ -79,6 +91,13 @@ function pickMimeType() {
   return '';
 }
 
+async function sendAudioBytes(uint8) {
+  const session_user = (window.getSessionUser && window.getSessionUser()) || null;
+  lucySocket.emit('voice_input', { audio: Array.from(uint8), session_user, handsfree: hfEnabled });
+  updateStatus('Procesando voz...', 'info');
+}
+
+// ===== Push-to-talk =====
 async function startRecording(streamOverride = null) {
   if (isRecording) return;
 
@@ -99,23 +118,14 @@ async function startRecording(streamOverride = null) {
   mediaRecorder.onstop = async () => {
     try {
       const blob = new Blob(audioChunks, { type: mimeType || 'audio/webm' });
-
-      // Guardrail: Firefox can produce tiny/empty blobs if stop happens too fast.
       if (blob.size < 2048) {
         updateStatus('No se capturó audio (muy corto). Probá de nuevo.', 'warning');
         return;
       }
-
       const buf = await blob.arrayBuffer();
-      const uint8 = new Uint8Array(buf);
-
-      // Send bytes to server (+ stable session)
-      const session_user = (window.getSessionUser && window.getSessionUser()) || null;
-      lucySocket.emit('voice_input', { audio: Array.from(uint8), session_user, handsfree: hfEnabled });
-      updateStatus('Procesando voz...', 'info');
+      await sendAudioBytes(new Uint8Array(buf));
 
     } finally {
-      // In hands-free we keep the stream open; in push-to-talk we close it.
       if (!hfEnabled && currentStream) {
         currentStream.getTracks().forEach(track => track.stop());
         currentStream = null;
@@ -138,17 +148,13 @@ function stopRecording() {
   voiceBtn.querySelector('span').textContent = '🎤';
 }
 
-// ===== Push-to-talk =====
 voiceBtn.addEventListener('mousedown', () => {
-  if (hfEnabled) return; // ignore in hands-free
-
-  // Always allow interrupting TTS when user starts speaking (even without hands-free)
+  if (hfEnabled) return;
   const a = window.__lucy_lastAudio;
   if (a && !a.paused) {
     try { a.pause(); a.currentTime = 0; } catch {}
     window.__lucy_lastAudio = null;
   }
-
   updateStatus('Grabando (mantené apretado)...', 'warning');
   startRecording();
 });
@@ -167,7 +173,7 @@ window.addEventListener('touchend', () => {
   stopRecording();
 });
 
-// ===== Hands-free (VAD) =====
+// ===== Hands-free =====
 function computeRMS(timeDomainFloat32) {
   let sum = 0;
   for (let i = 0; i < timeDomainFloat32.length; i++) {
@@ -175,6 +181,43 @@ function computeRMS(timeDomainFloat32) {
     sum += v * v;
   }
   return Math.sqrt(sum / timeDomainFloat32.length);
+}
+
+async function startHandsfreeRecorder(stream) {
+  hfRing = [];
+  hfUtterStartT = 0;
+  hfMimeType = pickMimeType() || 'audio/webm';
+  hfRecorder = new MediaRecorder(stream, hfMimeType ? { mimeType: hfMimeType } : undefined);
+
+  hfRecorder.ondataavailable = (event) => {
+    if (!event.data || event.data.size === 0) return;
+    const t = performance.now();
+    hfRing.push({ t, blob: event.data });
+
+    // trim ring
+    const cutoff = t - HF.ringKeepMs;
+    while (hfRing.length && hfRing[0].t < cutoff) hfRing.shift();
+  };
+
+  hfRecorder.start(HF.chunkMs);
+}
+
+async function finalizeUtterance(endT) {
+  const startT = hfUtterStartT || (endT - HF.prerollMs);
+
+  // collect blobs between startT and endT (+ one chunk)
+  const blobs = hfRing
+    .filter(x => x.t >= (startT - HF.chunkMs) && x.t <= (endT + HF.chunkMs))
+    .map(x => x.blob);
+
+  const blob = new Blob(blobs, { type: hfMimeType || 'audio/webm' });
+  if (blob.size < 2048) {
+    updateStatus('No se capturó audio (muy corto).', 'warning');
+    return;
+  }
+
+  const buf = await blob.arrayBuffer();
+  await sendAudioBytes(new Uint8Array(buf));
 }
 
 async function handsfreeStart() {
@@ -186,7 +229,7 @@ async function handsfreeStart() {
   hfEnabled = true;
   currentStream = stream;
 
-  // Setup analyser
+  // analyser
   hfCtx = new (window.AudioContext || window.webkitAudioContext)();
   hfSource = hfCtx.createMediaStreamSource(stream);
   hfAnalyser = hfCtx.createAnalyser();
@@ -197,13 +240,14 @@ async function handsfreeStart() {
   hfSpeechStartMs = 0;
   hfLastLoudMs = 0;
 
+  if (!window.__lucy_ttsEndedAt) window.__lucy_ttsEndedAt = 0;
+  if (!window.__lucy_lastRmsTs) window.__lucy_lastRmsTs = 0;
+
+  await startHandsfreeRecorder(stream);
+
   updateStatus('Hands‑free: escuchando…', 'success');
 
   const buf = new Float32Array(hfAnalyser.fftSize);
-
-  // initialize tts end marker
-  if (!window.__lucy_ttsEndedAt) window.__lucy_ttsEndedAt = 0;
-
   let bargeInStart = 0;
 
   const loop = () => {
@@ -224,21 +268,18 @@ async function handsfreeStart() {
     const loud = rms >= thr;
     const loudBarge = rms >= HF.bargeInThreshold;
 
-    // Mic meter UI
+    // Mic meter
     try {
       const bar = document.getElementById('mic-meter-bar');
       const thrEl = document.getElementById('mic-meter-thr');
       if (bar && thrEl) {
-        // Map RMS 0..0.08 -> 0..100%
         const pct = Math.max(0, Math.min(100, (rms / 0.08) * 100));
         bar.style.width = pct.toFixed(1) + '%';
-
         const thrPct = Math.max(0, Math.min(100, (thr / 0.08) * 100));
         thrEl.style.left = thrPct.toFixed(1) + '%';
       }
     } catch {}
 
-    // Debug hint in status every ~1s (helps tune thresholds)
     if (!window.__lucy_lastRmsTs || (now - window.__lucy_lastRmsTs) > 1000) {
       window.__lucy_lastRmsTs = now;
       if (!hfSpeechActive && !isPlaying && !inCooldown) {
@@ -246,15 +287,11 @@ async function handsfreeStart() {
       }
     }
 
-    // Barge-in: if Lucy is speaking and user starts speaking, cut TTS.
+    // Barge-in
     if (isPlaying && loudBarge) {
-      // Cut immediately (or after bargeInMs if configured)
       if (!bargeInStart) bargeInStart = now;
       if (HF.bargeInMs === 0 || (now - bargeInStart) >= HF.bargeInMs) {
-        try {
-          a.pause();
-          a.currentTime = 0;
-        } catch {}
+        try { a.pause(); a.currentTime = 0; } catch {}
         window.__lucy_lastAudio = null;
         bargeInStart = 0;
         updateStatus('Interrumpido. Te escucho…', 'success');
@@ -263,22 +300,19 @@ async function handsfreeStart() {
       bargeInStart = 0;
     }
 
-    // Avoid feedback loop: while Lucy is speaking OR during post-TTS cooldown,
-    // don't start/stop recordings. Only barge-in detection is allowed.
+    // While TTS playing or cooldown, don't segment speech
     if (isPlaying || inCooldown) {
-      if (hfSpeechActive) hfSpeechActive = false;
-      if (isRecording) stopRecording();
+      hfSpeechActive = false;
       hfRaf = requestAnimationFrame(loop);
       return;
     }
 
-    // Normal hands-free VAD logic
     if (loud) {
       hfLastLoudMs = now;
       if (!hfSpeechActive) {
         hfSpeechActive = true;
         hfSpeechStartMs = now;
-        startRecording(stream);
+        hfUtterStartT = now - HF.prerollMs;
         updateStatus('Hands‑free: grabando…', 'warning');
       }
     }
@@ -293,8 +327,8 @@ async function handsfreeStart() {
 
       if (endBySilence || endByMax) {
         hfSpeechActive = false;
-        stopRecording();
         updateStatus('Pensando…', 'info');
+        void finalizeUtterance(now);
       }
     }
 
@@ -320,8 +354,11 @@ function handsfreeStop() {
     hfCtx = null;
   }
 
-  // stop any in-flight recorder
-  try { if (isRecording) stopRecording(); } catch {}
+  try {
+    if (hfRecorder && hfRecorder.state !== 'inactive') hfRecorder.stop();
+  } catch {}
+  hfRecorder = null;
+  hfRing = [];
 
   if (currentStream) {
     currentStream.getTracks().forEach(t => t.stop());
@@ -331,28 +368,18 @@ function handsfreeStop() {
   updateStatus('Hands‑free: off', 'info');
 }
 
-// ===== Toggle behavior =====
-// Diego wants Raw mic + Hands-free simultaneously.
-// When Raw mic is toggled while Hands-free is running, we restart capture so the
-// new constraints apply immediately.
-
 handsfreeToggle?.addEventListener('change', async (e) => {
   const wantsHandsFree = !!e.target.checked;
-  if (wantsHandsFree) {
-    await handsfreeStart();
-  } else {
-    handsfreeStop();
-  }
+  if (wantsHandsFree) await handsfreeStart();
+  else handsfreeStop();
 });
 
 rawMicToggle?.addEventListener('change', async () => {
-  // Raw mic constraints only apply when (re)starting getUserMedia.
   if (!hfEnabled) return;
   updateStatus('Reiniciando mic…', 'info');
   handsfreeStop();
-  await new Promise(r => setTimeout(r, 120));
+  await new Promise(r => setTimeout(r, 150));
   await handsfreeStart();
 });
 
-// Make it easy to tweak from console
 window.LUCY_HANDSFREE = { HF, handsfreeStart, handsfreeStop };
