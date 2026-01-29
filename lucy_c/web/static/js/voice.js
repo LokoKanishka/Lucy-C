@@ -25,11 +25,11 @@ let hfLastLoudMs = 0;
 const HF = {
   // Conservative defaults (reduce false triggers)
   // Higher => less sensitive
-  rmsThreshold: 0.035,
+  rmsThreshold: 0.025,
   // When Raw mic is ON, RMS is usually lower (no AGC). Use a lower threshold.
-  rmsThresholdRaw: 0.015,
+  rmsThresholdRaw: 0.010,
   // Don’t trigger on tiny clicks / short bursts
-  minSpeechMs: 600,
+  minSpeechMs: 800,
   // End of utterance after this much silence
   endSilenceMs: 1300,
   // Safety cap: stop a too-long utterance
@@ -224,10 +224,23 @@ async function handsfreeStart() {
     const loud = rms >= thr;
     const loudBarge = rms >= HF.bargeInThreshold;
 
+    // Mic meter UI
+    try {
+      const bar = document.getElementById('mic-meter-bar');
+      const thrEl = document.getElementById('mic-meter-thr');
+      if (bar && thrEl) {
+        // Map RMS 0..0.08 -> 0..100%
+        const pct = Math.max(0, Math.min(100, (rms / 0.08) * 100));
+        bar.style.width = pct.toFixed(1) + '%';
+
+        const thrPct = Math.max(0, Math.min(100, (thr / 0.08) * 100));
+        thrEl.style.left = thrPct.toFixed(1) + '%';
+      }
+    } catch {}
+
     // Debug hint in status every ~1s (helps tune thresholds)
     if (!window.__lucy_lastRmsTs || (now - window.__lucy_lastRmsTs) > 1000) {
       window.__lucy_lastRmsTs = now;
-      // Only show when idle
       if (!hfSpeechActive && !isPlaying && !inCooldown) {
         updateStatus(`Hands‑free: escuchando… (rms=${rms.toFixed(3)} thr=${thr.toFixed(3)})`, 'success');
       }
