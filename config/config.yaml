@@ -2,8 +2,8 @@
 
 # ASR
 asr:
-  model: "Systran/faster-whisper-small"
-  device: "cpu"           # fallback-safe
+  model: "Systran/faster-whisper-medium"
+  device: "cpu"           # until CUDA runtime (libcublas.so.12) is installed
   compute_type: "int8"
   language: "es"
   task: "transcribe"
