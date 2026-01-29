@@ -175,6 +175,14 @@ body {
 
 .chat-messages:focus { outline: none; }
 
+.scroll-slider {
+    position: fixed;
+    right: 320px; /* just left of settings panel */
+    bottom: 24px;
+    width: 160px;
+    z-index: 9999;
+}
+
 .scroll-fab {
     position: fixed;
     /* keep it visible even if layout/containers are weird */
