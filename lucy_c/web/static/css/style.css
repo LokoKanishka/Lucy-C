@@ -115,6 +115,7 @@ body {
     display: flex;
     flex-direction: column;
     background: var(--bg-primary);
+    min-height: 0;
 }
 
 .chat-header {
@@ -153,6 +154,7 @@ body {
 
 .chat-messages {
     flex: 1;
+    min-height: 0; /* IMPORTANT for flexbox scrolling */
     overflow-y: scroll; /* force scrollbar track visibility */
     padding: 2rem;
 

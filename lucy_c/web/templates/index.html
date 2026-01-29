@@ -58,8 +58,10 @@
                 </div>
             </div>
 
-            <button id="scroll-top" class="scroll-fab" title="Subir" style="bottom: 92px;">↑</button>
-            <button id="scroll-bottom" class="scroll-fab" title="Bajar al final" style="bottom: 24px;">↓</button>
+            <button id="scroll-top" class="scroll-fab" title="Subir" style="bottom: 92px;"
+                onclick="(function(){const el=document.getElementById('chat-messages'); if(el){el.scrollTop=0;}})()">↑</button>
+            <button id="scroll-bottom" class="scroll-fab" title="Bajar al final" style="bottom: 24px;"
+                onclick="(function(){const el=document.getElementById('chat-messages'); if(el){el.scrollTop=el.scrollHeight; requestAnimationFrame(()=>{el.scrollTop=el.scrollHeight;});}})()">↓</button>
 
             <div class="chat-input-container">
                 <div class="input-wrapper">
