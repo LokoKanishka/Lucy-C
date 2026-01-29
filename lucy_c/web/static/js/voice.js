@@ -201,6 +201,8 @@ async function handsfreeStart() {
   const loop = () => {
     if (!hfEnabled) return;
 
+    const now = performance.now();
+
     const a = window.__lucy_lastAudio;
     const isPlaying = !!(a && !a.paused);
     const ttsEndedAt = window.__lucy_ttsEndedAt || 0;
@@ -210,8 +212,6 @@ async function handsfreeStart() {
     const rms = computeRMS(buf);
     const loud = rms >= HF.rmsThreshold;
     const loudBarge = rms >= HF.bargeInThreshold;
-
-    const now = performance.now();
 
     // Barge-in: if Lucy is speaking and user starts speaking, cut TTS.
     if (isPlaying && loudBarge) {

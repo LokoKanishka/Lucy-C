@@ -179,11 +179,12 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
             handsfree = bool((data or {}).get("handsfree"))
             result = pipeline.run_turn_from_audio(decoded.audio, session_user=session_user)
 
-            # In hands-free mode, ignore tiny/one-word junk to prevent loops.
+            # In hands-free mode, ignore empty transcripts to prevent loops.
+            # (Allow 1-word utterances like "hola".)
             if handsfree:
                 words = [w for w in (result.transcript or "").strip().split() if w]
-                if len(words) < 2:
-                    emit("status", {"message": "(Ignorado: muy corto)", "type": "info"})
+                if len(words) == 0:
+                    emit("status", {"message": "(Ignorado: vacío)", "type": "info"})
                     return
 
             if result.transcript:
