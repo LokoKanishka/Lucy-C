@@ -33,6 +33,8 @@ const HF = {
   maxUtteranceMs: 15000,
   // Barge-in: interrupt Lucy TTS if user starts speaking
   bargeInMs: 180,
+  // Separate threshold for barge-in (more sensitive than normal VAD)
+  bargeInThreshold: 0.02,
 };
 
 async function initMicrophone() {
@@ -126,6 +128,14 @@ function stopRecording() {
 // ===== Push-to-talk =====
 voiceBtn.addEventListener('mousedown', () => {
   if (hfEnabled) return; // ignore in hands-free
+
+  // Always allow interrupting TTS when user starts speaking (even without hands-free)
+  const a = window.__lucy_lastAudio;
+  if (a && !a.paused) {
+    try { a.pause(); a.currentTime = 0; } catch {}
+    window.__lucy_lastAudio = null;
+  }
+
   updateStatus('Grabando (mantené apretado)...', 'warning');
   startRecording();
 });
@@ -189,11 +199,12 @@ async function handsfreeStart() {
     hfAnalyser.getFloatTimeDomainData(buf);
     const rms = computeRMS(buf);
     const loud = rms >= HF.rmsThreshold;
+    const loudBarge = rms >= HF.bargeInThreshold;
 
     const now = performance.now();
 
     // Barge-in: if Lucy is speaking and user starts speaking, cut TTS.
-    if (isPlaying && loud) {
+    if (isPlaying && loudBarge) {
       if (!bargeInStart) bargeInStart = now;
       if (now - bargeInStart >= HF.bargeInMs) {
         try {

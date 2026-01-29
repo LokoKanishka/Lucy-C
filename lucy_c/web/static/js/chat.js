@@ -63,6 +63,14 @@ modelSelector.addEventListener('change', () => {
   updateStatus(`Model changed to ${selectedModel}`, 'success');
 });
 
+// Make wheel scrolling robust (some setups don't scroll unless the div is focusable)
+chatMessages?.addEventListener('wheel', (e) => {
+  // Let the scroll happen on the chat container (and not on the page)
+  // Default behavior is usually fine, but this keeps it reliable.
+  chatMessages.scrollTop += e.deltaY;
+  e.preventDefault();
+}, { passive: false });
+
 function addMessage(type, content) {
   const welcomeMsg = chatMessages.querySelector('.welcome-message');
   if (welcomeMsg) welcomeMsg.remove();
