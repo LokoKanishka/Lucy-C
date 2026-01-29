@@ -24,11 +24,11 @@ let hfLastLoudMs = 0;
 const HF = {
   // Conservative defaults (reduce false triggers)
   // Higher => less sensitive
-  rmsThreshold: 0.04,
+  rmsThreshold: 0.035,
   // Don’t trigger on tiny clicks / short bursts
   minSpeechMs: 600,
   // End of utterance after this much silence
-  endSilenceMs: 900,
+  endSilenceMs: 1300,
   // Safety cap: stop a too-long utterance
   maxUtteranceMs: 15000,
 
