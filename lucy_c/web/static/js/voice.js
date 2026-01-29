@@ -31,7 +31,11 @@ const HF = {
   endSilenceMs: 900,
   // Safety cap: stop a too-long utterance
   maxUtteranceMs: 15000,
-  // Barge-in: interrupt Lucy TTS if user starts speaking
+
+  // After Lucy finishes speaking, wait a bit before re-arming VAD
+  // (prevents immediate re-trigger from room echo / tail)
+  postTtsCooldownMs: 500,
+
   // Barge-in: as soon as mic detects speech over threshold, cut TTS.
   bargeInMs: 0,
   // Separate threshold for barge-in (more sensitive than normal VAD)
@@ -99,7 +103,7 @@ async function startRecording(streamOverride = null) {
 
       // Send bytes to server (+ stable session)
       const session_user = (window.getSessionUser && window.getSessionUser()) || null;
-      lucySocket.emit('voice_input', { audio: Array.from(uint8), session_user });
+      lucySocket.emit('voice_input', { audio: Array.from(uint8), session_user, handsfree: hfEnabled });
       updateStatus('Procesando voz...', 'info');
 
     } finally {
@@ -189,6 +193,9 @@ async function handsfreeStart() {
 
   const buf = new Float32Array(hfAnalyser.fftSize);
 
+  // initialize tts end marker
+  if (!window.__lucy_ttsEndedAt) window.__lucy_ttsEndedAt = 0;
+
   let bargeInStart = 0;
 
   const loop = () => {
@@ -196,6 +203,8 @@ async function handsfreeStart() {
 
     const a = window.__lucy_lastAudio;
     const isPlaying = !!(a && !a.paused);
+    const ttsEndedAt = window.__lucy_ttsEndedAt || 0;
+    const inCooldown = (!isPlaying) && ttsEndedAt && ((now - ttsEndedAt) < HF.postTtsCooldownMs);
 
     hfAnalyser.getFloatTimeDomainData(buf);
     const rms = computeRMS(buf);
@@ -221,9 +230,9 @@ async function handsfreeStart() {
       bargeInStart = 0;
     }
 
-    // Avoid feedback loop: while Lucy is speaking, don't start/stop recordings.
-    // Only barge-in detection is allowed.
-    if (isPlaying) {
+    // Avoid feedback loop: while Lucy is speaking OR during post-TTS cooldown,
+    // don't start/stop recordings. Only barge-in detection is allowed.
+    if (isPlaying || inCooldown) {
       if (hfSpeechActive) hfSpeechActive = false;
       if (isRecording) stopRecording();
       hfRaf = requestAnimationFrame(loop);
