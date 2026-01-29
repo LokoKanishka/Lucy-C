@@ -153,16 +153,40 @@ body {
 
 .chat-messages {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: scroll; /* force scrollbar track visibility */
     padding: 2rem;
+
     /* Firefox */
     scrollbar-width: thin;
     scrollbar-color: var(--bg-tertiary) var(--bg-primary);
 }
 
-.chat-messages:focus {
-    outline: none;
+/* Chromium/WebKit */
+.chat-messages::-webkit-scrollbar { width: 10px; }
+.chat-messages::-webkit-scrollbar-track { background: var(--bg-primary); }
+.chat-messages::-webkit-scrollbar-thumb {
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+    border: 2px solid var(--bg-primary);
 }
+.chat-messages::-webkit-scrollbar-thumb:hover { background: var(--border-color); }
+
+.chat-messages:focus { outline: none; }
+
+.scroll-fab {
+    position: absolute;
+    right: 16px;
+    bottom: 90px;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    cursor: pointer;
+    display: none;
+}
+.scroll-fab:hover { border-color: var(--accent-purple); }
 
 .welcome-message {
     max-width: 600px;

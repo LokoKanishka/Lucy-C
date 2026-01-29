@@ -32,9 +32,9 @@ const HF = {
   // Safety cap: stop a too-long utterance
   maxUtteranceMs: 15000,
   // Barge-in: interrupt Lucy TTS if user starts speaking
-  bargeInMs: 180,
+  bargeInMs: 120,
   // Separate threshold for barge-in (more sensitive than normal VAD)
-  bargeInThreshold: 0.02,
+  bargeInThreshold: 0.012,
 };
 
 async function initMicrophone() {
