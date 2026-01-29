@@ -32,6 +32,9 @@ socket.on('audio', (data) => {
   // Let voice.js coordinate listening/playing (for hands-free)
   window.__lucy_lastAudio = audio;
 
+  audio.onended = () => { if (window.__lucy_lastAudio === audio) window.__lucy_lastAudio = null; };
+  audio.onpause = () => { if (audio.currentTime > 0 && window.__lucy_lastAudio === audio) window.__lucy_lastAudio = null; };
+
   audio.play().catch(err => console.warn('Audio play failed:', err));
 });
 

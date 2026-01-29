@@ -208,6 +208,15 @@ async function handsfreeStart() {
       bargeInStart = 0;
     }
 
+    // Avoid feedback loop: while Lucy is speaking, don't start/stop recordings.
+    // Only barge-in detection is allowed.
+    if (isPlaying) {
+      if (hfSpeechActive) hfSpeechActive = false;
+      if (isRecording) stopRecording();
+      hfRaf = requestAnimationFrame(loop);
+      return;
+    }
+
     // Normal hands-free VAD logic
     if (loud) {
       hfLastLoudMs = now;
