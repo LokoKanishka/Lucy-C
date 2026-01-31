@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import json
 import logging
+import subprocess
 from dataclasses import dataclass
 from typing import Optional
-
-import httpx
 
 from lucy_c.config import ClawdbotConfig
 
@@ -21,27 +21,48 @@ class ClawdbotLLM:
         self.cfg = cfg
         self.log = logging.getLogger("LucyC.Clawdbot")
 
-    def generate(self, prompt: str, *, user: Optional[str] = None) -> LLMResult:
-        url = f"{self.cfg.host.rstrip('/')}/v1/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {self.cfg.token}",
-            "Content-Type": "application/json",
-            "x-clawdbot-agent-id": self.cfg.agent_id,
-        }
-        payload = {
-            "model": "clawdbot",
-            "messages": [{"role": "user", "content": prompt}],
-        }
+    def generate(self, prompt: str, *, model: Optional[str] = None, user: Optional[str] = None) -> LLMResult:
+        # Use Clawdbot CLI (Opción B del handoff)
+        # clawdbot agent --agent <id> --message "<prompt>" --json
+        cmd = [
+            "clawdbot",
+            "agent",
+            "--agent",
+            self.cfg.agent_id or "lucy",
+            "--message",
+            prompt,
+            "--json",
+        ]
+
+        if model:
+            # Note: Current clawdbot agent CLI turn doesn't support --model override flag.
+            # It will use the agent's configured model or the global default.
+            pass
+
         if user:
-            payload["user"] = user
+            # Optionally pass session-id if needed or user context
+            pass
 
-        with httpx.Client(timeout=self.cfg.timeout_s) as client:
-            r = client.post(url, headers=headers, json=payload)
-            r.raise_for_status()
-            data = r.json() or {}
-
+        self.log.info("Running: %s", " ".join(cmd))
         try:
-            content = data["choices"][0]["message"]["content"]
-        except Exception:
-            content = ""
-        return LLMResult(text=(content or "").strip())
+            res = subprocess.run(cmd, capture_output=True, text=True, check=False)
+            if res.returncode != 0:
+                self.log.error("Clawdbot CLI failed (exit %d): %s", res.returncode, res.stderr)
+                return LLMResult(text=f"Error Clawdbot: {res.stderr.strip()}")
+
+            data = json.loads(res.stdout)
+            # Response format for 'clawdbot agent' CLI (non-OpenAI)
+            # Result is usually in data["result"]["payloads"][0]["text"]
+            try:
+                payloads = data.get("result", {}).get("payloads", [])
+                if payloads:
+                    content = payloads[0].get("text") or ""
+                else:
+                    content = data.get("reply") or data.get("message") or ""
+            except Exception:
+                content = data.get("reply") or data.get("message") or ""
+            
+            return LLMResult(text=str(content).strip())
+        except Exception as e:
+            self.log.exception("Clawdbot CLI exception")
+            return LLMResult(text=f"Error exception: {e}")

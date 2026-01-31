@@ -25,9 +25,9 @@ async function loadModels() {
     if (data.provider && providerSelector) {
       providerSelector.value = data.provider;
       currentProviderDisplay.textContent = `provider: ${data.provider}`;
-      // Hide/show model selector depending on provider
-      modelSelector.disabled = (data.provider !== 'ollama');
-      modelSelector.style.opacity = (data.provider !== 'ollama') ? '0.5' : '1';
+      const isOllamaManaged = (data.provider === 'ollama' || data.provider === 'clawdbot');
+      modelSelector.disabled = !isOllamaManaged;
+      modelSelector.style.opacity = !isOllamaManaged ? '0.5' : '1';
     }
 
     if (data.models && data.models.length > 0) {
@@ -50,8 +50,9 @@ async function loadModels() {
 providerSelector?.addEventListener('change', () => {
   const provider = providerSelector.value;
   currentProviderDisplay.textContent = `provider: ${provider}`;
-  modelSelector.disabled = (provider !== 'ollama');
-  modelSelector.style.opacity = (provider !== 'ollama') ? '0.5' : '1';
+  const isOllamaManaged = (provider === 'ollama' || provider === 'clawdbot');
+  modelSelector.disabled = !isOllamaManaged;
+  modelSelector.style.opacity = !isOllamaManaged ? '0.5' : '1';
   lucySocket.emit('update_config', { llm_provider: provider });
   updateStatus(`Provider changed to ${provider}`, 'success');
 });
@@ -150,7 +151,7 @@ async function sendMessage() {
     if (autoSpeak && autoSpeak.checked && data.audio && data.audio.wav_base64) {
       const audio = new Audio(`data:${data.audio.mime || 'audio/wav'};base64,${data.audio.wav_base64}`);
       window.__lucy_lastAudio = audio;
-      audio.play().catch(() => {});
+      audio.play().catch(() => { });
     }
 
     updateStatus('Ready', 'success');

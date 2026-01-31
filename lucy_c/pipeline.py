@@ -32,11 +32,12 @@ class LucyPipeline:
 
     def _generate_reply(self, text: str, *, session_user: str | None = None) -> str:
         provider = (self.cfg.llm.provider or "ollama").lower()
+        model = self.cfg.ollama.model
         if provider == "clawdbot":
             if not self.cfg.clawdbot.token:
                 return "Clawdbot token no configurado (CLAWDBOT_GATEWAY_TOKEN)."
-            return self.clawdbot.generate(text, user=session_user).text
-        return self.ollama.generate(text).text
+            return self.clawdbot.generate(text, model=model, user=session_user).text
+        return self.ollama.generate(text, model=model).text
 
     def _tts_bytes(self, reply_text: str) -> tuple[bytes, int]:
         """Return (wav_bytes, sample_rate). Empty wav if TTS fails."""

@@ -33,9 +33,11 @@ class OllamaLLM:
                 models.append(name)
         return models
 
-    def generate(self, prompt: str) -> LLMResult:
+    def generate(self, prompt: str, *, model: Optional[str] = None) -> LLMResult:
         url = f"{self.cfg.host.rstrip('/')}/api/generate"
-        payload = {"model": self.cfg.model, "prompt": prompt, "stream": False}
+        # If model is provided, use it, otherwise use the config default
+        target_model = model or self.cfg.model
+        payload = {"model": target_model, "prompt": prompt, "stream": False}
         with httpx.Client(timeout=120.0) as client:
             r = client.post(url, json=payload)
             r.raise_for_status()
