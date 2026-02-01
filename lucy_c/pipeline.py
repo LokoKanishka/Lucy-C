@@ -230,6 +230,15 @@ class Moltbot:
         persisted_model = facts.get("selected_model")
         persisted_provider = facts.get("selected_provider")
         
+        # Release 1.1 Policy: ENFORCE LOCAL-ONLY
+        # If persisted choice is 'clawdbot' or missing, we fallback to 'ollama'
+        # to prevent cloud leaks/Anthropic fallbacks.
+        if persisted_provider and persisted_provider != "ollama":
+            self.log.warning("Ignoring persisted cloud provider '%s' for %s. Enforcing local-only policy.", 
+                            persisted_provider, session_user)
+            persisted_provider = "ollama"
+            persisted_model = self.cfg.ollama.model
+
         if persisted_model and (persisted_model != self.cfg.ollama.model or persisted_provider != self.cfg.llm.provider):
             self.log.info("Applying persisted brain for %s: %s (%s)", 
                          session_user, persisted_model, persisted_provider)
