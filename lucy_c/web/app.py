@@ -12,19 +12,23 @@ from flask_socketio import SocketIO, emit
 from lucy_c.audio_codec import decode_audio_bytes_to_f32_mono
 from lucy_c.config import LucyConfig
 from lucy_c.history_store import HistoryItem, HistoryStore, default_history_dir
-from lucy_c.pipeline import LucyPipeline
+from lucy_c.facts_store import FactsStore, default_facts_dir
+from lucy_c.pipeline import Moltbot
 
 
 log = logging.getLogger("LucyC.Web")
 
 
-def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
+def create_app() -> tuple[Flask, SocketIO, Moltbot]:
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.config["SECRET_KEY"] = os.environ.get("LUCY_C_SECRET", "lucy-c")
     # Disable caching so UI updates appear immediately after reload
     app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 
     socketio = SocketIO(app, cors_allowed_origins="*")
+
+    def status_callback(message: str, type: str = "info"):
+        socketio.emit("status", {"message": message, "type": type})
 
     root = Path(__file__).resolve().parents[2]
     cfg_path = os.environ.get("LUCY_C_CONFIG", str(root / "config" / "config.yaml"))
@@ -34,7 +38,8 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
     cfg.clawdbot.token = os.environ.get("CLAWDBOT_GATEWAY_TOKEN", cfg.clawdbot.token)
 
     history = HistoryStore(default_history_dir())
-    pipeline = LucyPipeline(cfg, history=history)
+    facts = FactsStore(default_facts_dir())
+    moltbot = Moltbot(cfg, history=history, facts=facts, status_callback=status_callback)
 
     @app.route("/")
     def index():
@@ -47,10 +52,18 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
     @app.route("/api/models")
     def models():
         try:
-            models = pipeline.ollama.list_models()
+            detailed = moltbot.ollama.list_models_detailed()
+            # Convert dataclasses to dicts for JSON
+            from dataclasses import asdict
+            models_data = [asdict(m) for m in detailed]
         except Exception as e:
-            return jsonify({"models": [], "current": pipeline.cfg.ollama.model, "error": str(e)})
-        return jsonify({"models": models, "current": pipeline.cfg.ollama.model, "provider": pipeline.cfg.llm.provider})
+            log.exception("Failed to list models")
+            return jsonify({"models": [], "current": moltbot.cfg.ollama.model, "error": str(e)})
+        return jsonify({
+            "models": models_data, 
+            "current": moltbot.cfg.ollama.model, 
+            "provider": moltbot.cfg.llm.provider
+        })
 
     @app.route("/api/chat", methods=["POST"])
     def chat_http():
@@ -61,15 +74,15 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
             return jsonify({"ok": False, "error": "empty message"}), 400
 
         session_user = (payload.get("session_user") or "").strip() or "lucy-c:anonymous"
-        result = pipeline.run_turn_from_text(text, session_user=session_user)
+        result = moltbot.run_turn_from_text(text, session_user=session_user)
 
         history.append(
             HistoryItem(
                 ts=time.time(),
                 session_user=session_user,
                 kind="text",
-                llm_provider=pipeline.cfg.llm.provider,
-                ollama_model=pipeline.cfg.ollama.model,
+                llm_provider=moltbot.cfg.llm.provider,
+                ollama_model=moltbot.cfg.ollama.model,
                 user_text=text,
                 transcript=text,
                 reply=result.reply,
@@ -100,27 +113,21 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
     def on_update_config(data):
         try:
             data = data or {}
-            provider = data.get("llm_provider")
-            if provider:
-                old_provider = pipeline.cfg.llm.provider
-                pipeline.cfg.llm.provider = str(provider)
-                log.info("LLM provider changed from %s to %s", old_provider, provider)
-                emit("status", {"message": f"Provider set to {provider}", "type": "success"})
-
-            model = data.get("ollama_model")
-            if model:
-                old_model = pipeline.cfg.ollama.model
-                pipeline.cfg.ollama.model = model
-                # Ensure the provider instance also sees the update if it relies on its own cfg
-                pipeline.ollama.cfg.model = model
-                log.info("Ollama model changed from %s to %s", old_model, model)
-                emit("status", {"message": f"Model set to {model}", "type": "success"})
-
-            if not provider and not model:
-                emit("status", {"message": "No config changes", "type": "info"})
+            provider = data.get("llm_provider") or moltbot.cfg.llm.provider
+            model = data.get("ollama_model") or moltbot.cfg.ollama.model
+            
+            if provider != moltbot.cfg.llm.provider or model != moltbot.cfg.ollama.model:
+                session_user = data.get("session_user") or "lucy-c:anonymous"
+                moltbot.switch_brain(model, provider=provider, session_user=session_user)
+                log.info("BRAIN EXCHANGE: %s (%s) -> %s (%s) for %s", 
+                         moltbot.cfg.llm.provider, moltbot.cfg.ollama.model, provider, model, session_user)
+                emit("moltbot_log", {"message": f"Brain exchanged: {model}"})
+                emit("status", {"message": f"Brain exchanged: {model} ({provider})", "type": "success"})
+            else:
+                emit("status", {"message": "No brain change needed", "type": "info"})
         except Exception as e:
             log.exception("update_config failed")
-            emit("error", {"message": f"Failed to update config: {e}"})
+            emit("error", {"message": f"Failed to update brain: {e}"})
 
     @socketio.on("chat_message")
     def on_chat_message(data):
@@ -143,9 +150,11 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
 
             emit("message", {"type": "user", "content": text})
             emit("status", {"message": "Thinking...", "type": "info"})
+            emit("moltbot_log", {"message": f"🧠 Cerebro: Procesando con {moltbot.cfg.ollama.model}", "type": "brain"})
 
             session_user = (data or {}).get("session_user")
-            result = pipeline.run_turn_from_text(text, session_user=session_user)
+            result = moltbot.run_turn_from_text(text, session_user=session_user)
+            emit("moltbot_log", {"message": f"✅ Respuesta generada ({len(result.reply)} caracteres)", "type": "success"})
 
             emit("message", {"type": "assistant", "content": result.reply})
 
@@ -155,8 +164,8 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
                     ts=time.time(),
                     session_user=session_user,
                     kind="text",
-                    llm_provider=pipeline.cfg.llm.provider,
-                    ollama_model=pipeline.cfg.ollama.model,
+                    llm_provider=moltbot.cfg.llm.provider,
+                    ollama_model=moltbot.cfg.ollama.model,
                     user_text=text,
                     transcript=text,
                     reply=result.reply,
@@ -189,12 +198,12 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
             raw_bytes = bytes(raw) if isinstance(raw, list) else raw
 
             emit("status", {"message": "Decoding...", "type": "info"})
-            decoded = decode_audio_bytes_to_f32_mono(raw_bytes, target_sr=pipeline.cfg.audio.sample_rate)
+            decoded = decode_audio_bytes_to_f32_mono(raw_bytes, target_sr=moltbot.cfg.audio.sample_rate)
 
             emit("status", {"message": "Transcribing...", "type": "info"})
             session_user = (data or {}).get("session_user") or "lucy-c:anonymous"
             handsfree = bool((data or {}).get("handsfree"))
-            result = pipeline.run_turn_from_audio(decoded.audio, session_user=session_user)
+            result = moltbot.run_turn_from_audio(decoded.audio, session_user=session_user)
 
             # In hands-free mode, ignore empty transcripts to prevent loops.
             # (Allow 1-word utterances like "hola".)
@@ -214,8 +223,8 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
                     ts=time.time(),
                     session_user=session_user,
                     kind="voice",
-                    llm_provider=pipeline.cfg.llm.provider,
-                    ollama_model=pipeline.cfg.ollama.model,
+                    llm_provider=moltbot.cfg.llm.provider,
+                    ollama_model=moltbot.cfg.ollama.model,
                     user_text="",
                     transcript=result.transcript,
                     reply=result.reply,
@@ -238,12 +247,12 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
             log.exception("voice_input failed")
             emit("error", {"message": str(e)})
 
-    return app, socketio, pipeline
+    return app, socketio, moltbot
 
 
 def main():
     logging.basicConfig(level=logging.INFO)
-    app, socketio, _pipeline = create_app()
+    app, socketio, _moltbot = create_app()
     port = int(os.environ.get("PORT", "5000"))
 
     # eventlet server

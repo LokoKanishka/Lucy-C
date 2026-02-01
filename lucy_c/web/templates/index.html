@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucy-C - Voice Assistant</title>
+    <title>Lucy-C | Asistente de Próxima Generación</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
+
 <body>
     <div class="container">
-        <!-- Left Sidebar -->
+        <!-- Panel Izquierdo -->
         <aside class="sidebar-left">
             <div class="sidebar-header">
                 <h2>Lucy-C</h2>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: -0.5rem;">Cerebro Local</div>
             </div>
             <nav class="sidebar-nav">
                 <button class="nav-button active">
@@ -21,48 +24,60 @@
                 </button>
                 <button class="nav-button">
                     <span class="icon">🎤</span>
-                    Voice Mode
-                </button>
-                <button class="nav-button">
-                    <span class="icon">📝</span>
-                    History
+                    Modo Voz
                 </button>
             </nav>
+
+            <div id="moltbot-logs" class="moltbot-logs">
+                <div class="logs-header">Logs de Moltbot</div>
+                <div id="logs-content" class="logs-content">
+                    <div class="log-entry log-success">Moltbot inicializado correctamente.</div>
+                </div>
+            </div>
+
             <div class="sidebar-footer">
                 <div class="model-info">
-                    <span class="label">Model:</span>
-                    <span id="current-model" class="value">Loading...</span>
-                    <span id="current-provider" class="value" style="margin-top:0.25rem; color: var(--accent-purple);">…</span>
+                    <span class="label">Cerebro Actual:</span>
+                    <span id="current-model" class="value">Cargando...</span>
+                    <span id="current-provider" class="value"
+                        style="margin-top:0.25rem; color: var(--accent-purple);">Ollama</span>
                 </div>
             </div>
         </aside>
 
-        <!-- Main Chat Area -->
+        <!-- Área Central de Chat -->
         <main class="chat-area" style="position: relative;">
             <div class="chat-header">
                 <h1>Lucy-C</h1>
                 <div class="status-indicator">
                     <span class="status-dot"></span>
-                    <span id="status-text">Ready</span>
+                    <span id="status-text">Lista</span>
                 </div>
             </div>
 
             <div id="chat-messages" class="chat-messages" tabindex="0">
                 <div class="welcome-message">
                     <h2>Hola, soy Lucy</h2>
-                    <p style="margin-bottom: 2rem; font-size: 1.1rem;">Tu asistente virtual inteligente y conversacional.</p>
+                    <p style="margin-bottom: 2rem; font-size: 1.1rem;">Tu asistente virtual inteligente, privada y 100%
+                        local.</p>
                     <ul>
                         <li>
-                            <span style="display: block; font-weight: 700; color: var(--accent-blue); margin-bottom: 0.25rem;">Chat Directo</span>
-                            Escribí tus consultas y Lucy te responderá al instante.
+                            <span
+                                style="display: block; font-weight: 700; color: var(--accent-blue); margin-bottom: 0.25rem;">Orquestado
+                                por Moltbot</span>
+                            Arquitectura desacoplada: el modelo piensa, Moltbot actúa.
                         </li>
                         <li>
-                            <span style="display: block; font-weight: 700; color: var(--accent-purple); margin-bottom: 0.25rem;">Modo Voz</span>
-                            Mantené apretado 🎤 para hablar o activá Hands-free.
+                            <span
+                                style="display: block; font-weight: 700; color: var(--accent-purple); margin-bottom: 0.25rem;">Cerebro
+                                Intercambiable</span>
+                            Cambiá de modelo local en cualquier momento sin perder memoria.
                         </li>
                         <li>
-                            <span style="display: block; font-weight: 700; color: var(--accent-cyan); margin-bottom: 0.25rem;">Multi-Cerebro</span>
-                            Cambiá entre Ollama y Clawdbot según tus necesidades.
+                            <span
+                                style="display: block; font-weight: 700; color: var(--accent-cyan); margin-bottom: 0.25rem;">Soberanía
+                                Digital</span>
+                            Tus datos y pensamientos nunca salen de esta máquina.
                         </li>
                     </ul>
                 </div>
@@ -72,7 +87,8 @@
                 <div class="scroll-controls" title="Scroll del chat">
                     <button id="scroll-top" class="scroll-fab" title="Subir">↑</button>
                     <button id="scroll-bottom" class="scroll-fab" title="Bajar">↓</button>
-                    <input id="scroll-slider" type="range" min="0" max="100" value="100" class="scroll-slider" title="Scroll" />
+                    <input id="scroll-slider" type="range" min="0" max="100" value="100" class="scroll-slider"
+                        title="Scroll" />
                 </div>
 
                 <div class="mic-meter" title="Nivel de micrófono (RMS)">
@@ -81,11 +97,8 @@
                 </div>
 
                 <div class="input-wrapper">
-                    <textarea 
-                        id="user-input" 
-                        placeholder="Escribe un mensaje..."
-                        rows="1"
-                    ></textarea>
+                    <textarea id="user-input" placeholder="Escribe un mensaje o pedime que haga algo..."
+                        rows="1"></textarea>
                     <div class="input-actions">
                         <button id="voice-btn" class="icon-button" title="Mantener para hablar">
                             <span>🎤</span>
@@ -101,53 +114,78 @@
             </div>
         </main>
 
-        <!-- Right Sidebar (Settings) -->
+        <!-- Panel Derecho (Configuración) -->
         <aside class="sidebar-right">
             <div class="settings-header">
-                <h3>Settings</h3>
+                <h3>Configuración</h3>
             </div>
-            
-            <div class="settings-section">
-                <h4>Brain</h4>
-                <select id="provider-selector" class="model-dropdown">
-                    <option value="ollama">Ollama (local)</option>
-                    <option value="clawdbot">lucy (Clawdbot)</option>
-                </select>
 
-                <div style="margin-top: 1rem;">
-                    <h4 style="margin-bottom: 0.75rem;">Ollama model</h4>
+            <div class="settings-section">
+                <h4>Cerebro (Ollama)</h4>
+                <div style="margin-top: 0.5rem;">
                     <select id="model-selector" class="model-dropdown">
-                        <option>Loading models...</option>
+                        <option>Cargando modelos...</option>
                     </select>
+                </div>
+                <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-secondary);">
+                    Lucy usa modelos locales vía Ollama. El intercambio es instantáneo.
                 </div>
             </div>
 
             <div class="settings-section">
-                <h4>Voice Controls</h4>
+                <h4>Controles de Voz</h4>
                 <div class="toggle-group">
                     <label class="toggle-item">
-                        <input type="checkbox" id="handsfree-toggle">
                         <span>Hands‑free (auto listen)</span>
+                        <input type="checkbox" id="handsfree-toggle">
                     </label>
                     <label class="toggle-item">
-                        <input type="checkbox" id="raw-mic-toggle">
                         <span>Raw mic (no suppression)</span>
+                        <input type="checkbox" id="raw-mic-toggle">
                     </label>
                     <label class="toggle-item">
-                        <input type="checkbox" id="auto-speak-toggle" checked>
                         <span>Auto Speak Responses</span>
+                        <input type="checkbox" id="auto-speak-toggle" checked>
                     </label>
                 </div>
                 <div style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4;">
-                    En modo hands‑free: hablás, pausás, y se envía solo.
+                    En modo hands-free: hablás, pausás, y se envía solo.
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h4>Atajos de Teclado</h4>
+                <div
+                    style="font-size: 0.8rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.6rem;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Foco en Chat</span>
+                        <kbd
+                            style="color: var(--text-secondary); background: rgba(255,255,255,0.05); padding: 2px 4px; border-radius: 4px;">Esc</kbd>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Activar Mic</span>
+                        <kbd
+                            style="color: var(--text-secondary); background: rgba(255,255,255,0.05); padding: 2px 4px; border-radius: 4px;">Ctrl+M</kbd>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Manos Libres</span>
+                        <kbd
+                            style="color: var(--text-secondary); background: rgba(255,255,255,0.05); padding: 2px 4px; border-radius: 4px;">Ctrl+H</kbd>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Limpiar Vista</span>
+                        <kbd
+                            style="color: var(--text-secondary); background: rgba(255,255,255,0.05); padding: 2px 4px; border-radius: 4px;">Ctrl+L</kbd>
+                    </div>
                 </div>
             </div>
         </aside>
     </div>
 
     <script src="{{ url_for('static', filename='js/websocket.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
     <script src="{{ url_for('static', filename='js/scroll.js') }}"></script>
     <script src="{{ url_for('static', filename='js/voice.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 </body>
+
 </html>

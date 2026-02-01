@@ -1,0 +1,111 @@
+from __future__ import annotations
+import logging
+import re
+from dataclasses import dataclass
+from typing import Callable, Any, Dict, List, Optional
+
+@dataclass
+class ToolResult:
+    success: bool
+    output: str
+    tag: str = "⚙️ TOOLS"
+
+class ToolRouter:
+    def __init__(self):
+        self.log = logging.getLogger("LucyC.ToolRouter")
+        self.tools: Dict[str, Callable] = {}
+        # tool_name -> list of forbidden strings in args (basic security)
+        self.security_rules: Dict[str, List[str]] = {
+            "all": [";", "&&", "||", ">", "<", "$(", "system("]
+        }
+
+    def register_tool(self, name: str, func: Callable):
+        self.tools[name] = func
+        self.log.info("Tool registered: %s", name)
+
+    def _validate_security(self, name: str, args_str: str) -> Optional[str]:
+        """Check for forbidden patterns in arguments."""
+        # Generic rules
+        for rule in self.security_rules.get("all", []):
+            if rule in args_str:
+                return f"Seguridad: Argumento prohibido '{rule}' detectado."
+        
+        # Specific rules
+        for rule in self.security_rules.get(name, []):
+            if rule in args_str:
+                return f"Seguridad: Argumento prohibido para {name}: '{rule}'."
+        
+        return None
+
+    def parse_and_execute(self, text: str, context: Dict[str, Any]) -> str:
+        """
+        Parses [[tool_name(args)]] from text and executes them.
+        Returns the original text with tool results appended.
+        """
+        # Matches [[ name ( args ) ]]
+        tool_pattern = re.compile(r'\[\[\s*(\w+)\s*\((.*?)\)\s*\]\]')
+        matches = tool_pattern.findall(text)
+        
+        if not matches:
+            return text
+            
+        final_response = text
+        for tool_name, args_str in matches:
+            self.log.info("Activating tool: %s(%s)", tool_name, args_str)
+            
+            # 1. Security Check
+            sec_error = self._validate_security(tool_name, args_str)
+            if sec_error:
+                self.log.warning("Security trigger: %s", sec_error)
+                final_response += f"\n\n[⚠️ SEGURIDAD]: {sec_error}"
+                continue
+
+            # 2. Find Tool
+            if tool_name not in self.tools:
+                self.log.warning("Tool not found: %s", tool_name)
+                final_response += f"\n\n[⚠️ BASE CORE]: Herramienta '{tool_name}' no disponible."
+                continue
+
+            # 3. Parse Args (Improved: handles quoted strings with commas)
+            try:
+                # Basic comma split but careful with quotes would be better.
+                # For now, improved split:
+                args = self._smart_split(args_str)
+                
+                # 4. Execute
+                result: ToolResult = self.tools[tool_name](args, context)
+                
+                self.log.info("%s result: %s", result.tag, result.output)
+                final_response += f"\n\n[{result.tag}]: {result.output}"
+                
+            except Exception as e:
+                self.log.error("Tool execution failed: %s", e)
+                final_response += f"\n\n[Moltbot Error]: Hubo un fallo inesperadamente ejecutando {tool_name}."
+                
+        return final_response
+
+    def _smart_split(self, s: str) -> List[str]:
+        """Split arguments by comma but respect quotes."""
+        # This is a basic implementation; a full parser would be better but this covers most cases.
+        parts = []
+        current = []
+        in_quotes = False
+        quote_char = ""
+        
+        for char in s:
+            if char in ('"', "'"):
+                if not in_quotes:
+                    in_quotes = True
+                    quote_char = char
+                elif quote_char == char:
+                    in_quotes = False
+                else:
+                    current.append(char)
+            elif char == ',' and not in_quotes:
+                parts.append("".join(current).strip())
+                current = []
+            else:
+                current.append(char)
+        
+        parts.append("".join(current).strip())
+        return [p for p in parts if p]

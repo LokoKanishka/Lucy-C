@@ -182,24 +182,31 @@ function stopRecording() {
   voiceBtn.querySelector('span').textContent = '🎤';
 }
 
-voiceBtn.addEventListener('mousedown', () => {
+async function toggleRecording() {
   if (hfEnabled) return;
-  const a = window.__lucy_lastAudio;
-  if (a && !a.paused) {
-    try { a.pause(); a.currentTime = 0; } catch { }
-    window.__lucy_lastAudio = null;
+
+  if (isRecording) {
+    stopRecording();
+    updateStatus('Procesando...', 'info');
+  } else {
+    const a = window.__lucy_lastAudio;
+    if (a && !a.paused) {
+      try { a.pause(); a.currentTime = 0; } catch { }
+      window.__lucy_lastAudio = null;
+    }
+    updateStatus('Escuchando... (clic para enviar)', 'warning');
+    await startRecording();
   }
-  updateStatus('Grabando (mantené apretado)...', 'warning');
-  startRecording();
-});
-voiceBtn.addEventListener('touchstart', (e) => {
-  if (hfEnabled) return;
+}
+
+voiceBtn.addEventListener('click', (e) => {
   e.preventDefault();
-  updateStatus('Grabando (mantené apretado)...', 'warning');
-  startRecording();
+  toggleRecording();
 });
-window.addEventListener('mouseup', () => { if (!hfEnabled) stopRecording(); });
-window.addEventListener('touchend', () => { if (!hfEnabled) stopRecording(); });
+
+// Remove global mouseup/touchend listeners that forced stopRecording
+// window.addEventListener('mouseup', () => { if (!hfEnabled) stopRecording(); });
+// window.addEventListener('touchend', () => { if (!hfEnabled) stopRecording(); });
 
 // ===== Hands-free =====
 function computeRMS(timeDomainFloat32) {

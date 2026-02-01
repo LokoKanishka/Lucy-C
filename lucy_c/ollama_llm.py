@@ -7,6 +7,7 @@ from typing import List, Optional
 import httpx
 
 from lucy_c.config import OllamaConfig
+from lucy_c.models_registry import ModelMetadata, get_enriched_models_list
 
 
 @dataclass
@@ -21,21 +22,31 @@ class OllamaLLM:
 
     def list_models(self) -> List[str]:
         """List available local Ollama models via /api/tags."""
+        tags = self._get_raw_tags()
+        models = []
+        for m in tags.get("models", []) or []:
+            name = m.get("name")
+            if name:
+                models.append(name)
+        return models
+
+    def list_models_detailed(self) -> List[ModelMetadata]:
+        """Returns a list of ModelMetadata objects for all local models."""
+        tags = self._get_raw_tags()
+        raw_models = tags.get("models", []) or []
+        return get_enriched_models_list(raw_models)
+
+    def _get_raw_tags(self) -> dict:
+        """Helper to fetch raw tags from Ollama API."""
         url = f"{self.cfg.host.rstrip('/')}/api/tags"
         try:
             with httpx.Client(timeout=10.0) as client:
                 r = client.get(url)
                 r.raise_for_status()
-                data = r.json() or {}
-            models = []
-            for m in data.get("models", []) or []:
-                name = m.get("name")
-                if name:
-                    models.append(name)
-            return models
+                return r.json() or {}
         except Exception as e:
-            self.log.error("Failed to list Ollama models: %s", e)
-            return []
+            self.log.error("Failed to fetch Ollama tags: %s", e)
+            return {}
 
     def generate(self, prompt: str, *, model: Optional[str] = None) -> LLMResult:
         """Simple single-prompt generation."""

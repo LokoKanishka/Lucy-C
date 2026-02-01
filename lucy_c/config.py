@@ -15,6 +15,7 @@ class ASRConfig:
     language: str = "es"
     task: str = "transcribe"
     force_language: bool = True
+    initial_prompt: str = "Che, viste, boludo, tenés, querés, decís."
 
 
 @dataclass
@@ -40,6 +41,7 @@ class ClawdbotConfig:
 @dataclass
 class TTSConfig:
     voice: str = "es_ES/m-ailabs_low#karen_savage"
+    length_scale: float = 1.1
 
 
 @dataclass
@@ -55,6 +57,7 @@ class LucyConfig:
     clawdbot: ClawdbotConfig = field(default_factory=ClawdbotConfig)
     tts: TTSConfig = field(default_factory=TTSConfig)
     audio: AudioConfig = field(default_factory=AudioConfig)
+    safe_mode: bool = True
 
     @staticmethod
     def load(path: str | Path) -> "LucyConfig":

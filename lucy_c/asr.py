@@ -52,11 +52,12 @@ class FasterWhisperASR:
         try:
             segments, info = self.model.transcribe(
                 audio_f32,
-                beam_size=2,
+                beam_size=4, # Increased for accuracy
                 best_of=5,
-                vad_filter=True,  # Improved performance on silent parts
+                vad_filter=True,
                 language=language,
                 task=task,
+                initial_prompt=self.cfg.initial_prompt if hasattr(self.cfg, "initial_prompt") else None
             )
         except RuntimeError as e:
             # Some CUDA lib problems only show up at first encode.

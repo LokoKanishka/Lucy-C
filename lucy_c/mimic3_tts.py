@@ -24,8 +24,30 @@ class Mimic3TTS:
         self._cache: dict[str, tuple[TTSResult, float]] = {}  # key -> (result, last_access_time)
         self._cache_hits = 0
         self._cache_misses = 0
+        self._enabled = self._check_executable()
+
+    def _check_executable(self) -> bool:
+        import shutil
+        from pathlib import Path
+        
+        # 1. Check PATH
+        self._exe_path = shutil.which("mimic3")
+        if self._exe_path:
+            return True
+            
+        # 2. Check current .venv/bin (project root)
+        # mimic3_tts.py is in lucy_c/, so parents[1] is project root
+        venv_mimic = Path(__file__).resolve().parents[1] / ".venv" / "bin" / "mimic3"
+        if venv_mimic.exists():
+            self._exe_path = str(venv_mimic)
+            return True
+            
+        self.log.warning("mimic3 executable not found in PATH or .venv. Voice output will be disabled.")
+        return False
 
     def synthesize(self, text: str) -> TTSResult:
+        if not self._enabled:
+            raise RuntimeError("mimic3 not found")
         import time
         
         # Simple cache to avoid re-running mimic3 for identical text
@@ -42,8 +64,14 @@ class Mimic3TTS:
 
         self._cache_misses += 1
         
+        cmd = [self._exe_path, "--voice", self.cfg.voice, "--stdout"]
+        
+        # Add speed/length_scale if present
+        if hasattr(self.cfg, "length_scale"):
+            cmd.extend(["--length-scale", str(self.cfg.length_scale)])
+            
         proc = subprocess.run(
-            ["mimic3", "--voice", self.cfg.voice, "--stdout"],
+            cmd,
             input=text.encode("utf-8"),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
