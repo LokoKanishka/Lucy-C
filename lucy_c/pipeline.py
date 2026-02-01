@@ -194,7 +194,7 @@ class Moltbot:
         self.tool_router.register_tool("read_file", tool_read_file)
         self.tool_router.register_tool("write_file", tool_write_file)
 
-    async def _execute_tools(self, text: str, *, session_user: str | None = None, context: dict | None = None) -> str:
+    def _execute_tools(self, text: str, *, session_user: str | None = None, context: dict | None = None) -> str:
         """Execute tools found in text and return text with results appended."""
         import re
         tool_pattern = re.compile(r'\[\[\s*(\w+)\s*\((.*?)\)\s*\]\]')
@@ -367,7 +367,7 @@ class Moltbot:
                     raise ValueError("Respuesta inválida o vacía del cerebro")
 
                 # Phase 4: Trigger tool execution if tool calls are present
-                processed_result = await self._execute_tools(result, session_user=session_user)
+                processed_result = self._execute_tools(result, session_user=session_user)
                 
                 # Phase 5: Reflection Loop
                 # If tools were executed (result != processed_result), ask the brain to reflect.
