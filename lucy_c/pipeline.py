@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import logging
+import uuid
+import traceback
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 
 from lucy_c.asr import FasterWhisperASR
@@ -24,10 +27,13 @@ class TurnResult:
     reply_sr: int
 
 
+import os
+
 # The canonical composition
 DEFAULT_SYSTEM_PROMPT = SYSTEM_PROMPT
 
 MAX_CONTEXT_CHARS = 4000  # Reserve space for system prompt + current message
+LOCAL_ONLY = os.environ.get("LUCY_LOCAL_ONLY", "1") == "1"
 
 
 class Moltbot:
@@ -35,10 +41,22 @@ class Moltbot:
         self.cfg = cfg
         self.log = logging.getLogger("Moltbot")
         self.log.info("LUCY CORE (Prompt v%s) initializing...", PROMPT_VERSION)
-        self.asr = FasterWhisperASR(cfg.asr)
+        
+        if LOCAL_ONLY:
+            self.log.info("LUCY_LOCAL_ONLY=1 active. Cloud providers disabled.")
+            self.cfg.llm.provider = "ollama"
 
+        self.asr = FasterWhisperASR(cfg.asr)
         self.ollama = OllamaLLM(cfg.ollama)
-        self.clawdbot = ClawdbotLLM(cfg.clawdbot)
+        
+        # Model Fallback: Ensure the configured model exists in Ollama
+        if LOCAL_ONLY:
+            self._validate_model_fallback()
+
+        if not LOCAL_ONLY:
+            self.clawdbot = ClawdbotLLM(cfg.clawdbot)
+        else:
+            self.clawdbot = None
 
         self.tts = Mimic3TTS(cfg.tts)
         self.history = history
@@ -176,7 +194,7 @@ class Moltbot:
         self.tool_router.register_tool("read_file", tool_read_file)
         self.tool_router.register_tool("write_file", tool_write_file)
 
-    async def _execute_tools(self, text: str, context: Dict[str, Any]) -> str:
+    async def _execute_tools(self, text: str, *, session_user: str | None = None, context: dict | None = None) -> str:
         """Execute tools found in text and return text with results appended."""
         import re
         tool_pattern = re.compile(r'\[\[\s*(\w+)\s*\((.*?)\)\s*\]\]')
@@ -200,7 +218,12 @@ class Moltbot:
             msg = messages.get(first_tool, "Ejecutando herramientas...")
             self.status_callback(msg, "warning")
 
-        return self.tool_router.parse_and_execute(text, context)
+        # Prepare context
+        exec_context = context.copy() if context else {}
+        if session_user:
+            exec_context["session_user"] = session_user
+
+        return self.tool_router.parse_and_execute(text, exec_context)
 
     def switch_brain(self, model_name: str, provider: str = "ollama", session_user: str | None = None):
         """Perform a formal brain exchange. If session_user is provided, persist the choice."""
@@ -311,6 +334,9 @@ class Moltbot:
         self._apply_persisted_brain(session_user)
         
         provider = (self.cfg.llm.provider or "ollama").lower()
+        if LOCAL_ONLY:
+            provider = "ollama"
+            
         model = self.cfg.ollama.model
         messages = self._get_chat_messages(text, session_user=session_user)
         
@@ -327,9 +353,10 @@ class Moltbot:
                     hint = "Por favor, respondé de forma clara y completa. Si vas a usar una herramienta, recordá usar el formato [[tool()]]."
                     current_messages = messages + [{"role": "user", "content": hint}]
 
-                if provider == "clawdbot":
+                if provider == "clawdbot" and self.clawdbot:
                     result = self.clawdbot.chat(current_messages, model=model, user=session_user).text
                 else:
+                    # Fallback to ollama if provider is unknown or clawdbot disabled
                     result = self.ollama.chat(current_messages, model=model).text
                 
                 # Refined error detection: empty OR suspiciously short
@@ -340,7 +367,7 @@ class Moltbot:
                     raise ValueError("Respuesta inválida o vacía del cerebro")
 
                 # Phase 4: Trigger tool execution if tool calls are present
-                processed_result = self._execute_tools(result, session_user=session_user)
+                processed_result = await self._execute_tools(result, session_user=session_user)
                 
                 # Phase 5: Reflection Loop
                 # If tools were executed (result != processed_result), ask the brain to reflect.
@@ -351,7 +378,7 @@ class Moltbot:
                         {"role": "user", "content": "Mirá los resultados de las herramientas arriba y dame una respuesta final natural condensada para el usuario. No repitas los bloques [TAG]."}
                     ]
                     
-                    if provider == "clawdbot":
+                    if provider == "clawdbot" and self.clawdbot:
                         reflection_res = self.clawdbot.chat(reflection_messages, model=model, user=session_user).text
                     else:
                         reflection_res = self.ollama.chat(reflection_messages, model=model).text
@@ -369,6 +396,10 @@ class Moltbot:
                 return result
                 
             except Exception as e:
+                # Capture specific Ollama errors if available
+                from lucy_c.ollama_llm import OllamaChatError
+                is_ollama_error = isinstance(e, OllamaChatError)
+
                 self.log.warning("Moltbot brain attempt %d/%d failed: %s", 
                                attempt + 1, max_retries + 1, e)
                 
@@ -379,16 +410,43 @@ class Moltbot:
                     continue
                 
                 # Final attempt failed
-                self.log.exception("All Moltbot retries exhausted")
+                error_id = str(uuid.uuid4())[:8]
+                self.log.exception("All Moltbot retries exhausted [ErrorID: %s]", error_id)
                 
                 # Semantic fallbacks
                 err_str = str(e).lower()
+                
+                if is_ollama_error:
+                    # Provide clearer feedback for Ollama specific issues
+                    if "connect" in err_str or "refused" in err_str:
+                         return f"No pude conectar con Ollama. ¿Podrías fijarte si el servidor está corriendo en 127.0.0.1:11434? (ID: {error_id})"
+                    if "not found" in err_str or "model" in err_str:
+                         return f"Parece que el modelo '{model}' no está instalado o no se encuentra. ¿Probamos con otro? (ID: {error_id})"
+                    return f"Tuve un problema técnico con mi cerebro local: {e} (ID: {error_id})"
+
                 if "connection" in err_str or "timeout" in err_str or "unreachable" in err_str:
-                    return "Perdón, che, parece que tengo un problema de conexión con mi cerebro local. ¿Te fijás si Ollama está corriendo? Intentá de nuevo en un ratito."
-                elif "venerable" in err_str or "empty" in err_str or "inválida" in err_str:
-                    return "Che, mi cerebro se quedó en blanco. ¿Podrías preguntarme de otra forma o repetirme lo último?"
+                    return f"Perdón, che, parece que tengo un problema de conexión con mi cerebro local. ¿Te fijás si Ollama está corriendo? Intentá de nuevo en un ratito. (ID: {error_id})"
+                elif "venerable" in err_str or "empty" in err_str or "invalida" in err_str or "inválida" in err_str:
+                    return f"Che, mi cerebro se quedó en blanco. ¿Podrías preguntarme de otra forma o repetirme lo último? (ID: {error_id})"
                 else:
-                    return "Ups, algo no salió bien procesando eso. ¿Probamos de nuevo con otra frase?"
+                    return f"Ups, algo no salió bien procesando eso. ¿Probamos de nuevo con otra frase? (ID: {error_id})"
+
+    def _validate_model_fallback(self):
+        """If configured model missing, fallback to first available."""
+        try:
+            models = self.ollama.list_models()
+            if not models:
+                self.log.error("No local models found in Ollama!")
+                return
+
+            current_model = self.cfg.ollama.model
+            if current_model not in models:
+                fallback = models[0]
+                self.log.warning("Configured model '%s' not found. Falling back to '%s'.", 
+                               current_model, fallback)
+                self.cfg.ollama.model = fallback
+        except Exception as e:
+            self.log.error("Failed to validate model fallback: %s", e)
 
     def _tts_bytes(self, reply_text: str) -> tuple[bytes, int]:
         """Return (wav_bytes, sample_rate). Empty wav if TTS fails."""

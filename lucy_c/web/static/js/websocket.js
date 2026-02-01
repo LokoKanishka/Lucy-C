@@ -94,16 +94,23 @@ socket.on('audio', (data) => {
   // Let voice.js coordinate listening/playing (for hands-free)
   window.__lucy_lastAudio = audio;
 
+  audio.play()
+    .then(() => {
+      window.dispatchEvent(new Event('lucy:tts_start'));
+    })
+    .catch(err => console.warn('Audio play failed:', err));
+
   audio.onended = () => {
     if (window.__lucy_lastAudio === audio) window.__lucy_lastAudio = null;
     window.__lucy_ttsEndedAt = performance.now();
+    window.dispatchEvent(new Event('lucy:response_end'));
   };
   audio.onpause = () => {
     if (audio.currentTime > 0 && window.__lucy_lastAudio === audio) window.__lucy_lastAudio = null;
     window.__lucy_ttsEndedAt = performance.now();
+    // Treat pause as end for generic turn-taking (user can interrupt)
+    window.dispatchEvent(new Event('lucy:response_end'));
   };
-
-  audio.play().catch(err => console.warn('Audio play failed:', err));
 });
 
 function updateStatus(message, type = 'info') {

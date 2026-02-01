@@ -15,6 +15,12 @@ class LLMResult:
     text: str
 
 
+class OllamaChatError(Exception):
+    def __init__(self, message: str, original_exc: Exception | None = None):
+        super().__init__(message)
+        self.original_exc = original_exc
+
+
 class OllamaLLM:
     def __init__(self, cfg: OllamaConfig):
         self.cfg = cfg
@@ -61,7 +67,7 @@ class OllamaLLM:
             return LLMResult(text=(data.get("response") or "").strip())
         except Exception as e:
             self.log.error("Ollama generate failed: %s", e)
-            return LLMResult(text=f"Error (Ollama): {e}")
+            raise OllamaChatError(f"Error generando con Ollama: {e}", e)
 
     def chat(self, messages: List[dict], *, model: Optional[str] = None) -> LLMResult:
         """Multi-turn chat completion using /api/chat."""
@@ -78,4 +84,4 @@ class OllamaLLM:
             return LLMResult(text=content.strip())
         except Exception as e:
             self.log.error("Ollama chat failed: %s", e)
-            return LLMResult(text=f"Error (Ollama Chat): {e}")
+            raise OllamaChatError(f"No pude conectar con Ollama o el modelo falló: {e}", e)

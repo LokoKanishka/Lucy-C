@@ -6,3 +6,7 @@ __pycache__/
 
 # runtime data
 /data/
+diagnosis.log
+server_verification*.log
+smoke_results*.txt
+verify_output*.txt

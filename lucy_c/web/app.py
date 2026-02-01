@@ -113,7 +113,13 @@ def create_app() -> tuple[Flask, SocketIO, Moltbot]:
     def on_update_config(data):
         try:
             data = data or {}
+            from lucy_c.pipeline import LOCAL_ONLY
+            
             provider = data.get("llm_provider") or moltbot.cfg.llm.provider
+            if LOCAL_ONLY and provider != "ollama":
+                log.warning("Ignoring request to switch to cloud provider '%s' (LOCAL_ONLY=1)", provider)
+                provider = "ollama"
+                
             model = data.get("ollama_model") or moltbot.cfg.ollama.model
             
             if provider != moltbot.cfg.llm.provider or model != moltbot.cfg.ollama.model:
@@ -121,7 +127,6 @@ def create_app() -> tuple[Flask, SocketIO, Moltbot]:
                 moltbot.switch_brain(model, provider=provider, session_user=session_user)
                 log.info("BRAIN EXCHANGE: %s (%s) -> %s (%s) for %s", 
                          moltbot.cfg.llm.provider, moltbot.cfg.ollama.model, provider, model, session_user)
-                emit("moltbot_log", {"message": f"Brain exchanged: {model}"})
                 emit("status", {"message": f"Brain exchanged: {model} ({provider})", "type": "success"})
             else:
                 emit("status", {"message": "No brain change needed", "type": "info"})
@@ -132,6 +137,7 @@ def create_app() -> tuple[Flask, SocketIO, Moltbot]:
     @socketio.on("chat_message")
     def on_chat_message(data):
         try:
+            # ... rest of the function ...
             text = (data or {}).get("message", "")
             text = (text or "").strip()
             

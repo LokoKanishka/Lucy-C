@@ -1,5 +1,5 @@
 // Dedicated scroll controls (buttons + slider)
-(function(){
+(function () {
   const chat = document.getElementById('chat-messages');
   const btnTop = document.getElementById('scroll-top');
   const btnBottom = document.getElementById('scroll-bottom');
@@ -9,6 +9,31 @@
 
   function maxScrollTop() {
     return Math.max(0, chat.scrollHeight - chat.clientHeight);
+  }
+
+  // State to track if user is reading previous messages
+  let userIsScrolling = false;
+  const AUTOSCROLL_THRESHOLD = 50; // px
+
+  function checkScrollPosition() {
+    if (!chat) return;
+    const distanceToBottom = chat.scrollHeight - (chat.scrollTop + chat.clientHeight);
+    // If user is within threshold of bottom, they follow the conversation
+    userIsScrolling = distanceToBottom > AUTOSCROLL_THRESHOLD;
+
+    // Update FAB visibility
+    if (btnBottom) {
+      btnBottom.style.opacity = userIsScrolling ? '1' : '0.3';
+      btnBottom.style.pointerEvents = userIsScrolling ? 'auto' : 'none';
+    }
+  }
+
+  function scrollToBottom(force = false) {
+    if (!chat) return;
+    // Only scroll if forced OR if the user was already at the bottom
+    if (force || !userIsScrolling) {
+      chat.scrollTop = chat.scrollHeight;
+    }
   }
 
   function updateSliderFromScroll() {
@@ -30,8 +55,7 @@
 
   btnBottom?.addEventListener('click', (e) => {
     e.preventDefault();
-    chat.scrollTop = chat.scrollHeight;
-    requestAnimationFrame(() => { chat.scrollTop = chat.scrollHeight; });
+    scrollToBottom(true);
   });
 
   slider?.addEventListener('input', () => {
@@ -39,10 +63,20 @@
     scrollToPct(pct);
   });
 
-  chat.addEventListener('scroll', updateSliderFromScroll);
-  window.addEventListener('resize', updateSliderFromScroll);
+  chat.addEventListener('scroll', () => {
+    updateSliderFromScroll();
+    checkScrollPosition();
+  });
 
-  // Keep it in sync periodically in case messages append
-  setInterval(updateSliderFromScroll, 250);
-  updateSliderFromScroll();
+  window.addEventListener('resize', () => {
+    updateSliderFromScroll();
+    checkScrollPosition();
+  });
+
+  // Expose for external calls (e.g. from chat.js on new message)
+  window.scrollToBottom = scrollToBottom;
+
+  // Initial check
+  setInterval(checkScrollPosition, 500);
+  checkScrollPosition();
 })();

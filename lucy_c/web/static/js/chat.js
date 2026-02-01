@@ -234,6 +234,8 @@ if (window.lucySocket) {
     addMessage(data.type, data.content);
     if (data.type === 'assistant') {
       updateStatus('Lista', 'success');
+      // Signal start of response (voice should pause)
+      window.dispatchEvent(new Event('lucy:response_start'));
     }
   });
 }

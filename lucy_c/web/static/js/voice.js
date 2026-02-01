@@ -276,6 +276,16 @@ async function startPcmCapture(stream) {
   hfCaptureNode.connect(hfCtx.destination);
 }
 
+const VState = {
+  IDLE: 'IDLE',
+  LISTENING: 'LISTENING',
+  RECORDING: 'RECORDING',
+  SENDING: 'SENDING',
+  SPEAK_WAIT: 'SPEAK_WAIT'
+};
+
+let currentState = VState.IDLE;
+
 async function handsfreeStart() {
   if (hfEnabled) return;
 
@@ -284,6 +294,7 @@ async function handsfreeStart() {
 
   hfEnabled = true;
   currentStream = stream;
+  currentState = VState.LISTENING;
 
   hfSpeechActive = false;
   hfSpeechStartMs = 0;
@@ -303,11 +314,11 @@ async function handsfreeStart() {
     if (!hfEnabled) return;
 
     const now = performance.now();
-
     const a = window.__lucy_lastAudio;
     const isPlaying = !!(a && !a.paused);
     const ttsEndedAt = window.__lucy_ttsEndedAt || 0;
     const inCooldown = (!isPlaying) && ttsEndedAt && ((now - ttsEndedAt) < HF.postTtsCooldownMs);
+    const pending = !!HF.responsePending;
 
     hfAnalyser.getFloatTimeDomainData(buf);
     const rms = computeRMS(buf);
@@ -317,7 +328,7 @@ async function handsfreeStart() {
     const loud = rms >= thr;
     const loudBarge = rms >= HF.bargeInThreshold;
 
-    // Mic meter
+    // Mic meter update (kept same)
     try {
       const bar = document.getElementById('mic-meter-bar');
       const thrEl = document.getElementById('mic-meter-thr');
@@ -329,69 +340,86 @@ async function handsfreeStart() {
       }
     } catch { }
 
-    if (!window.__lucy_lastRmsTs || (now - window.__lucy_lastRmsTs) > 1000) {
-      window.__lucy_lastRmsTs = now;
-      if (!hfSpeechActive && !isPlaying && !inCooldown) {
-        updateStatus(`Hands‑free: escuchando… (rms=${rms.toFixed(3)} thr=${thr.toFixed(3)})`, 'success');
+    // State machine transitions
+    if (isPlaying || pending || inCooldown) {
+      if (currentState !== VState.SPEAK_WAIT) {
+        currentState = VState.SPEAK_WAIT;
+        hfSpeechActive = false;
+        if (isPlaying) updateStatus('Lucy hablando...', 'info');
+        else if (pending) updateStatus('Pensando...', 'info');
       }
-    }
 
-    // Barge-in
-    if (isPlaying && loudBarge) {
-      if (!bargeInStart) bargeInStart = now;
-      if (HF.bargeInMs === 0 || (now - bargeInStart) >= HF.bargeInMs) {
-        try { a.pause(); a.currentTime = 0; } catch { }
-        window.__lucy_lastAudio = null;
+      // Barge-in Logic
+      if (isPlaying && loudBarge) {
+        if (!bargeInStart) bargeInStart = now;
+        if (HF.bargeInMs === 0 || (now - bargeInStart) >= HF.bargeInMs) {
+          try { a.pause(); a.currentTime = 0; } catch { }
+          window.__lucy_lastAudio = null;
+          bargeInStart = 0;
+          currentState = VState.LISTENING; // Break out of SPEAK_WAIT
+          updateStatus('Interrumpido. Te escucho…', 'success');
+        }
+      } else {
         bargeInStart = 0;
-        updateStatus('Interrumpido. Te escucho…', 'success');
       }
     } else {
-      bargeInStart = 0;
-    }
-
-    // While TTS playing or cooldown, don't segment speech
-    if (isPlaying || inCooldown) {
-      hfSpeechActive = false;
-      hfRaf = requestAnimationFrame(loop);
-      return;
-    }
-
-    if (loud) {
-      hfLastLoudMs = now;
-      if (!hfSpeechActive) {
-        hfSpeechActive = true;
-        hfSpeechStartMs = now;
-        // absolute sample index start (with preroll)
-        const nowAbs = hfPcmWriteAbs();
-        const prerollSamples = Math.floor((HF.prerollMs / 1000) * hfPcmRate);
-        hfUtterStartSample = Math.max(0, nowAbs - prerollSamples);
-        updateStatus('Hands‑free: grabando…', 'warning');
+      // Not playing, not pending, not in cooldown
+      if (currentState === VState.SPEAK_WAIT) {
+        currentState = VState.LISTENING;
+        updateStatus('Te escucho...', 'success');
       }
     }
 
-    if (hfSpeechActive) {
-      const speechDur = now - hfSpeechStartMs;
-      const silenceDur = now - hfLastLoudMs;
+    // Process states if we are not locked in SPEAK_WAIT (unless we just barged in)
+    if (currentState !== VState.SPEAK_WAIT) {
+      switch (currentState) {
+        case VState.LISTENING:
+          if (loud) {
+            currentState = VState.RECORDING;
+            hfSpeechStartMs = now;
+            hfLastLoudMs = now;
+            const nowAbs = hfPcmWriteAbs();
+            const prerollSamples = Math.floor((HF.prerollMs / 1000) * hfPcmRate);
+            hfUtterStartSample = Math.max(0, nowAbs - prerollSamples);
+            updateStatus('Escuchando...', 'warning');
+          }
+          break;
 
-      const enoughSpeech = speechDur >= HF.minSpeechMs;
-      const endBySilence = enoughSpeech && silenceDur >= HF.endSilenceMs;
-      const endByMax = speechDur >= HF.maxUtteranceMs;
+        case VState.RECORDING:
+          if (loud) hfLastLoudMs = now;
+          const speechDur = now - hfSpeechStartMs;
+          const silenceDur = now - hfLastLoudMs;
+          const enoughSpeech = speechDur >= HF.minSpeechMs;
 
-      if (endBySilence || endByMax) {
-        hfSpeechActive = false;
-        if (window.showTypingIndicator) window.showTypingIndicator();
-        updateStatus('Pensando…', 'info');
+          if (enoughSpeech && silenceDur >= HF.endSilenceMs) {
+            currentState = VState.SENDING;
+            processAndSend();
+          } else if (speechDur >= HF.maxUtteranceMs) {
+            currentState = VState.SENDING;
+            processAndSend();
+          }
+          break;
 
-        const endAbs = hfPcmWriteAbs();
-        const pcm = ringReadRange(hfUtterStartSample, endAbs);
-        const pcm16k = downsampleLinear(pcm, hfPcmRate, 16000);
-        const wav = encodeWavPCM16(pcm16k, 16000);
-        void sendAudioBytes(wav);
+        case VState.SENDING:
+          // Locking until backend acknowledges something
+          break;
       }
+    }
+
+    function processAndSend() {
+      if (window.showTypingIndicator) window.showTypingIndicator();
+      updateStatus('Enviando...', 'info');
+      const endAbs = hfPcmWriteAbs();
+      const pcm = ringReadRange(hfUtterStartSample, endAbs);
+      const pcm16k = downsampleLinear(pcm, hfPcmRate, 16000);
+      const wav = encodeWavPCM16(pcm16k, 16000);
+      HF.responsePending = true;
+      void sendAudioBytes(wav);
     }
 
     hfRaf = requestAnimationFrame(loop);
   };
+
 
   hfRaf = requestAnimationFrame(loop);
 }
@@ -437,4 +465,57 @@ rawMicToggle?.addEventListener('change', async () => {
   await handsfreeStart();
 });
 
-window.LUCY_HANDSFREE = { HF, handsfreeStart, handsfreeStop };
+window.addEventListener('load', () => {
+  // Init hands-free default (true unless explicitly disabled)
+  const saved = localStorage.getItem('lucy_handsfree');
+  // Default to TRUE if null, otherwise parse string
+  const shouldEnable = saved === null ? true : (saved === 'true');
+
+  if (shouldEnable && handsfreeToggle) {
+    if (!handsfreeToggle.checked) {
+      handsfreeToggle.checked = true;
+      // Small delay to let page stabilize before asking for mic
+      setTimeout(() => handsfreeToggle.dispatchEvent(new Event('change')), 500);
+    }
+  }
+});
+
+// Turn-taking Lifecycle
+let fallbackTimer = null;
+
+window.addEventListener('lucy:response_start', () => {
+  HF.responsePending = true;
+  // If we were recording, stop it
+  if (currentState === VState.RECORDING) {
+    currentState = VState.SPEAK_WAIT;
+  }
+  updateStatus('Lucy está pensando...', 'info');
+
+  // Fallback: if no TTS starts within 2s, assume text-only and resume
+  if (fallbackTimer) clearTimeout(fallbackTimer);
+  fallbackTimer = setTimeout(() => {
+    if (HF.responsePending) {
+      console.log('Voice: No TTS detected, resuming loop...');
+      HF.responsePending = false;
+      fallbackTimer = null;
+    }
+  }, 2000);
+});
+
+window.addEventListener('lucy:tts_start', () => {
+  if (fallbackTimer) {
+    clearTimeout(fallbackTimer);
+    fallbackTimer = null;
+  }
+  HF.responsePending = true;
+  currentState = VState.SPEAK_WAIT;
+  updateStatus('Lucy está hablando...', 'info');
+});
+
+window.addEventListener('lucy:response_end', () => {
+  HF.responsePending = false;
+  if (fallbackTimer) clearTimeout(fallbackTimer);
+  // States will be updated in the loop to LISTENING after cooldown
+});
+
+window.LUCY_HANDSFREE = { HF, handsfreeStart, handsfreeStop, VState };

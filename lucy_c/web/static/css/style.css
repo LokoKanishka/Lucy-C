@@ -60,198 +60,29 @@ body {
 
 .container {
     display: grid;
-    grid-template-columns: 300px 1fr 320px;
+    grid-template-columns: 280px 1fr 300px;
+    /* Slimmer sidebars */
     height: 100vh;
+    min-height: 0;
     gap: 0;
+    overflow: hidden;
 }
 
-/* ===== Glass Sidebar Mixin-style ===== */
-.sidebar-left,
-.sidebar-right {
-    background: var(--bg-surface);
-    backdrop-filter: blur(var(--blur-val));
-    -webkit-backdrop-filter: blur(var(--blur-val));
-    border-right: 1px solid var(--glass-border);
-    display: flex;
-    flex-direction: column;
-    z-index: 20;
-}
+/* ... existing styles ... */
 
-.sidebar-right {
-    border-right: none;
-    border-left: 1px solid var(--glass-border);
-}
-
-/* ===== Left Sidebar ===== */
-.sidebar-header {
-    padding: 2.5rem 1.5rem;
-    border-bottom: 1px solid var(--glass-border);
-}
-
-.sidebar-header h2 {
-    font-size: 1.75rem;
-    font-weight: 800;
-    letter-spacing: -0.04em;
-    background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.2));
-}
-
-.sidebar-nav {
-    flex: 1;
-    padding: 2rem 1rem;
-}
-
-.nav-button {
-    width: 100%;
-    padding: 0.9rem 1.2rem;
-    margin-bottom: 0.75rem;
-    background: transparent;
-    border: 1px solid transparent;
-    color: var(--text-secondary);
-    text-align: left;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    font-size: 1rem;
-    font-weight: 500;
-}
-
-.nav-button:hover {
-    background: rgba(255, 255, 255, 0.04);
-    color: var(--text-primary);
-    border-color: var(--glass-border);
-    transform: translateX(6px);
-}
-
-.nav-button.active {
-    background: linear-gradient(135deg, hsla(var(--h-purple), 85%, 65%, 0.15), hsla(var(--h-blue), 90%, 60%, 0.15));
-    border-color: hsla(var(--h-purple), 80%, 60%, 0.3);
-    color: var(--text-primary);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
-.nav-button.active .icon {
-    filter: drop-shadow(0 0 5px var(--accent-purple));
-}
-
-/* ===== Moltbot Logs ===== */
-.moltbot-logs {
-    margin: 1rem;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--glass-border);
-    display: flex;
-    flex-direction: column;
-    min-height: 200px;
-}
-
-.logs-header {
-    padding: 0.75rem 1rem;
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-muted);
-    border-bottom: 1px solid var(--glass-border);
-    background: rgba(255, 255, 255, 0.02);
-}
-
-.logs-content {
-    padding: 1rem;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7rem;
-    overflow-y: auto;
-    color: var(--text-secondary);
-    line-height: 1.5;
-}
-
-.log-entry {
-    margin-bottom: 0.4rem;
-    padding-left: 0.6rem;
-    border-left: 1px solid var(--accent-purple);
-    opacity: 0.8;
-}
-
-.log-entry.log-success {
-    border-left-color: var(--status-ready);
-}
-
-.log-entry.log-error {
-    border-left-color: var(--status-error);
-}
-
-.log-entry.log-brain {
-    border-left-color: var(--accent-cyan);
-}
-
-/* ===== Main Chat Area ===== */
 .chat-area {
     display: flex;
     flex-direction: column;
     background: radial-gradient(circle at center, rgba(30, 41, 59, 0.2) 0%, transparent 70%);
     position: relative;
     z-index: 10;
+    height: 100%;
+    min-height: 0;
+    /* Prevents flex child from overflowing parent */
+    overflow: hidden;
 }
 
-.chat-header {
-    padding: 1.5rem 3rem;
-    border-bottom: 1px solid var(--glass-border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--bg-surface);
-    backdrop-filter: blur(10px);
-    z-index: 30;
-}
-
-.chat-header h1 {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    letter-spacing: -0.02em;
-}
-
-.status-indicator {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    background: rgba(255, 255, 255, 0.03);
-    padding: 0.6rem 1.2rem;
-    border-radius: 2rem;
-    border: 1px solid var(--glass-border);
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--status-ready);
-    box-shadow: 0 0 12px var(--status-ready);
-    animation: statusPulse 2s infinite ease-in-out;
-}
-
-@keyframes statusPulse {
-
-    0%,
-    100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-
-    50% {
-        opacity: 0.5;
-        transform: scale(1.2);
-    }
-}
+/* ... existing styles ... */
 
 .chat-messages {
     flex: 1;
@@ -261,6 +92,65 @@ body {
     flex-direction: column;
     gap: 2rem;
     scroll-behavior: smooth;
+    min-height: 0;
+    /* Allows shrinking when input grows */
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 1400px) {
+    .container {
+        grid-template-columns: 240px 1fr 260px;
+    }
+
+    .chat-messages {
+        padding: 2.5rem 3rem;
+    }
+}
+
+@media (max-width: 1100px) {
+    .container {
+        grid-template-columns: 220px 1fr 0;
+        /* Hide right sidebar earlier */
+    }
+
+    .chat-messages {
+        padding: 2rem 2.5rem;
+    }
+}
+
+@media (max-height: 800px) {
+    .chat-messages {
+        padding: 2rem 3rem;
+        gap: 1.5rem;
+    }
+
+    .chat-input-container {
+        padding: 1.5rem 3rem;
+    }
+
+    .input-wrapper {
+        padding: 0.8rem 1.2rem;
+    }
+}
+
+@media (max-height: 700px) {
+    .chat-messages {
+        padding: 1rem 2rem;
+        gap: 1rem;
+    }
+
+    .chat-input-container {
+        padding: 1rem 2rem;
+    }
+
+    .welcome-message {
+        padding: 2rem 1.5rem;
+        border-radius: 1.5rem;
+    }
+
+    .welcome-message h2 {
+        font-size: 2rem;
+    }
 }
 
 /* Beautiful scrollbar */
