@@ -53,14 +53,18 @@ providerSelector?.addEventListener('change', () => {
   const isOllamaManaged = (provider === 'ollama' || provider === 'clawdbot');
   modelSelector.disabled = !isOllamaManaged;
   modelSelector.style.opacity = !isOllamaManaged ? '0.5' : '1';
-  lucySocket.emit('update_config', { llm_provider: provider });
+  if (window.lucySocket) {
+    window.lucySocket.emit('update_config', { llm_provider: provider });
+  }
   updateStatus(`Provider changed to ${provider}`, 'success');
 });
 
 modelSelector.addEventListener('change', () => {
   const selectedModel = modelSelector.value;
   currentModelDisplay.textContent = selectedModel;
-  lucySocket.emit('update_config', { ollama_model: selectedModel });
+  if (window.lucySocket) {
+    window.lucySocket.emit('update_config', { ollama_model: selectedModel });
+  }
   updateStatus(`Model changed to ${selectedModel}`, 'success');
 });
 
@@ -95,7 +99,29 @@ scrollTopBtn?.addEventListener('click', (e) => {
 window.scrollChatToBottom = scrollChatToBottom;
 window.scrollChatToTop = scrollChatToTop;
 
+function showTypingIndicator() {
+  const existing = document.getElementById('typing-indicator');
+  if (existing) return;
+
+  const indicator = document.createElement('div');
+  indicator.id = 'typing-indicator';
+  indicator.className = 'typing-indicator assistant';
+  indicator.innerHTML = `
+    <div class="typing-dot"></div>
+    <div class="typing-dot"></div>
+    <div class="typing-dot"></div>
+  `;
+  chatMessages.appendChild(indicator);
+  scrollChatToBottom();
+}
+
+function hideTypingIndicator() {
+  const indicator = document.getElementById('typing-indicator');
+  if (indicator) indicator.remove();
+}
+
 function addMessage(type, content) {
+  hideTypingIndicator();
   const welcomeMsg = chatMessages.querySelector('.welcome-message');
   if (welcomeMsg) welcomeMsg.remove();
 
@@ -114,12 +140,21 @@ function addMessage(type, content) {
   messageDiv.appendChild(contentDiv);
   chatMessages.appendChild(messageDiv);
 
-  chatMessages.scrollTop = chatMessages.scrollHeight;
+  scrollChatToBottom();
 }
 
 async function sendMessage() {
   const message = userInput.value.trim();
-  if (!message) return;
+  if (!message) {
+    updateStatus('Por favor, escribí un mensaje', 'warning');
+    return;
+  }
+
+  const MAX_LENGTH = 2000;
+  if (message.length > MAX_LENGTH) {
+    updateStatus(`Mensaje muy largo (${message.length} chars). Máximo: ${MAX_LENGTH}`, 'warning');
+    return;
+  }
 
   userInput.value = '';
   userInput.style.height = 'auto';
@@ -129,12 +164,14 @@ async function sendMessage() {
 
   if (window.lucySocket && window.lucySocket.connected) {
     lucySocket.emit('chat_message', { message, session_user });
+    showTypingIndicator();
     updateStatus('Thinking...', 'info');
     return;
   }
 
   // HTTP fallback
   addMessage('user', message);
+  showTypingIndicator();
   updateStatus('Thinking (HTTP)...', 'info');
   try {
     const r = await fetch('/api/chat', {
@@ -161,12 +198,14 @@ async function sendMessage() {
   }
 }
 
-lucySocket.on('message', (data) => {
-  addMessage(data.type, data.content);
-  if (data.type === 'assistant') {
-    updateStatus('Ready', 'success');
-  }
-});
+if (window.lucySocket) {
+  window.lucySocket.on('message', (data) => {
+    addMessage(data.type, data.content);
+    if (data.type === 'assistant') {
+      updateStatus('Ready', 'success');
+    }
+  });
+}
 
 sendBtn.addEventListener('click', sendMessage);
 
@@ -182,7 +221,9 @@ userInput.addEventListener('input', () => {
   userInput.style.height = userInput.scrollHeight + 'px';
 });
 
-// expose for voice.js
+// expose for other scripts
 window.getSessionUser = getSessionUser;
+window.showTypingIndicator = showTypingIndicator;
+window.hideTypingIndicator = hideTypingIndicator;
 
 loadModels();

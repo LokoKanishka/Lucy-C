@@ -22,6 +22,7 @@ class ClawdbotLLM:
         self.log = logging.getLogger("LucyC.Clawdbot")
 
     def generate(self, prompt: str, *, model: Optional[str] = None, user: Optional[str] = None) -> LLMResult:
+        """Single-turn generation, but uses user as session_id for continuity."""
         # Use Clawdbot CLI (Opción B del handoff)
         # clawdbot agent --agent <id> --message "<prompt>" --json
         cmd = [
@@ -34,25 +35,28 @@ class ClawdbotLLM:
             "--json",
         ]
 
-        if model:
-            # Note: Current clawdbot agent CLI turn doesn't support --model override flag.
-            # It will use the agent's configured model or the global default.
-            pass
-
+        # Use the session_user as session-id for memory
         if user:
-            # Optionally pass session-id if needed or user context
+            cmd.extend(["--session-id", user])
+
+        if model:
+            # Note: Current clawdbot agent CLI doesn't support easy --model override.
             pass
 
         self.log.info("Running: %s", " ".join(cmd))
         try:
-            res = subprocess.run(cmd, capture_output=True, text=True, check=False)
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
             if res.returncode != 0:
                 self.log.error("Clawdbot CLI failed (exit %d): %s", res.returncode, res.stderr)
-                return LLMResult(text=f"Error Clawdbot: {res.stderr.strip()}")
+                return LLMResult(text=f"Error (Clawdbot CLI): {res.stderr.strip()}")
 
-            data = json.loads(res.stdout)
-            # Response format for 'clawdbot agent' CLI (non-OpenAI)
-            # Result is usually in data["result"]["payloads"][0]["text"]
+            try:
+                data = json.loads(res.stdout)
+            except json.JSONDecodeError as je:
+                self.log.error("Clawdbot CLI returned invalid JSON: %s", res.stdout)
+                return LLMResult(text=f"Error (Clawdbot JSON): {je}")
+
+            # Extract content from result payloads
             try:
                 payloads = data.get("result", {}).get("payloads", [])
                 if payloads:
@@ -62,7 +66,23 @@ class ClawdbotLLM:
             except Exception:
                 content = data.get("reply") or data.get("message") or ""
             
+            if not content:
+                self.log.warning("Clawdbot CLI returned empty content: %s", data)
+                content = "Error: Respuesta vacía de Clawdbot."
+
             return LLMResult(text=str(content).strip())
+        except subprocess.TimeoutExpired:
+            self.log.error("Clawdbot CLI timed out")
+            return LLMResult(text="Error: Clawdbot excedió el tiempo de espera.")
         except Exception as e:
             self.log.exception("Clawdbot CLI exception")
-            return LLMResult(text=f"Error exception: {e}")
+            return LLMResult(text=f"Error (Clawdbot Exception): {e}")
+
+    def chat(self, messages: list[dict], *, model: Optional[str] = None, user: Optional[str] = None) -> LLMResult:
+        """Chat wrapper. Since CLI handles session internally via --session-id, 
+        we just send the last message here."""
+        if not messages:
+            return LLMResult(text="")
+        
+        last_msg = messages[-1].get("content", "")
+        return self.generate(last_msg, model=model, user=user)

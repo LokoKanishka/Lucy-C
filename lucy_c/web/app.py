@@ -33,8 +33,8 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
     # Pull Clawdbot token from env if present (recommended)
     cfg.clawdbot.token = os.environ.get("CLAWDBOT_GATEWAY_TOKEN", cfg.clawdbot.token)
 
-    pipeline = LucyPipeline(cfg)
     history = HistoryStore(default_history_dir())
+    pipeline = LucyPipeline(cfg, history=history)
 
     @app.route("/")
     def index():
@@ -102,26 +102,43 @@ def create_app() -> tuple[Flask, SocketIO, LucyPipeline]:
             data = data or {}
             provider = data.get("llm_provider")
             if provider:
+                old_provider = pipeline.cfg.llm.provider
                 pipeline.cfg.llm.provider = str(provider)
+                log.info("LLM provider changed from %s to %s", old_provider, provider)
                 emit("status", {"message": f"Provider set to {provider}", "type": "success"})
 
             model = data.get("ollama_model")
             if model:
+                old_model = pipeline.cfg.ollama.model
                 pipeline.cfg.ollama.model = model
+                # Ensure the provider instance also sees the update if it relies on its own cfg
                 pipeline.ollama.cfg.model = model
+                log.info("Ollama model changed from %s to %s", old_model, model)
                 emit("status", {"message": f"Model set to {model}", "type": "success"})
 
             if not provider and not model:
                 emit("status", {"message": "No config changes", "type": "info"})
         except Exception as e:
-            emit("error", {"message": str(e)})
+            log.exception("update_config failed")
+            emit("error", {"message": f"Failed to update config: {e}"})
 
     @socketio.on("chat_message")
     def on_chat_message(data):
         try:
             text = (data or {}).get("message", "")
             text = (text or "").strip()
+            
+            # Input validation
             if not text:
+                emit("status", {"message": "Por favor, escribí un mensaje", "type": "warning"})
+                return
+            
+            MAX_INPUT_LENGTH = 2000
+            if len(text) > MAX_INPUT_LENGTH:
+                emit("status", {
+                    "message": f"Mensaje muy largo ({len(text)} chars). Máximo: {MAX_INPUT_LENGTH}",
+                    "type": "warning"
+                })
                 return
 
             emit("message", {"type": "user", "content": text})

@@ -54,7 +54,7 @@ class FasterWhisperASR:
                 audio_f32,
                 beam_size=2,
                 best_of=5,
-                vad_filter=False,
+                vad_filter=True,  # Improved performance on silent parts
                 language=language,
                 task=task,
             )

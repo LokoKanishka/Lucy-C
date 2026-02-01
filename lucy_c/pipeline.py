@@ -8,6 +8,7 @@ from lucy_c.clawdbot_llm import ClawdbotLLM
 from lucy_c.config import LucyConfig
 from lucy_c.mimic3_tts import Mimic3TTS
 from lucy_c.ollama_llm import OllamaLLM
+from lucy_c.history_store import HistoryStore
 from lucy_c.text_normalizer import normalize_for_tts
 
 
@@ -19,8 +20,29 @@ class TurnResult:
     reply_sr: int
 
 
+DEFAULT_SYSTEM_PROMPT = """Sos Lucy, una asistente virtual inteligente y conversacional.
+
+**Personalidad**:
+- Amigable, natural y cercana
+- Concisa pero completa en tus respuestas
+- Hablás en español argentino (vos, decís, tenés, etc.)
+
+**Instrucciones**:
+- Recordá el contexto de la conversación para dar respuestas coherentes
+- Si no estás segura, decilo abiertamente
+- Evitá respuestas muy largas; sé directa y clara
+- Usá un tono conversacional, como si estuvieras hablando con un amigo
+
+**Formato**:
+- No uses markdown ni formato especial en tus respuestas
+- Respondé en texto plano, listo para ser leído en voz alta
+"""
+
+MAX_CONTEXT_CHARS = 4000  # Reserve space for system prompt + current message
+
+
 class LucyPipeline:
-    def __init__(self, cfg: LucyConfig):
+    def __init__(self, cfg: LucyConfig, history: HistoryStore | None = None):
         self.cfg = cfg
         self.log = logging.getLogger("LucyC.Pipeline")
         self.asr = FasterWhisperASR(cfg.asr)
@@ -29,15 +51,95 @@ class LucyPipeline:
         self.clawdbot = ClawdbotLLM(cfg.clawdbot)
 
         self.tts = Mimic3TTS(cfg.tts)
+        self.history = history
+
+    def _get_chat_messages(self, text: str, session_user: str | None = None) -> list[dict]:
+        """Build the message list for the LLM, including history with context window management."""
+        import time
+        start_time = time.time()
+        
+        messages = [{"role": "system", "content": DEFAULT_SYSTEM_PROMPT}]
+        current_msg = {"role": "user", "content": text}
+        
+        # Calculate base size (system + current message)
+        base_size = len(DEFAULT_SYSTEM_PROMPT) + len(text)
+        available_chars = MAX_CONTEXT_CHARS - base_size
+        
+        if self.history and session_user and available_chars > 0:
+            # Fetch more history than we need, then truncate
+            past_items = self.history.read(session_user, limit=10)
+            history_messages = []
+            total_chars = 0
+            
+            # Process in reverse (newest first) to prioritize recent context
+            for item in reversed(past_items):
+                user_content = item.get("transcript") or item.get("user_text") or ""
+                assistant_content = item.get("reply") or ""
+                
+                pair_size = len(user_content) + len(assistant_content)
+                if total_chars + pair_size > available_chars:
+                    self.log.debug("Context truncated: %d chars used of %d available", 
+                                 total_chars, available_chars)
+                    break
+                
+                if user_content:
+                    history_messages.insert(0, {"role": "user", "content": user_content})
+                if assistant_content:
+                    history_messages.insert(0, {"role": "assistant", "content": assistant_content})
+                
+                total_chars += pair_size
+            
+            messages.extend(history_messages)
+            self.log.info("Loaded %d history messages (%d chars)", 
+                         len(history_messages), total_chars)
+        
+        messages.append(current_msg)
+        
+        elapsed = (time.time() - start_time) * 1000
+        self.log.debug("_get_chat_messages took %.1fms", elapsed)
+        
+        return messages
 
     def _generate_reply(self, text: str, *, session_user: str | None = None) -> str:
+        import time
+        start_time = time.time()
+        
         provider = (self.cfg.llm.provider or "ollama").lower()
         model = self.cfg.ollama.model
-        if provider == "clawdbot":
-            if not self.cfg.clawdbot.token:
-                return "Clawdbot token no configurado (CLAWDBOT_GATEWAY_TOKEN)."
-            return self.clawdbot.generate(text, model=model, user=session_user).text
-        return self.ollama.generate(text, model=model).text
+        messages = self._get_chat_messages(text, session_user=session_user)
+        
+        # Retry logic for transient failures
+        max_retries = 2
+        for attempt in range(max_retries + 1):
+            try:
+                if provider == "clawdbot":
+                    result = self.clawdbot.chat(messages, model=model, user=session_user).text
+                else:
+                    result = self.ollama.chat(messages, model=model).text
+                
+                elapsed = (time.time() - start_time) * 1000
+                self.log.info("LLM %s replied in %.0fms (attempt %d)", 
+                            provider, elapsed, attempt + 1)
+                return result
+                
+            except Exception as e:
+                self.log.warning("LLM attempt %d/%d failed: %s", 
+                               attempt + 1, max_retries + 1, e)
+                
+                if attempt < max_retries:
+                    import time as time_module
+                    wait_time = (2 ** attempt) * 0.5  # Exponential backoff
+                    time_module.sleep(wait_time)
+                    continue
+                
+                # Final attempt failed
+                self.log.exception("All LLM retries exhausted")
+                
+                # Friendly fallback message
+                if "connection" in str(e).lower() or "timeout" in str(e).lower():
+                    return "Perdón, parece que tengo problemas para conectarme. ¿Podés intentar de nuevo en un momento?"
+                else:
+                    return "Ups, tuve un problema procesando eso. ¿Podrías reformular tu pregunta?"
 
     def _tts_bytes(self, reply_text: str) -> tuple[bytes, int]:
         """Return (wav_bytes, sample_rate). Empty wav if TTS fails."""

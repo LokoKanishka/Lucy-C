@@ -81,6 +81,7 @@ function pickMimeType() {
 async function sendAudioBytes(uint8) {
   const session_user = (window.getSessionUser && window.getSessionUser()) || null;
   lucySocket.emit('voice_input', { audio: Array.from(uint8), session_user, handsfree: hfEnabled });
+  if (window.showTypingIndicator) window.showTypingIndicator();
   updateStatus('Procesando voz...', 'info');
 }
 
@@ -185,7 +186,7 @@ voiceBtn.addEventListener('mousedown', () => {
   if (hfEnabled) return;
   const a = window.__lucy_lastAudio;
   if (a && !a.paused) {
-    try { a.pause(); a.currentTime = 0; } catch {}
+    try { a.pause(); a.currentTime = 0; } catch { }
     window.__lucy_lastAudio = null;
   }
   updateStatus('Grabando (mantené apretado)...', 'warning');
@@ -319,7 +320,7 @@ async function handsfreeStart() {
         const thrPct = Math.max(0, Math.min(100, (thr / 0.08) * 100));
         thrEl.style.left = thrPct.toFixed(1) + '%';
       }
-    } catch {}
+    } catch { }
 
     if (!window.__lucy_lastRmsTs || (now - window.__lucy_lastRmsTs) > 1000) {
       window.__lucy_lastRmsTs = now;
@@ -332,7 +333,7 @@ async function handsfreeStart() {
     if (isPlaying && loudBarge) {
       if (!bargeInStart) bargeInStart = now;
       if (HF.bargeInMs === 0 || (now - bargeInStart) >= HF.bargeInMs) {
-        try { a.pause(); a.currentTime = 0; } catch {}
+        try { a.pause(); a.currentTime = 0; } catch { }
         window.__lucy_lastAudio = null;
         bargeInStart = 0;
         updateStatus('Interrumpido. Te escucho…', 'success');
@@ -371,6 +372,7 @@ async function handsfreeStart() {
 
       if (endBySilence || endByMax) {
         hfSpeechActive = false;
+        if (window.showTypingIndicator) window.showTypingIndicator();
         updateStatus('Pensando…', 'info');
 
         const endAbs = hfPcmWriteAbs();
@@ -394,14 +396,14 @@ function handsfreeStop() {
   if (hfRaf) cancelAnimationFrame(hfRaf);
   hfRaf = null;
 
-  try { if (hfSource) hfSource.disconnect(); } catch {}
-  try { if (hfCaptureNode) hfCaptureNode.disconnect(); } catch {}
+  try { if (hfSource) hfSource.disconnect(); } catch { }
+  try { if (hfCaptureNode) hfCaptureNode.disconnect(); } catch { }
   hfSource = null;
   hfAnalyser = null;
   hfCaptureNode = null;
 
   if (hfCtx) {
-    hfCtx.close().catch(() => {});
+    hfCtx.close().catch(() => { });
     hfCtx = null;
   }
 

@@ -59,7 +59,14 @@ class LucyConfig:
     @staticmethod
     def load(path: str | Path) -> "LucyConfig":
         p = Path(path)
-        data: Dict[str, Any] = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+        if not p.exists():
+            return LucyConfig()
+            
+        try:
+            data: Dict[str, Any] = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+        except Exception:
+            # Fallback to defaults if YAML is corrupted
+            return LucyConfig()
 
         asr = data.get("asr", {}) or {}
         llm = data.get("llm", {}) or {}
@@ -68,6 +75,7 @@ class LucyConfig:
         tts = data.get("tts", {}) or {}
         audio = data.get("audio", {}) or {}
 
+        # Merge with defaults
         return LucyConfig(
             asr=ASRConfig(**{**ASRConfig().__dict__, **asr}),
             llm=LLMConfig(**{**LLMConfig().__dict__, **llm}),

@@ -21,8 +21,27 @@ class Mimic3TTS:
     def __init__(self, cfg: TTSConfig):
         self.cfg = cfg
         self.log = logging.getLogger("LucyC.Mimic3")
+        self._cache: dict[str, tuple[TTSResult, float]] = {}  # key -> (result, last_access_time)
+        self._cache_hits = 0
+        self._cache_misses = 0
 
     def synthesize(self, text: str) -> TTSResult:
+        import time
+        
+        # Simple cache to avoid re-running mimic3 for identical text
+        cache_key = f"{self.cfg.voice}:{text}"
+        current_time = time.time()
+        
+        if cache_key in self._cache:
+            result, _ = self._cache[cache_key]
+            self._cache[cache_key] = (result, current_time)  # Update access time
+            self._cache_hits += 1
+            hit_rate = self._cache_hits / (self._cache_hits + self._cache_misses) * 100
+            self.log.debug("TTS Cache HIT (%.1f%% hit rate): %s", hit_rate, text[:30])
+            return result
+
+        self._cache_misses += 1
+        
         proc = subprocess.run(
             ["mimic3", "--voice", self.cfg.voice, "--stdout"],
             input=text.encode("utf-8"),
@@ -37,4 +56,19 @@ class Mimic3TTS:
 
         if data.ndim == 2:
             data = data[:, 0]
-        return TTSResult(audio_f32=np.asarray(data, dtype=np.float32).reshape(-1), sample_rate=sr)
+        
+        res = TTSResult(audio_f32=np.asarray(data, dtype=np.float32).reshape(-1), sample_rate=sr)
+        
+        # LRU eviction: Keep cache under limit
+        MAX_CACHE_SIZE = 100
+        if len(self._cache) >= MAX_CACHE_SIZE:
+            # Evict oldest 30% by access time
+            items = sorted(self._cache.items(), key=lambda x: x[1][1])
+            evict_count = int(MAX_CACHE_SIZE * 0.3)
+            for key, _ in items[:evict_count]:
+                del self._cache[key]
+            self.log.info("TTS cache evicted %d items (LRU)", evict_count)
+        
+        self._cache[cache_key] = (res, current_time)
+        
+        return res
