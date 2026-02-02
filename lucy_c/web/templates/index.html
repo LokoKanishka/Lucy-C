@@ -10,6 +10,11 @@
 </head>
 
 <body>
+  <!-- injected: required by websocket.js -->
+  <div id="reconnect-banner" style="display:none; position:fixed; top:0; left:0; right:0; z-index:9999; padding:8px 12px; text-align:center; background:rgba(0,0,0,0.75); color:#fff; font-size:14px;">
+    <span id="reconnect-banner-text">Reconectando…</span>
+  </div>
+
     <div class="container">
         <!-- Panel Izquierdo -->
         <aside class="sidebar-left">
@@ -56,6 +61,9 @@
             </div>
 
             <div id="chat-messages" class="chat-messages" tabindex="0">
+  <!-- injected: required by chat.js -->
+  <div id="typing-indicator" style="display:none;"></div>
+
                 <div class="welcome-message">
                     <h2>Hola, soy Lucy</h2>
                     <p style="margin-bottom: 2rem; font-size: 1.1rem;">Tu asistente virtual inteligente, privada y 100%
@@ -186,6 +194,37 @@
     <script src="{{ url_for('static', filename='js/scroll.js') }}"></script>
     <script src="{{ url_for('static', filename='js/voice.js') }}"></script>
     <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+
+  <!-- injected: JS fatal error overlay -->
+  <div id="js-fatal" style="display:none; position:fixed; left:0; right:0; bottom:0; z-index:100000;
+       background:rgba(140,0,0,0.92); color:#fff; padding:10px 12px; font:13px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+       white-space:pre-wrap; max-height:45vh; overflow:auto; border-top:1px solid rgba(255,255,255,0.25);">
+  </div>
+  <script>
+  (function(){
+    function show(msg){
+      try {
+        var el = document.getElementById('js-fatal');
+        if (!el) return;
+        el.style.display = 'block';
+        el.textContent = msg;
+      } catch (_) {}
+    }
+    window.addEventListener('error', function(e){
+      var msg = "JS ERROR: " + (e && (e.message || (e.error && e.error.message) || String(e)) || "unknown");
+      if (e && e.filename) msg += "\\n" + e.filename + ":" + (e.lineno||"?") + ":" + (e.colno||"?");
+      if (e && e.error && e.error.stack) msg += "\\n\\n" + e.error.stack;
+      show(msg);
+    });
+    window.addEventListener('unhandledrejection', function(e){
+      var r = (e && e.reason) || "";
+      var msg = "JS PROMISE REJECTION: " + (r && (r.message || String(r)) || "unknown");
+      if (r && r.stack) msg += "\\n\\n" + r.stack;
+      show(msg);
+    });
+  })();
+  </script>
+
 </body>
 
 </html>
