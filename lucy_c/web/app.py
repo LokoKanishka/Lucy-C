@@ -6,7 +6,7 @@ import os
 import time
 from pathlib import Path
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, send_from_directory
 from flask_socketio import SocketIO, emit
 
 from lucy_c.audio_codec import decode_audio_bytes_to_f32_mono
@@ -27,8 +27,35 @@ def create_app() -> tuple[Flask, SocketIO, Moltbot]:
 
     socketio = SocketIO(app, cors_allowed_origins="*")
 
+    # Enhanced status callback that emits both generic status and tool events
     def status_callback(message: str, type: str = "info"):
         socketio.emit("status", {"message": message, "type": type})
+        
+        # Detect tool execution and emit structured event
+        tool_badges = {
+            "Mirando pantalla": ("screenshot", "sensor", "👁️"),
+            "Haciendo clic": ("click", "actuator", "🖐️"),
+            "Escribiendo": ("type", "actuator", "⌨️"),
+            "Usando atajo": ("hotkey", "actuator", "⌨️"),
+            "Moviendo el mouse": ("move", "actuator", "🖱️"),
+            "Leyendo archivo": ("read_file", "sensor", "📄"),
+            "Escribiendo archivo": ("write_file", "actuator", "📝"),
+            "Guardando en memoria": ("memorize_file", "memory", "🧠"),
+            "Ejecutando herramientas": ("tool_execution", "actuator", "⚙️"),
+            "Buscando en internet": ("search_web", "sensor", "🔍"),
+            "Abriendo aplicación": ("os_run", "actuator", "🖐️"),
+        }
+        
+        for msg_pattern, (tool_name, category, emoji) in tool_badges.items():
+            if msg_pattern.lower() in message.lower():
+                socketio.emit("tool_event", {
+                    "tool": tool_name,
+                    "category": category,
+                    "emoji": emoji,
+                    "status": "running",
+                    "message": message
+                })
+                break
 
     root = Path(__file__).resolve().parents[2]
     cfg_path = os.environ.get("LUCY_C_CONFIG", str(root / "config" / "config.yaml"))
@@ -56,12 +83,27 @@ def create_app() -> tuple[Flask, SocketIO, Moltbot]:
             # Convert dataclasses to dicts for JSON
             from dataclasses import asdict
             models_data = [asdict(m) for m in detailed]
+            
+            # Add synthetic Clawdbot model if selected
+            if moltbot.cfg.llm.provider == "clawdbot":
+                from lucy_c.models_registry import ModelMetadata
+                claw_meta = ModelMetadata(
+                    name=moltbot.cfg.clawdbot.agent_id or "lucy",
+                    size_gb=0.0,
+                    modified_at="persistent",
+                    family="clawdbot",
+                    is_vision=True
+                )
+                models_data.append(asdict(claw_meta))
         except Exception as e:
             log.exception("Failed to list models")
             return jsonify({"models": [], "current": moltbot.cfg.ollama.model, "error": str(e)})
+        
+        current_model = moltbot.cfg.ollama.model if moltbot.cfg.llm.provider == "ollama" else (moltbot.cfg.clawdbot.agent_id or "lucy")
+        
         return jsonify({
             "models": models_data, 
-            "current": moltbot.cfg.ollama.model, 
+            "current": current_model, 
             "provider": moltbot.cfg.llm.provider
         })
 
@@ -104,6 +146,29 @@ def create_app() -> tuple[Flask, SocketIO, Moltbot]:
         limit = int(request.args.get("limit") or "200")
         items = history.read(session_user=session_user, limit=limit)
         return jsonify({"ok": True, "session_user": session_user, "items": items})
+
+    @app.route("/api/budgets/<filename>")
+    def download_budget(filename):
+        root = Path(__file__).resolve().parents[2]
+        budget_dir = root / "data" / "budgets"
+        return send_from_directory(budget_dir, filename)
+
+    @app.route("/api/stats")
+    def system_stats():
+        import psutil
+        import platform
+        
+        cpu_usage = psutil.cpu_percent()
+        mem = psutil.virtual_memory()
+        
+        return jsonify({
+            "ok": True,
+            "cpu": cpu_usage,
+            "memory_used_gb": round(mem.used / (1024**3), 2),
+            "memory_total_gb": round(mem.total / (1024**3), 2),
+            "os": f"{platform.system()} {platform.release()}",
+            "uptime": time.time() - moltbot._init_time if hasattr(moltbot, "_init_time") else 0
+        })
 
     @socketio.on("connect")
     def on_connect():
@@ -197,11 +262,17 @@ def create_app() -> tuple[Flask, SocketIO, Moltbot]:
     def on_voice_input(data):
         try:
             raw = (data or {}).get("audio")
-            if raw is None:
-                emit("error", {"message": "Missing audio"})
+            if raw is None or (isinstance(raw, (bytes, list)) and len(raw) == 0):
+                log.warning("Received empty audio blob from frontend")
+                emit("status", {"message": "(Audio vacío ignorado)", "type": "warning"})
                 return
-
+            
             raw_bytes = bytes(raw) if isinstance(raw, list) else raw
+            
+            if len(raw_bytes) < 100: # Too small for a valid wav/pcm usually
+                log.warning("Received suspiciously small audio blob (%d bytes)", len(raw_bytes))
+                emit("status", {"message": "(Audio muy corto ignorado)", "type": "warning"})
+                return
 
             emit("status", {"message": "Decoding...", "type": "info"})
             decoded = decode_audio_bytes_to_f32_mono(raw_bytes, target_sr=moltbot.cfg.audio.sample_rate)
