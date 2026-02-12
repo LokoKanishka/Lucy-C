@@ -40,7 +40,7 @@ PY
 fi
 
 # Port selection
-BASE_PORT="${PORT:-5000}"
+BASE_PORT="${PORT:-5050}"
 PORT_CHOSEN="$BASE_PORT"
 
 is_port_free() {

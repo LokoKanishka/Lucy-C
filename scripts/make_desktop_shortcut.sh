@@ -12,7 +12,7 @@ Type=Application
 Name=${NAME}
 Comment=Interfaz local para hablar con Lucy-C (abre el navegador automáticamente)
 Terminal=true
-Exec=bash -lc 'cd \"${ROOT}\" && (./scripts/run_web_ui.sh & pid=\$!; sleep 1; xdg-open http://127.0.0.1:5000 >/dev/null 2>&1 || true; wait \$pid)'
+Exec=bash -lc 'cd \"${ROOT}\" && (./scripts/run_web_ui.sh & pid=\$!; sleep 1; xdg-open http://127.0.0.1:5050 >/dev/null 2>&1 || true; wait \$pid)'
 Icon=utilities-terminal
 Categories=Utility;
 "

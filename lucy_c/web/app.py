@@ -395,7 +395,7 @@ def create_app() -> tuple[Flask, SocketIO, Moltbot]:
 def main():
     logging.basicConfig(level=logging.INFO)
     app, socketio, _moltbot = create_app()
-    port = int(os.environ.get("PORT", "5000"))
+    port = int(os.environ.get("PORT", "5050"))
 
     # eventlet server
     socketio.run(app, host="0.0.0.0", port=port)

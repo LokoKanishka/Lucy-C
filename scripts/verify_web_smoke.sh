@@ -7,7 +7,7 @@ python3 --version
 
 echo
 echo "=== API Check: Models ==="
-MODELS_JSON=$(curl -s http://127.0.0.1:5000/api/models)
+MODELS_JSON=$(curl -s http://127.0.0.1:5050/api/models)
 echo "$MODELS_JSON" | python3 -m json.tool
 
 # Verify current model is in the list
@@ -22,7 +22,7 @@ fi
 
 echo
 echo "=== API Check: Chat ==="
-CHAT_JSON=$(curl -s -X POST http://127.0.0.1:5000/api/chat \
+CHAT_JSON=$(curl -s -X POST http://127.0.0.1:5050/api/chat \
   -H "Content-Type: application/json" \
   -d '{"message": "hola, respondé solo una palabra", "session_user": "smoke-test"}')
 
