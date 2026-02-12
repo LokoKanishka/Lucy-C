@@ -274,6 +274,7 @@ def create_app() -> tuple[Flask, SocketIO, Moltbot]:
             # Input validation
             if not text:
                 emit("status", {"message": "Por favor, escribí un mensaje", "type": "warning"})
+                emit("status", {"message": "Ready", "type": "success"})
                 return
             
             MAX_INPUT_LENGTH = 2000
@@ -282,6 +283,7 @@ def create_app() -> tuple[Flask, SocketIO, Moltbot]:
                     "message": f"Mensaje muy largo ({len(text)} chars). Máximo: {MAX_INPUT_LENGTH}",
                     "type": "warning"
                 })
+                emit("status", {"message": "Ready", "type": "success"})
                 return
 
             emit("message", {"type": "user", "content": text})
@@ -330,6 +332,7 @@ def create_app() -> tuple[Flask, SocketIO, Moltbot]:
             if raw is None or (isinstance(raw, (bytes, list)) and len(raw) == 0):
                 log.warning("Received empty audio blob from frontend")
                 emit("status", {"message": "(Audio vacío ignorado)", "type": "warning"})
+                emit("status", {"message": "Ready", "type": "success"})
                 return
             
             raw_bytes = bytes(raw) if isinstance(raw, list) else raw
@@ -337,6 +340,7 @@ def create_app() -> tuple[Flask, SocketIO, Moltbot]:
             if len(raw_bytes) < 100: # Too small for a valid wav/pcm usually
                 log.warning("Received suspiciously small audio blob (%d bytes)", len(raw_bytes))
                 emit("status", {"message": "(Audio muy corto ignorado)", "type": "warning"})
+                emit("status", {"message": "Ready", "type": "success"})
                 return
 
             emit("status", {"message": "Decoding...", "type": "info"})
@@ -353,6 +357,7 @@ def create_app() -> tuple[Flask, SocketIO, Moltbot]:
                 words = [w for w in (result.transcript or "").strip().split() if w]
                 if len(words) == 0:
                     emit("status", {"message": "(Ignorado: vacío)", "type": "info"})
+                    emit("status", {"message": "Ready", "type": "success"})
                     return
 
             if result.transcript:
