@@ -42,13 +42,15 @@ class ToolRouter:
         Parses [[tool_name(args)]] from text and executes them.
         Returns the original text with tool results appended.
         """
-        # Matches [[ name ( args ) ]]
-        tool_pattern = re.compile(r'\[\[\s*(\w+)\s*\((.*?)\)\s*\]\]')
+        # Matches [[ name ( args ) ]] - allowing dots in names just in case
+        tool_pattern = re.compile(r'\[\[\s*([\w\.]+)\s*\((.*?)\)\s*\]\]')
         matches = tool_pattern.findall(text)
         
         if not matches:
+            self.log.debug("No tool matches found in text.")
             return text
             
+        self.log.info("Parsed %d tool calls: %s", len(matches), matches)
         final_response = text
         for tool_name, args_str in matches:
             self.log.info("Activating tool: %s(%s)", tool_name, args_str)

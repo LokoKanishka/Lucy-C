@@ -59,9 +59,13 @@ async function loadModels() {
         if (data.current) modelSelector.value = data.current;
       }
       if (currentModelDisplay) {
-        currentModelDisplay.textContent = data.current || data.models[0].name;
+        currentModelDisplay.textContent = data.current || (data.models && data.models[0]?.name) || '---';
       }
-      console.log('loadModels: Selector populated');
+      const providerDisplay = document.getElementById('current-provider');
+      if (providerDisplay && data.provider) {
+        providerDisplay.textContent = data.provider.charAt(0).toUpperCase() + data.provider.slice(1);
+      }
+      console.log('loadModels: UI updated');
     } else {
       console.warn('loadModels: No models found or invalid shape');
     }
@@ -77,7 +81,11 @@ modelSelector?.addEventListener('change', () => {
   const selectedModel = modelSelector.value;
   if (currentModelDisplay) currentModelDisplay.textContent = selectedModel;
   if (window.lucySocket) {
-    window.lucySocket.emit('update_config', { ollama_model: selectedModel });
+    const session_user = getSessionUser();
+    window.lucySocket.emit('update_config', {
+      ollama_model: selectedModel,
+      session_user: session_user
+    });
   }
   updateStatus(`Cerebro cambiado a ${selectedModel}`, 'success');
   addLog(`🔄 Cambio de cerebro: ${selectedModel}`, 'brain');

@@ -1,22 +1,39 @@
 from __future__ import annotations
 
 import logging
-import uuid
+import time
 import traceback
-from typing import Dict, List, Any, Optional
+import platform
+import uuid
+from typing import Dict, List, Any, Optional, Callable
 from dataclasses import dataclass
 
 from lucy_c.asr import FasterWhisperASR
 from lucy_c.clawdbot_llm import ClawdbotLLM
 from lucy_c.config import LucyConfig
 from lucy_c.mimic3_tts import Mimic3TTS
+
+# Try to import XTTS (optional)
+try:
+    from lucy_c.services.xtts_service import XTTSService
+    XTTS_AVAILABLE = True
+except ImportError:
+    XTTS_AVAILABLE = False
 from lucy_c.ollama_llm import OllamaLLM
-from lucy_c.history_store import HistoryStore
-from lucy_c.facts_store import FactsStore
+from lucy_c.history_store import HistoryStore, default_history_dir
+from lucy_c.facts_store import FactsStore, default_facts_dir
 from lucy_c.text_normalizer import normalize_for_tts
 from lucy_c.prompts import SYSTEM_PROMPT, PROMPT_VERSION
 from lucy_c.tool_router import ToolRouter, ToolResult
 from lucy_c.tools.file_tools import tool_read_file, tool_write_file
+from lucy_c.tools.business_tools import tool_check_shipping, tool_process_payment, tool_generate_budget_pdf
+from lucy_c.tools.web_tools import tool_web_search, tool_open_url, tool_read_url
+from lucy_c.tools.os_tools import tool_os_run, tool_window_manager
+from lucy_c.tools.vision_ui_tools import tool_scan_ui, tool_click_text, tool_peek_desktop
+from lucy_c.tools.n8n_tools import create_n8n_tools
+from lucy_c.tools.cognitive_tools import create_cognitive_tools
+from lucy_c.rag_engine import MemoryEngine
+from lucy_c.tools.knowledge_tools import create_knowledge_tools
 
 
 @dataclass
@@ -38,12 +55,13 @@ LOCAL_ONLY = os.environ.get("LUCY_LOCAL_ONLY", "1") == "1"
 
 class Moltbot:
     def __init__(self, cfg: LucyConfig, history: HistoryStore | None = None, facts: FactsStore | None = None, status_callback: Callable[[str, str], None] | None = None):
+        self._init_time = time.time()
         self.cfg = cfg
         self.log = logging.getLogger("Moltbot")
         self.log.info("LUCY CORE (Prompt v%s) initializing...", PROMPT_VERSION)
         
-        if LOCAL_ONLY:
-            self.log.info("LUCY_LOCAL_ONLY=1 active. Cloud providers disabled.")
+        if LOCAL_ONLY and self.cfg.llm.provider not in ["ollama", "clawdbot"]:
+            self.log.info("LUCY_LOCAL_ONLY=1 active. Cloud providers disabled. Falling back to ollama.")
             self.cfg.llm.provider = "ollama"
 
         self.asr = FasterWhisperASR(cfg.asr)
@@ -53,19 +71,63 @@ class Moltbot:
         if LOCAL_ONLY:
             self._validate_model_fallback()
 
-        if not LOCAL_ONLY:
-            self.clawdbot = ClawdbotLLM(cfg.clawdbot)
-        else:
-            self.clawdbot = None
+        # Clawdbot is treated as local (CLI wrapper)
+        self.clawdbot = ClawdbotLLM(cfg.clawdbot)
 
-        self.tts = Mimic3TTS(cfg.tts)
-        self.history = history
-        self.facts = facts
+        self.tts = self._initialize_tts(cfg)
+        self.history = history or HistoryStore(default_history_dir())
+        self.facts = facts or FactsStore(default_facts_dir())
         self.status_callback = status_callback
         
         # Tool Orchestration
         self.tool_router = ToolRouter()
+        
+        # Initialize RAG Memory Engine
+        try:
+            self.memory = MemoryEngine(persist_directory="data/chroma_db")
+            self.log.info("RAG Memory Engine initialized.")
+        except Exception as e:
+            self.log.warning("Failed to initialize RAG memory: %s. Memory features disabled.", e)
+            self.memory = None
+        
+        # Virtual Display (optional, for autonomous non-intrusive operation)
+        self.virtual_display = None
+        enable_virtual = os.environ.get("LUCY_VIRTUAL_DISPLAY", "0") == "1"
+        if enable_virtual:
+            try:
+                from lucy_c.services.virtual_display import VirtualDisplay
+                self.virtual_display = VirtualDisplay()
+                if self.virtual_display.start():
+                    self.log.info("Virtual Display started on :99 for non-intrusive operation")
+                else:
+                    self.virtual_display = None
+            except Exception as e:
+                self.log.warning("Virtual Display not available: %s", e)
+                self.virtual_display = None
+        
         self._register_default_tools()
+    
+    def _initialize_tts(self, cfg):
+        """Initialize TTS service with fallback."""
+        provider = getattr(cfg.tts, 'provider', 'mimic3')
+        
+        # Try XTTS if requested
+        if provider == "xtts" and XTTS_AVAILABLE:
+            try:
+                tts = XTTSService(cfg.tts)
+                if tts._enabled:
+                    self.log.info("✅ Using XTTS neural voice (GPU-accelerated)")
+                    return tts
+                else:
+                    self.log.warning("XTTS initialization failed, falling back to Mimic3")
+            except Exception as e:
+                self.log.warning(f"XTTS failed ({e}), falling back to Mimic3")
+        elif provider == "xtts" and not XTTS_AVAILABLE:
+            self.log.warning("XTTS requested but not installed. Install with: pip install TTS torch")
+        
+        # Fallback to Mimic3
+        self.log.info("Using Mimic3 TTS")
+        return Mimic3TTS(cfg.tts)
         
         # Phase 4/5: Sensors and Actuators (The "Body")
         # These are lazy-loaded to ensure Core stability even if dependencies are missing.
@@ -182,6 +244,22 @@ class Moltbot:
             except Exception as e:
                 return ToolResult(False, f"Error en move: {e}", "🖐️ MANOS")
 
+        def tool_get_info(args, ctx):
+            import datetime
+            import platform
+            tipo = args[0].lower() if args else "time"
+            if tipo == "time":
+                now = datetime.datetime.now().strftime("%H:%M:%S")
+                return ToolResult(True, f"La hora actual es: {now}", "⚙️ SISTEMA")
+            elif tipo == "date":
+                today = datetime.datetime.now().strftime("%d/%m/%Y")
+                return ToolResult(True, f"La fecha de hoy es: {today}", "⚙️ SISTEMA")
+            elif tipo == "os":
+                info = f"{platform.system()} {platform.release()}"
+                return ToolResult(True, f"Información del sistema: {info}", "⚙️ SISTEMA")
+            else:
+                return ToolResult(False, f"Tipo de información '{tipo}' no soportado.", "⚠️ ERROR CORE")
+
         self.tool_router.register_tool("remember", tool_remember)
         self.tool_router.register_tool("forget", tool_forget)
         self.tool_router.register_tool("screenshot", tool_screenshot)
@@ -193,29 +271,103 @@ class Moltbot:
         self.tool_router.register_tool("move", tool_move)
         self.tool_router.register_tool("read_file", tool_read_file)
         self.tool_router.register_tool("write_file", tool_write_file)
+        self.tool_router.register_tool("get_info", tool_get_info)
+        self.tool_router.register_tool("check_shipping", tool_check_shipping)
+        self.tool_router.register_tool("process_payment", tool_process_payment)
+        self.tool_router.register_tool("generate_budget_pdf", tool_generate_budget_pdf)
+        self.tool_router.register_tool("search_web", tool_web_search)
+        self.tool_router.register_tool("open_url", tool_open_url)
+        self.tool_router.register_tool("read_url", tool_read_url)
+        self.tool_router.register_tool("os_run", tool_os_run)
+        self.tool_router.register_tool("window_manager", tool_window_manager)
+        self.tool_router.register_tool("windows", tool_window_manager)
+        
+        # Aliases for common model hallucinations
+        self.tool_router.register_tool("browser.open_url", tool_open_url)
+        self.tool_router.register_tool("google_search", tool_web_search)
+        self.tool_router.register_tool("web_search", tool_web_search)
+        self.tool_router.register_tool("browser.run", tool_os_run)
+        
+        # n8n orchestration tools
+        n8n_tools = create_n8n_tools(self.cfg.n8n)
+        self.tool_router.register_tool("trigger_workflow", n8n_tools["trigger_workflow"])
+        
+        # Cognitive delegation tools (require n8n)
+        cognitive_tools = create_cognitive_tools(n8n_tools)
+        self.tool_router.register_tool("ask_sota", cognitive_tools["ask_sota"])
+        
+        # Knowledge/Memory tools (require RAG memory engine)
+        if self.memory:
+            knowledge_tools = create_knowledge_tools(self.memory)
+            self.tool_router.register_tool("memorize_file", knowledge_tools["memorize_file"])
+            self.tool_router.register_tool("recall", knowledge_tools["recall"])
+            self.tool_router.register_tool("memory_stats", knowledge_tools["memory_stats"])
+        
+        # We handle 'assistant' specially if it's used as a generic wrapper
+        def tool_assistant(args, ctx):
+            if not args: return ToolResult(False, "No args for assistant wrapper", "⚠️")
+            # assistant("os_run", "ls") -> tool_os_run(["ls"], ctx)
+            inner_tool = args[0]
+            inner_args = args[1:]
+            if inner_tool in self.tool_router.tools:
+                return self.tool_router.tools[inner_tool](inner_args, ctx)
+            return ToolResult(False, f"Inner tool '{inner_tool}' not found.", "⚠️")
+            
+        self.tool_router.register_tool("assistant", tool_assistant)
+        
+        # Vision UI tools (OCR-based intelligent interaction)
+        self.tool_router.register_tool("scan_ui", tool_scan_ui)
+        self.tool_router.register_tool("click_text", tool_click_text)
+        self.tool_router.register_tool("peek", tool_peek_desktop)
+        self.tool_router.register_tool("peek_desktop", tool_peek_desktop)
+        
+        # Scroll tool
+        def tool_scroll(args, ctx):
+            if not self.hands or not args:
+                return ToolResult(False, "Falta argumento para scroll(clicks).", "🖐️ MANOS")
+            try:
+                clicks = int(args[0])
+                return ToolResult(True, self.hands.scroll(clicks), "🖐️ MANOS")
+            except:
+                return ToolResult(False, "Argumento de scroll debe ser un número.", "🖐️ MANOS")
+        
+        self.tool_router.register_tool("scroll", tool_scroll)
 
     def _execute_tools(self, text: str, *, session_user: str | None = None, context: dict | None = None) -> str:
         """Execute tools found in text and return text with results appended."""
         import re
-        tool_pattern = re.compile(r'\[\[\s*(\w+)\s*\((.*?)\)\s*\]\]')
+        # Updated pattern to support dotted names like browser.open_url
+        tool_pattern = re.compile(r'\[\[\s*([\w.]+)\s*\((.*?)\)\s*\]\]')
         matches = tool_pattern.findall(text)
         
+        if matches:
+            self.log.info("TOOLS DETECTED in response: %s", matches)
+        
         if matches and self.status_callback:
-            # Map tools to user-friendly messages
+            # Map tools to user-friendly messages with better specificity
             messages = {
-                "screenshot": "Mirando pantalla...",
-                "click": "Haciendo clic...",
-                "type": "Escribiendo...",
-                "hotkey": "Usando atajo de teclado...",
-                "move": "Moviendo el mouse...",
-                "read_file": "Leyendo archivo...",
-                "write_file": "Escribiendo archivo...",
-                "remember": "Guardando en memoria...",
-                "forget": "Olvidando...",
+                "screenshot": "Mirando pantalla",
+                "click": "Haciendo clic",
+                "type": "Escribiendo",
+                "hotkey": "Usando atajo de teclado",
+                "move": "Moviendo el mouse",
+                "read_file": "Leyendo archivo",
+                "write_file": "Escribiendo archivo",
+                "remember": "Guardando en memoria",
+                "forget": "Olvidando",
+                "memorize_file": "Guardando en memoria",
+                "recall": "Buscando en memoria",
+                "search_web": "Buscando en internet",
+                "web_search": "Buscando en internet",
+                "read_url": "Leyendo página web",
+                "os_run": "Abriendo aplicación",
+                "browser.run": "Abriendo navegador",
+                "window_manager": "Gestionando ventanas",
+                "windows": "Gestionando ventanas",
             }
             # Pick first tool's message as general status
             first_tool = matches[0][0]
-            msg = messages.get(first_tool, "Ejecutando herramientas...")
+            msg = messages.get(first_tool, "Ejecutando herramientas")
             self.status_callback(msg, "warning")
 
         # Prepare context
@@ -223,7 +375,11 @@ class Moltbot:
         if session_user:
             exec_context["session_user"] = session_user
 
-        return self.tool_router.parse_and_execute(text, exec_context)
+        try:
+            return self.tool_router.parse_and_execute(text, exec_context)
+        except Exception as e:
+            self.log.error("Tool execution failed: %s", e, exc_info=True)
+            return text + f"\n\n[⚠️ ERROR CORE]: Error al ejecutar herramientas: {e}"
 
     def switch_brain(self, model_name: str, provider: str = "ollama", session_user: str | None = None):
         """Perform a formal brain exchange. If session_user is provided, persist the choice."""
@@ -271,13 +427,21 @@ class Moltbot:
                 self.cfg.ollama.model = persisted_model
                 self.ollama.cfg.model = persisted_model
 
+
     def _get_chat_messages(self, text: str, session_user: str | None = None) -> list[dict]:
         """Build the message list for the LLM, including history with context window management."""
         import time
         start_time = time.time()
         
-        # Phase 5: Facts Enrichment
-        system_content = DEFAULT_SYSTEM_PROMPT
+        # Phase 5: Facts Enrichment & Dynamic Context
+        import datetime
+        now = datetime.datetime.now()
+        dynamic_context = f"\n\n[SISTEMA - {now.strftime('%d/%m/%Y %H:%M:%S')}]\n"
+        dynamic_context += f"- Hora actual: {now.strftime('%H:%M')}\n"
+        dynamic_context += f"- SO: {platform.system()} {platform.release()}\n"
+        
+        system_content = DEFAULT_SYSTEM_PROMPT + dynamic_context
+        
         if self.facts and session_user:
             fact_summary = self.facts.get_facts_summary(session_user)
             if fact_summary:
@@ -307,10 +471,10 @@ class Moltbot:
                                  total_chars, available_chars)
                     break
                 
-                if user_content:
-                    history_messages.insert(0, {"role": "user", "content": user_content})
                 if assistant_content:
                     history_messages.insert(0, {"role": "assistant", "content": assistant_content})
+                if user_content:
+                    history_messages.insert(0, {"role": "user", "content": user_content})
                 
                 total_chars += pair_size
             
@@ -334,7 +498,7 @@ class Moltbot:
         self._apply_persisted_brain(session_user)
         
         provider = (self.cfg.llm.provider or "ollama").lower()
-        if LOCAL_ONLY:
+        if LOCAL_ONLY and provider not in ["ollama", "clawdbot"]:
             provider = "ollama"
             
         model = self.cfg.ollama.model

@@ -1,230 +1,323 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucy-C | Asistente de Próxima Generación</title>
+    <title>Lucy-C | Asistente de Proxima Generación</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        lucy: {
+                            purple: '#8b5cf6',
+                            yellow: '#fbbf24',
+                            cyan: '#06b6d4',
+                            magenta: '#d946ef',
+                            dark: '#05070a',
+                            surface: '#0a0c10',
+                            glass: 'rgba(22, 27, 34, 0.45)'
+                        }
+                    },
+                    backdropBlur: {
+                        xs: '2px',
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .glass {
+                @apply bg-lucy-glass backdrop-blur-md border border-white/10 shadow-2xl;
+            }
+            .text-gradient {
+                @apply bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400;
+            }
+            .accent-gradient {
+                @apply bg-gradient-to-br from-lucy-purple to-lucy-yellow;
+            }
+        }
+    </style>
 </head>
 
-<body>
-  <!-- injected: required by websocket.js -->
-  <div id="reconnect-banner" style="display:none; position:fixed; top:0; left:0; right:0; z-index:9999; padding:8px 12px; text-align:center; background:rgba(0,0,0,0.75); color:#fff; font-size:14px;">
-    <span id="reconnect-banner-text">Reconectando…</span>
-  </div>
+<body class="bg-lucy-dark text-slate-200 overflow-hidden h-screen font-['Outfit']">
+    <!-- injected: required by websocket.js -->
+    <div id="reconnect-banner"
+        class="hidden fixed top-0 left-0 right-0 z-[9999] p-2 text-center bg-black/80 text-white text-sm">
+        <span id="reconnect-banner-text">Reconectando…</span>
+    </div>
 
-    <div class="container">
+    <div class="grid grid-cols-[280px_1fr_300px] h-full transition-all duration-500" id="main-container">
         <!-- Panel Izquierdo -->
-        <aside class="sidebar-left">
-            <div class="sidebar-header">
-                <h2>Lucy-C</h2>
-                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: -0.5rem;">Cerebro Local</div>
+        <aside class="flex flex-col bg-lucy-surface border-r border-white/5 z-20">
+            <div class="p-6">
+                <h2 class="text-2xl font-bold tracking-tight text-white">Lucy-C</h2>
+                <div class="text-[0.7rem] text-slate-500 uppercase tracking-widest mt-1">Cerebro Local</div>
             </div>
-            <nav class="sidebar-nav">
-                <button class="nav-button active">
-                    <span class="icon">💬</span>
-                    Chat
+
+            <nav class="flex-1 px-4 space-y-2 mt-4">
+                <button
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-lucy-purple/10 text-white border border-lucy-purple/20 transition-all hover:bg-lucy-purple/20">
+                    <span class="text-xl">💬</span>
+                    <span class="font-medium">Chat</span>
                 </button>
-                <button class="nav-button">
-                    <span class="icon">🎤</span>
-                    Modo Voz
+                <button
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/5 transition-all">
+                    <span class="text-xl">🎤</span>
+                    <span class="font-medium font-medium">Modo Voz</span>
                 </button>
             </nav>
 
-            <div id="moltbot-logs" class="moltbot-logs">
-                <div class="logs-header">Logs de Moltbot</div>
-                <div id="logs-content" class="logs-content">
-                    <div class="log-entry log-success">Moltbot inicializado correctamente.</div>
+            <div id="moltbot-logs" class="mx-4 mb-4 p-4 glass rounded-2xl flex flex-col h-48">
+                <div class="text-[0.65rem] uppercase tracking-wider text-lucy-cyan font-bold mb-3">Moltbot Activity
+                </div>
+                <div id="logs-content" class="flex-1 overflow-y-auto text-[0.8rem] space-y-2 font-mono scrollbar-hide">
+                    <div class="text-emerald-400">Moltbot inicializado.</div>
                 </div>
             </div>
 
-            <div class="sidebar-footer">
-                <div class="model-info">
-                    <span class="label">Cerebro Actual:</span>
-                    <span id="current-model" class="value">Cargando...</span>
-                    <span id="current-provider" class="value"
-                        style="margin-top:0.25rem; color: var(--accent-purple);">Ollama</span>
+            <div class="p-6 border-t border-white/5">
+                <div class="space-y-1">
+                    <span class="text-[0.65rem] uppercase text-slate-500 block">Cerebro Actual</span>
+                    <div id="current-model" class="text-sm font-semibold text-white truncate">Cargando...</div>
+                    <div id="current-provider" class="text-xs text-lucy-purple font-medium">Ollama</div>
                 </div>
             </div>
         </aside>
 
         <!-- Área Central de Chat -->
-        <main class="chat-area" style="position: relative;">
-            <div class="chat-header">
-                <h1>Lucy-C</h1>
-                <div class="status-indicator">
-                    <span class="status-dot"></span>
-                    <span id="status-text">Lista</span>
+        <main
+            class="relative flex flex-col bg-[radial-gradient(circle_at_center,rgba(30,41,59,0.2)_0%,transparent_70%)] overflow-hidden">
+            <header
+                class="flex justify-between items-center px-8 py-6 z-30 bg-lucy-dark/50 backdrop-blur-sm border-b border-white/5">
+                <h1 class="text-xl font-bold text-white tracking-tight">Consola de Operaciones</h1>
+                <div class="flex items-center gap-3 bg-white/5 px-4 py-1.5 rounded-full border border-white/10">
+                    <span id="status-dot"
+                        class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                    <span id="status-text"
+                        class="text-xs font-bold uppercase tracking-wider text-slate-300">Lista</span>
                 </div>
-            </div>
+            </header>
 
-            <div id="chat-messages" class="chat-messages" tabindex="0">
-  <!-- injected: required by chat.js -->
-  <div id="typing-indicator" style="display:none;"></div>
+            <div id="chat-messages" class="flex-1 overflow-y-auto px-8 py-10 space-y-8 scroll-smooth" tabindex="0">
+                <div id="typing-indicator" class="hidden h-8"></div>
 
-                <div class="welcome-message">
-                    <h2>Hola, soy Lucy</h2>
-                    <p style="margin-bottom: 2rem; font-size: 1.1rem;">Tu asistente virtual inteligente, privada y 100%
-                        local.</p>
-                    <ul>
-                        <li>
+                <div class="welcome-message animate-in fade-in slide-in-from-bottom-8 duration-700">
+                    <h2 class="text-5xl font-extrabold text-gradient mb-6">Hola, soy Lucy</h2>
+                    <p class="text-lg text-slate-400 mb-10">Tu asistente virtual inteligente, privada y 100% local.</p>
+                    <div class="grid gap-4 max-w-2xl mx-auto">
+                        <div
+                            class="p-6 glass rounded-3xl text-left transition-all hover:bg-white/5 hover:-translate-y-1 group">
                             <span
-                                style="display: block; font-weight: 700; color: var(--accent-blue); margin-bottom: 0.25rem;">Orquestado
-                                por Moltbot</span>
-                            Arquitectura desacoplada: el modelo piensa, Moltbot actúa.
-                        </li>
-                        <li>
+                                class="text-lucy-yellow font-bold text-sm uppercase tracking-wider block mb-1 group-hover:text-lucy-cyan">Orquestación</span>
+                            <p class="text-slate-300">Arquitectura desacoplada: el modelo piensa, Moltbot actúa sobre el
+                                sistema.</p>
+                        </div>
+                        <div
+                            class="p-6 glass rounded-3xl text-left transition-all hover:bg-white/5 hover:-translate-y-1 group">
                             <span
-                                style="display: block; font-weight: 700; color: var(--accent-purple); margin-bottom: 0.25rem;">Cerebro
-                                Intercambiable</span>
-                            Cambiá de modelo local en cualquier momento sin perder memoria.
-                        </li>
-                        <li>
-                            <span
-                                style="display: block; font-weight: 700; color: var(--accent-cyan); margin-bottom: 0.25rem;">Soberanía
-                                Digital</span>
-                            Tus datos y pensamientos nunca salen de esta máquina.
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="chat-input-container">
-                <div class="scroll-controls" title="Scroll del chat">
-                    <button id="scroll-top" class="scroll-fab" title="Subir">↑</button>
-                    <button id="scroll-bottom" class="scroll-fab" title="Bajar">↓</button>
-                    <input id="scroll-slider" type="range" min="0" max="100" value="100" class="scroll-slider"
-                        title="Scroll" />
-                </div>
-
-                <div class="mic-meter" title="Nivel de micrófono (RMS)">
-                    <div class="mic-meter-bar" id="mic-meter-bar"></div>
-                    <div class="mic-meter-thr" id="mic-meter-thr"></div>
-                </div>
-
-                <div class="input-wrapper">
-                    <textarea id="user-input" placeholder="Escribe un mensaje o pedime que haga algo..."
-                        rows="1"></textarea>
-                    <div class="input-actions">
-                        <button id="voice-btn" class="icon-button" title="Mantener para hablar">
-                            <span>🎤</span>
-                        </button>
-                        <button id="send-btn" class="send-button">
-                            Enviar
-                        </button>
+                                class="text-lucy-purple font-bold text-sm uppercase tracking-wider block mb-1 group-hover:text-lucy-magenta">Cerebro
+                                Dual</span>
+                            <p class="text-slate-300">Intercambio de modelos locales instantáneo sin pérdida de contexto
+                                ni memoria.</p>
+                        </div>
                     </div>
                 </div>
-                <div class="input-hint">
-                    Presioná Enter para enviar, Shift+Enter para nueva línea
+            </div>
+
+            <div class="px-8 pb-8 z-40">
+                <div class="max-w-4xl mx-auto">
+                    <div class="flex flex-col gap-4 relative">
+                        <div class="absolute -top-12 left-0 right-0 flex justify-between px-2">
+                            <div class="flex gap-2">
+                                <button id="scroll-top"
+                                    class="w-8 h-8 rounded-full glass flex items-center justify-center hover:bg-lucy-purple hover:border-transparent transition-all">↑</button>
+                                <button id="scroll-bottom"
+                                    class="w-8 h-8 rounded-full glass flex items-center justify-center hover:bg-lucy-purple hover:border-transparent transition-all">↓</button>
+                            </div>
+                            <div
+                                class="flex items-center gap-2 h-8 glass px-3 rounded-full opacity-0 hover:opacity-100 transition-opacity">
+                                <div class="w-32 h-1 bg-white/10 rounded-full overflow-hidden relative">
+                                    <div id="mic-meter-bar"
+                                        class="absolute inset-y-0 left-0 bg-lucy-cyan w-0 transition-all duration-75">
+                                    </div>
+                                    <div id="mic-meter-thr" class="hidden"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass rounded-[2rem] p-3 focus-within:ring-2 ring-lucy-purple/30 transition-all">
+                            <input type="range" id="scroll-slider" class="hidden">
+                            <textarea id="user-input"
+                                class="w-full bg-transparent border-none text-white text-lg resize-none outline-none px-4 py-2 min-h-[50px] max-h-[200px]"
+                                placeholder="Escribe un mensaje o pedime algo..."></textarea>
+                            <div class="flex justify-between items-center mt-2 px-2 pb-1">
+                                <div class="text-[0.7rem] text-slate-500 font-medium italic">Shift+Enter para nueva
+                                    línea</div>
+                                <div class="flex gap-3">
+                                    <button id="voice-btn"
+                                        class="w-12 h-12 rounded-xl glass flex items-center justify-center hover:bg-lucy-yellow transition-all group"
+                                        title="Pulsar para hablar">
+                                        <span class="text-xl group-hover:scale-110 transition-transform">🎤</span>
+                                    </button>
+                                    <button id="send-btn"
+                                        class="accent-gradient text-white px-8 py-0 rounded-xl font-bold text-sm uppercase tracking-wider hover:shadow-[0_8px_25px_rgba(251,191,36,0.4)] hover:-translate-y-0.5 transition-all">
+                                        Enviar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
 
-        <!-- Panel Derecho (Configuración) -->
-        <aside class="sidebar-right">
-            <div class="settings-header">
-                <h3>Configuración</h3>
+        <!-- Panel Derecho (Configuración y Monitoreo) -->
+        <aside class="flex flex-col bg-lucy-surface border-l border-white/5 overflow-y-auto">
+            <div class="p-8 border-b border-white/5">
+                <h3 class="text-lg font-bold text-white">Configuración</h3>
             </div>
 
-            <div class="settings-section">
-                <h4>Cerebro (Ollama)</h4>
-                <div style="margin-top: 0.5rem;">
-                    <select id="model-selector" class="model-dropdown">
+            <div class="p-8 space-y-8 flex-1">
+                <!-- Cerebro -->
+                <div class="space-y-4">
+                    <h4 class="text-[0.65rem] uppercase font-bold tracking-[0.2em] text-lucy-cyan">Brain Selector</h4>
+                    <select id="model-selector"
+                        class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 ring-lucy-yellow/50 outline-none transition-all cursor-pointer">
                         <option>Cargando modelos...</option>
                     </select>
                 </div>
-                <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-secondary);">
-                    Lucy usa modelos locales vía Ollama. El intercambio es instantáneo.
+
+                <!-- Voz -->
+                <div class="space-y-4">
+                    <h4 class="text-[0.65rem] uppercase font-bold tracking-[0.2em] text-lucy-magenta">Voz & Audio</h4>
+                    <div class="space-y-3">
+                        <label
+                            class="flex justify-between items-center p-3 glass rounded-xl cursor-pointer hover:bg-white/5 transition-all">
+                            <span class="text-sm">Hands-free Auto</span>
+                            <div class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="handsfree-toggle" class="sr-only peer">
+                                <div
+                                    class="w-10 h-5 bg-white/10 rounded-full peer peer-checked:bg-lucy-purple peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all">
+                                </div>
+                            </div>
+                        </label>
+                        <label
+                            class="flex justify-between items-center p-3 glass rounded-xl cursor-pointer hover:bg-white/5 transition-all">
+                            <span class="text-sm">Speak Response</span>
+                            <div class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="auto-speak-toggle" class="sr-only peer" checked>
+                                <div
+                                    class="w-10 h-5 bg-white/10 rounded-full peer peer-checked:bg-lucy-purple peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all">
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Virtual Display (Modo Fantasma) -->
+                <div class="space-y-4">
+                    <h4 class="text-[0.65rem] uppercase font-bold tracking-[0.2em] text-lucy-yellow">Display Virtual
+                    </h4>
+                    <label
+                        class="flex justify-between items-center p-3 glass rounded-xl cursor-pointer hover:bg-white/5 transition-all">
+                        <span class="text-sm">🖥️ Modo Fantasma</span>
+                        <div class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="virtual-display-toggle" class="sr-only peer">
+                            <div
+                                class="w-10 h-5 bg-white/10 rounded-full peer peer-checked:bg-lucy-yellow peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all">
+                            </div>
+                        </div>
+                    </label>
+                    <div id="display-status" class="p-3 glass rounded-xl text-xs space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span id="display-indicator" class="w-2 h-2 rounded-full bg-slate-500"></span>
+                            <span id="display-text" class="font-mono text-slate-400">Display: Principal</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monitoring Dashboard -->
+                <div class="space-y-4 pt-4 border-t border-white/5">
+                    <h4 class="text-[0.65rem] uppercase font-bold tracking-[0.2em] text-emerald-400">Monitoring HUD</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="p-4 glass rounded-2xl">
+                            <span class="text-[0.6rem] text-slate-500 uppercase block mb-1">CPU Usage</span>
+                            <div id="mon-cpu" class="text-xl font-bold font-mono">--%</div>
+                        </div>
+                        <div class="p-4 glass rounded-2xl">
+                            <span class="text-[0.6rem] text-slate-500 uppercase block mb-1">RAM Used</span>
+                            <div id="mon-ram" class="text-xl font-bold font-mono">-- GB</div>
+                        </div>
+                    </div>
+                    <div class="p-4 glass rounded-2xl">
+                        <span class="text-[0.6rem] text-slate-500 uppercase block mb-1">Uptime</span>
+                        <div id="mon-uptime" class="text-sm font-mono text-slate-300">00:00:00</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="settings-section">
-                <h4>Controles de Voz</h4>
-                <div class="toggle-group">
-                    <label class="toggle-item">
-                        <span>Hands‑free (auto listen)</span>
-                        <input type="checkbox" id="handsfree-toggle">
-                    </label>
-                    <label class="toggle-item">
-                        <span>Raw mic (no suppression)</span>
-                        <input type="checkbox" id="raw-mic-toggle">
-                    </label>
-                    <label class="toggle-item">
-                        <span>Auto Speak Responses</span>
-                        <input type="checkbox" id="auto-speak-toggle" checked>
-                    </label>
-                </div>
-                <div style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4;">
-                    En modo hands-free: hablás, pausás, y se envía solo.
-                </div>
-            </div>
-
-            <div class="settings-section">
-                <h4>Atajos de Teclado</h4>
-                <div
-                    style="font-size: 0.8rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.6rem;">
-                    <div style="display: flex; justify-content: space-between;">
-                        <span>Foco en Chat</span>
-                        <kbd
-                            style="color: var(--text-secondary); background: rgba(255,255,255,0.05); padding: 2px 4px; border-radius: 4px;">Esc</kbd>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span>Activar Mic</span>
-                        <kbd
-                            style="color: var(--text-secondary); background: rgba(255,255,255,0.05); padding: 2px 4px; border-radius: 4px;">Ctrl+M</kbd>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span>Manos Libres</span>
-                        <kbd
-                            style="color: var(--text-secondary); background: rgba(255,255,255,0.05); padding: 2px 4px; border-radius: 4px;">Ctrl+H</kbd>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span>Limpiar Vista</span>
-                        <kbd
-                            style="color: var(--text-secondary); background: rgba(255,255,255,0.05); padding: 2px 4px; border-radius: 4px;">Ctrl+L</kbd>
-                    </div>
+            <div class="px-8 py-6 border-t border-white/5 opacity-40 hover:opacity-100 transition-opacity">
+                <div class="grid grid-cols-2 gap-y-2 text-[0.7rem] font-medium uppercase tracking-tight">
+                    <span class="text-slate-500">Chat Focus</span> <span class="text-right">Esc</span>
+                    <span class="text-slate-500">Mic Toggle</span> <span class="text-right">Ctrl+M</span>
+                    <span class="text-slate-500">Reset View</span> <span class="text-right">Ctrl+L</span>
                 </div>
             </div>
         </aside>
     </div>
 
+    <!-- Monitoring Script -->
+    <script>
+        function updateStats() {
+            fetch('/api/stats')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.ok) {
+                        document.getElementById('mon-cpu').textContent = data.cpu + '%';
+                        document.getElementById('mon-ram').textContent = data.memory_used_gb + ' GB';
+
+                        // Uptime convert
+                        const up = Math.floor(data.uptime);
+                        const h = Math.floor(up / 3600);
+                        const m = Math.floor((up % 3600) / 60);
+                        const s = up % 60;
+                        document.getElementById('mon-uptime').textContent =
+                            `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                    }
+                })
+                .catch(err => console.error("Stats update failed", err));
+        }
+        setInterval(updateStats, 2000);
+        updateStats();
+    </script>
+
     <script src="{{ url_for('static', filename='js/websocket.js') }}"></script>
     <script src="{{ url_for('static', filename='js/scroll.js') }}"></script>
     <script src="{{ url_for('static', filename='js/voice.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/display.js') }}"></script>
     <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 
-  <!-- injected: JS fatal error overlay -->
-  <div id="js-fatal" style="display:none; position:fixed; left:0; right:0; bottom:0; z-index:100000;
-       background:rgba(140,0,0,0.92); color:#fff; padding:10px 12px; font:13px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-       white-space:pre-wrap; max-height:45vh; overflow:auto; border-top:1px solid rgba(255,255,255,0.25);">
-  </div>
-  <script>
-  (function(){
-    function show(msg){
-      try {
-        var el = document.getElementById('js-fatal');
-        if (!el) return;
-        el.style.display = 'block';
-        el.textContent = msg;
-      } catch (_) {}
-    }
-    window.addEventListener('error', function(e){
-      var msg = "JS ERROR: " + (e && (e.message || (e.error && e.error.message) || String(e)) || "unknown");
-      if (e && e.filename) msg += "\\n" + e.filename + ":" + (e.lineno||"?") + ":" + (e.colno||"?");
-      if (e && e.error && e.error.stack) msg += "\\n\\n" + e.error.stack;
-      show(msg);
-    });
-    window.addEventListener('unhandledrejection', function(e){
-      var r = (e && e.reason) || "";
-      var msg = "JS PROMISE REJECTION: " + (r && (r.message || String(r)) || "unknown");
-      if (r && r.stack) msg += "\\n\\n" + r.stack;
-      show(msg);
-    });
-  })();
-  </script>
-
+    <!-- injected: JS fatal error overlay -->
+    <div id="js-fatal"
+        class="hidden fixed bottom-0 left-0 right-0 z-[100000] bg-red-900/90 text-white p-3 font-mono text-xs whitespace-pre-wrap max-h-[45vh] overflow-auto border-t border-white/20">
+    </div>
+    <script>
+        (function () {
+            function show(msg) {
+                const el = document.getElementById('js-fatal');
+                if (el) { el.classList.remove('hidden'); el.textContent = msg; }
+            }
+            window.addEventListener('error', e => show("JS ERROR: " + (e.message || e) + "\n" + (e.filename || "") + ":" + (e.lineno || "")));
+            window.addEventListener('unhandledrejection', e => show("JS PROMISE Error: " + (e.reason || e)));
+        })();
+    </script>
 </body>
 
 </html>

@@ -161,14 +161,79 @@ def create_app() -> tuple[Flask, SocketIO, Moltbot]:
         cpu_usage = psutil.cpu_percent()
         mem = psutil.virtual_memory()
         
+        # Try to get GPU info
+        gpu_info = "N/A"
+        try:
+            import GPUtil
+            gpus = GPUtil.getGPUs()
+            if gpus:
+                gpu_info = f"{gpus[0].name} ({gpus[0].memoryUsed / gpus[0].memoryTotal * 100:.1f}%)"
+        except Exception:
+            pass
+        
         return jsonify({
             "ok": True,
             "cpu": cpu_usage,
+            "gpu": gpu_info,
             "memory_used_gb": round(mem.used / (1024**3), 2),
             "memory_total_gb": round(mem.total / (1024**3), 2),
             "os": f"{platform.system()} {platform.release()}",
             "uptime": time.time() - moltbot._init_time if hasattr(moltbot, "_init_time") else 0
         })
+    
+    @app.route("/api/settings/virtual_display", methods=["GET"])
+    def get_virtual_display_status():
+        """Get current virtual display status."""
+        enabled = os.environ.get("LUCY_VIRTUAL_DISPLAY") == "1"
+        running = moltbot.virtual_display and moltbot.virtual_display.is_running() if hasattr(moltbot, 'virtual_display') else False
+        display_num = moltbot.virtual_display.display if hasattr(moltbot, 'virtual_display') and moltbot.virtual_display else None
+        
+        return jsonify({
+            "enabled": enabled,
+            "running": running,
+            "display": display_num
+        })
+    
+    @app.route("/api/settings/virtual_display", methods=["POST"])
+    def toggle_virtual_display():
+        """Toggle virtual display on/off."""
+        data = request.get_json()
+        enabled = data.get("enabled", False)
+        
+        try:
+            if enabled:
+                os.environ["LUCY_VIRTUAL_DISPLAY"] = "1"
+                
+                # Initialize or start virtual display
+                if not hasattr(moltbot, 'virtual_display') or not moltbot.virtual_display:
+                    from lucy_c.services.virtual_display import VirtualDisplay
+                    moltbot.virtual_display = VirtualDisplay()
+                
+                if not moltbot.virtual_display.is_running():
+                    success = moltbot.virtual_display.start()
+                    status = "active" if success else "failed"
+                else:
+                    status = "active"
+            else:
+                os.environ["LUCY_VIRTUAL_DISPLAY"] = "0"
+                
+                if hasattr(moltbot, 'virtual_display') and moltbot.virtual_display:
+                    if moltbot.virtual_display.is_running():
+                        moltbot.virtual_display.stop()
+                status = "inactive"
+            
+            return jsonify({
+                "success": True,
+                "display_mode": "virtual" if enabled else "physical",
+                "status": status
+            })
+            
+        except Exception as e:
+            log.error(f"Failed to toggle virtual display: {e}")
+            return jsonify({
+                "success": False,
+                "error": str(e)
+            }), 500
 
     @socketio.on("connect")
     def on_connect():

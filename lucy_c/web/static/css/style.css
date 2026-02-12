@@ -5,12 +5,12 @@
 :root {
     /* Color Palette - Vibrant HSL */
     --h-purple: 258;
-    --h-blue: 217;
+    --h-yellow: 48;
     --h-cyan: 188;
     --h-magenta: 316;
 
     --accent-purple: hsl(var(--h-purple), 85%, 65%);
-    --accent-blue: hsl(var(--h-blue), 90%, 60%);
+    --accent-yellow: hsl(var(--h-yellow), 95%, 60%);
     --accent-cyan: hsl(var(--h-cyan), 90%, 55%);
     --accent-magenta: hsl(var(--h-magenta), 80%, 60%);
 
@@ -51,7 +51,7 @@ body {
     background-color: var(--bg-darker);
     background-image:
         radial-gradient(circle at 0% 0%, hsla(var(--h-purple), 30%, 15%, 0.15) 0%, transparent 40%),
-        radial-gradient(circle at 100% 100%, hsla(var(--h-blue), 30%, 15%, 0.15) 0%, transparent 40%);
+        radial-gradient(circle at 100% 100%, hsla(var(--h-yellow), 30%, 15%, 0.15) 0%, transparent 40%);
     color: var(--text-primary);
     height: 100vh;
     overflow: hidden;
@@ -262,7 +262,7 @@ body {
 
 .message.user .message-header {
     text-align: right;
-    color: var(--accent-blue);
+    color: var(--accent-yellow);
 }
 
 .message.assistant .message-header {
@@ -279,7 +279,7 @@ body {
 }
 
 .message.user .message-content {
-    background: linear-gradient(135deg, hsl(var(--h-blue), 80%, 45%), hsl(var(--h-blue), 90%, 55%));
+    background: linear-gradient(135deg, hsl(var(--h-yellow), 80%, 45%), hsl(var(--h-yellow), 90%, 55%));
     color: white;
     border-bottom-right-radius: 0.4rem;
 }
@@ -364,13 +364,13 @@ body {
 }
 
 .icon-button:hover {
-    background: var(--accent-blue);
+    background: var(--accent-yellow);
     color: white;
     transform: scale(1.05);
 }
 
 .send-button {
-    background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-yellow));
     color: white;
     border: none;
     padding: 0.7rem 1.8rem;
@@ -443,7 +443,7 @@ body {
 }
 
 .model-dropdown:hover {
-    border-color: var(--accent-blue);
+    border-color: var(--accent-yellow);
 }
 
 .toggle-group {
@@ -574,8 +574,8 @@ input[type="checkbox"]:checked::before {
 }
 
 .tool-result-badge.tool-security {
-    border-left-color: var(--accent-blue);
-    background: rgba(59, 130, 246, 0.05);
+    border-left-color: var(--accent-yellow);
+    background: hsla(var(--h-yellow), 95%, 60%, 0.05);
 }
 
 .message-content p {

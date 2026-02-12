@@ -54,3 +54,10 @@ class SystemHands:
         size = pyautogui.size()
         pos = pyautogui.position()
         return f"Pantalla: {size.width}x{size.height}, Mouse: {pos.x},{pos.y}"
+    
+    def scroll(self, clicks: int):
+        """Scroll up (positive) or down (negative)."""
+        self.log.info("Scrolling %d clicks", clicks)
+        pyautogui.scroll(clicks)
+        direction = "arriba" if clicks > 0 else "abajo"
+        return f"Scrolleé {abs(clicks)} clicks hacia {direction}"

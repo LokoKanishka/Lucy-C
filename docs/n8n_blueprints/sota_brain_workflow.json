@@ -1,0 +1,115 @@
+{
+    "name": "Lucy SOTA Brain",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "lucy-ask-sota",
+                "responseMode": "responseNode",
+                "options": {}
+            },
+            "id": "webhook-sota",
+            "name": "Webhook (Lucy Request)",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1.1,
+            "position": [
+                250,
+                300
+            ],
+            "webhookId": "lucy-sota-webhook"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://openrouter.ai/api/v1/chat/completions",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "HTTP-Referer",
+                            "value": "https://lucy-c.local"
+                        },
+                        {
+                            "name": "X-Title",
+                            "value": "Lucy-C SOTA Brain"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": []
+                },
+                "specifyBody": "json",
+                "jsonBody": "={ \n  \"model\": \"google/gemini-2.0-flash-001\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Sos un asistente experto y altamente capaz. Respondé de forma clara, precisa y completa en español argentino.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.body.prompt }}\"\n    }\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 2000\n}",
+                "options": {}
+            },
+            "id": "http-openrouter",
+            "name": "OpenRouter (SOTA Model)",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                450,
+                300
+            ],
+            "credentials": {
+                "httpHeaderAuth": {
+                    "id": "PLACEHOLDER_OPENROUTER_API_KEY",
+                    "name": "OpenRouter API Key"
+                }
+            },
+            "notes": "IMPORTANTE: Debes configurar tu API Key de OpenRouter en las credenciales. Alternativas:\n- OpenAI (gpt-4-turbo)\n- Anthropic Claude (claude-3-opus)\n- Google AI Studio (gemini-pro)"
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{ \n  {\n    \"success\": true,\n    \"response\": $json.choices[0].message.content,\n    \"model\": $json.model,\n    \"tokens\": $json.usage.total_tokens\n  }\n}}",
+                "options": {}
+            },
+            "id": "respond-webhook",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.1,
+            "position": [
+                650,
+                300
+            ]
+        }
+    ],
+    "pinData": {},
+    "connections": {
+        "Webhook (Lucy Request)": {
+            "main": [
+                [
+                    {
+                        "node": "OpenRouter (SOTA Model)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenRouter (SOTA Model)": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "lucy-sota-v1",
+    "meta": {
+        "instanceId": "lucy-c-local"
+    },
+    "id": "lucy-sota-brain",
+    "tags": []
+}

@@ -115,7 +115,8 @@ socket.on('audio', (data) => {
 
 function updateStatus(message, type = 'info') {
   const statusText = document.getElementById('status-text');
-  const statusDot = document.querySelector('.status-dot');
+  const statusDot = document.getElementById('status-dot');
+  if (!statusText || !statusDot) return;
   statusText.textContent = message;
 
   if (type === 'success') statusDot.style.background = '#10b981';

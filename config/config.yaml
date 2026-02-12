@@ -31,3 +31,9 @@ tts:
 # Audio
 audio:
   sample_rate: 16000
+
+# n8n Orchestration
+n8n:
+  base_url: "http://localhost:5678"
+  webhook_prefix: "lucy-"
+  timeout: 30.0
