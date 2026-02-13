@@ -37,6 +37,10 @@ def tool_os_run(args, ctx):
     
     raw_cmd = args[0].strip()
     
+    # Expand ~ and environment variables
+    import os
+    raw_cmd = os.path.expandvars(os.path.expanduser(raw_cmd))
+    
     # Check for alias
     cmd_parts = shlex.split(raw_cmd)
     executable = cmd_parts[0] if cmd_parts else ""
@@ -49,12 +53,12 @@ def tool_os_run(args, ctx):
 
     log.info("Executing OS command: %s", raw_cmd)
     try:
-        # For GUI apps or background tasks, using Popen might be better if no output expected immediately
-        # But for 'ls' etc, we want results.
-        # Check if it looks like a GUI app launch
-        is_gui = any(app in raw_cmd for app in APP_MAP.values()) or "firefox" in raw_cmd
+        # Check if it looks like a GUI app launch (xdg-open, firefox, etc)
+        is_gui = any(app in raw_cmd for app in APP_MAP.values()) or "firefox" in raw_cmd or "xdg-open" in raw_cmd
         
         if is_gui:
+            # We use shell=True for complex commands with expansion if needed, 
+            # but shlex.split + Popen is safer. However, expanduser already did the heavy lifting.
             subprocess.Popen(shlex.split(raw_cmd), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return ToolResult(True, f"Ejecutando '{raw_cmd}' en segundo plano.", "🖥️ OS")
         else:

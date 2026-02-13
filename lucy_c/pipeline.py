@@ -287,6 +287,7 @@ class Moltbot:
         self.tool_router.register_tool("google_search", tool_web_search)
         self.tool_router.register_tool("web_search", tool_web_search)
         self.tool_router.register_tool("browser.run", tool_os_run)
+        self.tool_router.register_tool("browser.screenshot", tool_screenshot)
         
         # n8n orchestration tools
         n8n_tools = create_n8n_tools(self.cfg.n8n)
@@ -306,12 +307,20 @@ class Moltbot:
         # We handle 'assistant' specially if it's used as a generic wrapper
         def tool_assistant(args, ctx):
             if not args: return ToolResult(False, "No args for assistant wrapper", "⚠️")
-            # assistant("os_run", "ls") -> tool_os_run(["ls"], ctx)
+            
             inner_tool = args[0]
             inner_args = args[1:]
+            
+            # Robustness: sometimes models put the tool name in quotes or as a key
+            if not inner_tool and inner_args:
+                # Handle case where first arg is empty but more follow
+                inner_tool = inner_args[0]
+                inner_args = inner_args[1:]
+
             if inner_tool in self.tool_router.tools:
                 return self.tool_router.tools[inner_tool](inner_args, ctx)
-            return ToolResult(False, f"Inner tool '{inner_tool}' not found.", "⚠️")
+                
+            return ToolResult(False, f"Inner tool '{inner_tool}' not found or invalid.", "⚠️")
             
         self.tool_router.register_tool("assistant", tool_assistant)
         
