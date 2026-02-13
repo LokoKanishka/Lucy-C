@@ -1,0 +1,248 @@
+[run_web_ui] Starting Lucy-C Web UI: http://127.0.0.1:5050
+INFO:Moltbot:LUCY CORE (Prompt v1.0.0) initializing...
+INFO:httpx:HTTP Request: GET http://127.0.0.1:11434/api/tags "HTTP/1.1 200 OK"
+INFO:Moltbot:Using Mimic3 TTS
+WARNING:LucyC.Mimic3:mimic3 executable not found in PATH or .venv. Voice output will be disabled.
+INFO:LucyC.RAG:Loading embedding model (all-MiniLM-L6-v2)...
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: cuda:0
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/README.md "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/sentence_bert_config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/sentence_bert_config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights:   1%|          | 1/103 [00:00<00:00, 85598.04it/s, Materializing param=embeddings.LayerNorm.bias]Loading weights:   1%|          | 1/103 [00:00<00:00, 4604.07it/s, Materializing param=embeddings.LayerNorm.bias] Loading weights:   2%|▏         | 2/103 [00:00<00:00, 6775.94it/s, Materializing param=embeddings.LayerNorm.weight]Loading weights:   2%|▏         | 2/103 [00:00<00:00, 5422.50it/s, Materializing param=embeddings.LayerNorm.weight]Loading weights:   3%|▎         | 3/103 [00:00<00:00, 6235.34it/s, Materializing param=embeddings.position_embeddings.weight]Loading weights:   3%|▎         | 3/103 [00:00<00:00, 4828.44it/s, Materializing param=embeddings.position_embeddings.weight]Loading weights:   4%|▍         | 4/103 [00:00<00:00, 5662.24it/s, Materializing param=embeddings.token_type_embeddings.weight]Loading weights:   4%|▍         | 4/103 [00:00<00:00, 4565.23it/s, Materializing param=embeddings.token_type_embeddings.weight]Loading weights:   5%|▍         | 5/103 [00:00<00:00, 4759.76it/s, Materializing param=embeddings.word_embeddings.weight]      Loading weights:   5%|▍         | 5/103 [00:00<00:00, 4613.18it/s, Materializing param=embeddings.word_embeddings.weight]Loading weights:   6%|▌         | 6/103 [00:00<00:00, 4568.13it/s, Materializing param=encoder.layer.0.attention.output.LayerNorm.bias]Loading weights:   6%|▌         | 6/103 [00:00<00:00, 4051.16it/s, Materializing param=encoder.layer.0.attention.output.LayerNorm.bias]Loading weights:   7%|▋         | 7/103 [00:00<00:00, 4307.53it/s, Materializing param=encoder.layer.0.attention.output.LayerNorm.weight]Loading weights:   7%|▋         | 7/103 [00:00<00:00, 4161.02it/s, Materializing param=encoder.layer.0.attention.output.LayerNorm.weight]Loading weights:   8%|▊         | 8/103 [00:00<00:00, 4495.50it/s, Materializing param=encoder.layer.0.attention.output.dense.bias]      Loading weights:   8%|▊         | 8/103 [00:00<00:00, 4429.04it/s, Materializing param=encoder.layer.0.attention.output.dense.bias]Loading weights:   9%|▊         | 9/103 [00:00<00:00, 4615.32it/s, Materializing param=encoder.layer.0.attention.output.dense.weight]Loading weights:   9%|▊         | 9/103 [00:00<00:00, 4522.43it/s, Materializing param=encoder.layer.0.attention.output.dense.weight]Loading weights:  10%|▉         | 10/103 [00:00<00:00, 4758.14it/s, Materializing param=encoder.layer.0.attention.self.key.bias]     Loading weights:  10%|▉         | 10/103 [00:00<00:00, 4308.04it/s, Materializing param=encoder.layer.0.attention.self.key.bias]Loading weights:  11%|█         | 11/103 [00:00<00:00, 4576.66it/s, Materializing param=encoder.layer.0.attention.self.key.weight]Loading weights:  11%|█         | 11/103 [00:00<00:00, 4523.71it/s, Materializing param=encoder.layer.0.attention.self.key.weight]Loading weights:  12%|█▏        | 12/103 [00:00<00:00, 4823.35it/s, Materializing param=encoder.layer.0.attention.self.query.bias]Loading weights:  12%|█▏        | 12/103 [00:00<00:00, 4677.23it/s, Materializing param=encoder.layer.0.attention.self.query.bias]Loading weights:  13%|█▎        | 13/103 [00:00<00:00, 4814.65it/s, Materializing param=encoder.layer.0.attention.self.query.weight]Loading weights:  13%|█▎        | 13/103 [00:00<00:00, 4765.42it/s, Materializing param=encoder.layer.0.attention.self.query.weight]Loading weights:  14%|█▎        | 14/103 [00:00<00:00, 4869.01it/s, Materializing param=encoder.layer.0.attention.self.value.bias]  Loading weights:  14%|█▎        | 14/103 [00:00<00:00, 4722.18it/s, Materializing param=encoder.layer.0.attention.self.value.bias]Loading weights:  15%|█▍        | 15/103 [00:00<00:00, 4734.69it/s, Materializing param=encoder.layer.0.attention.self.value.weight]Loading weights:  15%|█▍        | 15/103 [00:00<00:00, 4688.47it/s, Materializing param=encoder.layer.0.attention.self.value.weight]Loading weights:  16%|█▌        | 16/103 [00:00<00:00, 4802.07it/s, Materializing param=encoder.layer.0.intermediate.dense.bias]    Loading weights:  16%|█▌        | 16/103 [00:00<00:00, 4761.18it/s, Materializing param=encoder.layer.0.intermediate.dense.bias]Loading weights:  17%|█▋        | 17/103 [00:00<00:00, 4971.98it/s, Materializing param=encoder.layer.0.intermediate.dense.weight]Loading weights:  17%|█▋        | 17/103 [00:00<00:00, 4792.52it/s, Materializing param=encoder.layer.0.intermediate.dense.weight]Loading weights:  17%|█▋        | 18/103 [00:00<00:00, 4968.57it/s, Materializing param=encoder.layer.0.output.LayerNorm.bias]    Loading weights:  17%|█▋        | 18/103 [00:00<00:00, 4834.00it/s, Materializing param=encoder.layer.0.output.LayerNorm.bias]Loading weights:  18%|█▊        | 19/103 [00:00<00:00, 4969.86it/s, Materializing param=encoder.layer.0.output.LayerNorm.weight]Loading weights:  18%|█▊        | 19/103 [00:00<00:00, 4870.84it/s, Materializing param=encoder.layer.0.output.LayerNorm.weight]Loading weights:  19%|█▉        | 20/103 [00:00<00:00, 4977.81it/s, Materializing param=encoder.layer.0.output.dense.bias]      Loading weights:  19%|█▉        | 20/103 [00:00<00:00, 4911.65it/s, Materializing param=encoder.layer.0.output.dense.bias]Loading weights:  20%|██        | 21/103 [00:00<00:00, 5065.88it/s, Materializing param=encoder.layer.0.output.dense.weight]Loading weights:  20%|██        | 21/103 [00:00<00:00, 4856.66it/s, Materializing param=encoder.layer.0.output.dense.weight]Loading weights:  21%|██▏       | 22/103 [00:00<00:00, 4915.29it/s, Materializing param=encoder.layer.1.attention.output.LayerNorm.bias]Loading weights:  21%|██▏       | 22/103 [00:00<00:00, 4860.91it/s, Materializing param=encoder.layer.1.attention.output.LayerNorm.bias]Loading weights:  22%|██▏       | 23/103 [00:00<00:00, 4962.14it/s, Materializing param=encoder.layer.1.attention.output.LayerNorm.weight]Loading weights:  22%|██▏       | 23/103 [00:00<00:00, 4854.52it/s, Materializing param=encoder.layer.1.attention.output.LayerNorm.weight]Loading weights:  23%|██▎       | 24/103 [00:00<00:00, 4936.90it/s, Materializing param=encoder.layer.1.attention.output.dense.bias]      Loading weights:  23%|██▎       | 24/103 [00:00<00:00, 4906.10it/s, Materializing param=encoder.layer.1.attention.output.dense.bias]Loading weights:  24%|██▍       | 25/103 [00:00<00:00, 5051.19it/s, Materializing param=encoder.layer.1.attention.output.dense.weight]Loading weights:  24%|██▍       | 25/103 [00:00<00:00, 4941.22it/s, Materializing param=encoder.layer.1.attention.output.dense.weight]Loading weights:  25%|██▌       | 26/103 [00:00<00:00, 4997.11it/s, Materializing param=encoder.layer.1.attention.self.key.bias]      Loading weights:  25%|██▌       | 26/103 [00:00<00:00, 4848.48it/s, Materializing param=encoder.layer.1.attention.self.key.bias]Loading weights:  26%|██▌       | 27/103 [00:00<00:00, 4607.44it/s, Materializing param=encoder.layer.1.attention.self.key.weight]Loading weights:  26%|██▌       | 27/103 [00:00<00:00, 4570.25it/s, Materializing param=encoder.layer.1.attention.self.key.weight]Loading weights:  27%|██▋       | 28/103 [00:00<00:00, 4636.60it/s, Materializing param=encoder.layer.1.attention.self.query.bias]Loading weights:  27%|██▋       | 28/103 [00:00<00:00, 4587.16it/s, Materializing param=encoder.layer.1.attention.self.query.bias]Loading weights:  28%|██▊       | 29/103 [00:00<00:00, 4590.51it/s, Materializing param=encoder.layer.1.attention.self.query.weight]Loading weights:  28%|██▊       | 29/103 [00:00<00:00, 4527.29it/s, Materializing param=encoder.layer.1.attention.self.query.weight]Loading weights:  29%|██▉       | 30/103 [00:00<00:00, 4627.09it/s, Materializing param=encoder.layer.1.attention.self.value.bias]  Loading weights:  29%|██▉       | 30/103 [00:00<00:00, 4564.65it/s, Materializing param=encoder.layer.1.attention.self.value.bias]Loading weights:  30%|███       | 31/103 [00:00<00:00, 4661.84it/s, Materializing param=encoder.layer.1.attention.self.value.weight]Loading weights:  30%|███       | 31/103 [00:00<00:00, 4643.36it/s, Materializing param=encoder.layer.1.attention.self.value.weight]Loading weights:  31%|███       | 32/103 [00:00<00:00, 4760.68it/s, Materializing param=encoder.layer.1.intermediate.dense.bias]    Loading weights:  31%|███       | 32/103 [00:00<00:00, 4743.51it/s, Materializing param=encoder.layer.1.intermediate.dense.bias]Loading weights:  32%|███▏      | 33/103 [00:00<00:00, 4860.83it/s, Materializing param=encoder.layer.1.intermediate.dense.weight]Loading weights:  32%|███▏      | 33/103 [00:00<00:00, 4844.32it/s, Materializing param=encoder.layer.1.intermediate.dense.weight]Loading weights:  33%|███▎      | 34/103 [00:00<00:00, 4961.43it/s, Materializing param=encoder.layer.1.output.LayerNorm.bias]    Loading weights:  33%|███▎      | 34/103 [00:00<00:00, 4937.72it/s, Materializing param=encoder.layer.1.output.LayerNorm.bias]Loading weights:  34%|███▍      | 35/103 [00:00<00:00, 5052.86it/s, Materializing param=encoder.layer.1.output.LayerNorm.weight]Loading weights:  34%|███▍      | 35/103 [00:00<00:00, 5036.56it/s, Materializing param=encoder.layer.1.output.LayerNorm.weight]Loading weights:  35%|███▍      | 36/103 [00:00<00:00, 5150.07it/s, Materializing param=encoder.layer.1.output.dense.bias]      Loading weights:  35%|███▍      | 36/103 [00:00<00:00, 5133.61it/s, Materializing param=encoder.layer.1.output.dense.bias]Loading weights:  36%|███▌      | 37/103 [00:00<00:00, 5247.13it/s, Materializing param=encoder.layer.1.output.dense.weight]Loading weights:  36%|███▌      | 37/103 [00:00<00:00, 5230.86it/s, Materializing param=encoder.layer.1.output.dense.weight]Loading weights:  37%|███▋      | 38/103 [00:00<00:00, 5336.98it/s, Materializing param=encoder.layer.2.attention.output.LayerNorm.bias]Loading weights:  37%|███▋      | 38/103 [00:00<00:00, 5319.35it/s, Materializing param=encoder.layer.2.attention.output.LayerNorm.bias]Loading weights:  38%|███▊      | 39/103 [00:00<00:00, 5426.55it/s, Materializing param=encoder.layer.2.attention.output.LayerNorm.weight]Loading weights:  38%|███▊      | 39/103 [00:00<00:00, 5409.50it/s, Materializing param=encoder.layer.2.attention.output.LayerNorm.weight]Loading weights:  39%|███▉      | 40/103 [00:00<00:00, 5516.82it/s, Materializing param=encoder.layer.2.attention.output.dense.bias]      Loading weights:  39%|███▉      | 40/103 [00:00<00:00, 5499.64it/s, Materializing param=encoder.layer.2.attention.output.dense.bias]Loading weights:  40%|███▉      | 41/103 [00:00<00:00, 5606.44it/s, Materializing param=encoder.layer.2.attention.output.dense.weight]Loading weights:  40%|███▉      | 41/103 [00:00<00:00, 5590.04it/s, Materializing param=encoder.layer.2.attention.output.dense.weight]Loading weights:  41%|████      | 42/103 [00:00<00:00, 5696.76it/s, Materializing param=encoder.layer.2.attention.self.key.bias]      Loading weights:  41%|████      | 42/103 [00:00<00:00, 5679.86it/s, Materializing param=encoder.layer.2.attention.self.key.bias]Loading weights:  42%|████▏     | 43/103 [00:00<00:00, 5785.25it/s, Materializing param=encoder.layer.2.attention.self.key.weight]Loading weights:  42%|████▏     | 43/103 [00:00<00:00, 5768.59it/s, Materializing param=encoder.layer.2.attention.self.key.weight]Loading weights:  43%|████▎     | 44/103 [00:00<00:00, 5873.44it/s, Materializing param=encoder.layer.2.attention.self.query.bias]Loading weights:  43%|████▎     | 44/103 [00:00<00:00, 5856.85it/s, Materializing param=encoder.layer.2.attention.self.query.bias]Loading weights:  44%|████▎     | 45/103 [00:00<00:00, 5958.76it/s, Materializing param=encoder.layer.2.attention.self.query.weight]Loading weights:  44%|████▎     | 45/103 [00:00<00:00, 5942.06it/s, Materializing param=encoder.layer.2.attention.self.query.weight]Loading weights:  45%|████▍     | 46/103 [00:00<00:00, 6042.34it/s, Materializing param=encoder.layer.2.attention.self.value.bias]  Loading weights:  45%|████▍     | 46/103 [00:00<00:00, 6025.55it/s, Materializing param=encoder.layer.2.attention.self.value.bias]Loading weights:  46%|████▌     | 47/103 [00:00<00:00, 6125.93it/s, Materializing param=encoder.layer.2.attention.self.value.weight]Loading weights:  46%|████▌     | 47/103 [00:00<00:00, 6109.03it/s, Materializing param=encoder.layer.2.attention.self.value.weight]Loading weights:  47%|████▋     | 48/103 [00:00<00:00, 6209.18it/s, Materializing param=encoder.layer.2.intermediate.dense.bias]    Loading weights:  47%|████▋     | 48/103 [00:00<00:00, 6191.81it/s, Materializing param=encoder.layer.2.intermediate.dense.bias]Loading weights:  48%|████▊     | 49/103 [00:00<00:00, 6290.04it/s, Materializing param=encoder.layer.2.intermediate.dense.weight]Loading weights:  48%|████▊     | 49/103 [00:00<00:00, 6270.47it/s, Materializing param=encoder.layer.2.intermediate.dense.weight]Loading weights:  49%|████▊     | 50/103 [00:00<00:00, 6366.20it/s, Materializing param=encoder.layer.2.output.LayerNorm.bias]    Loading weights:  49%|████▊     | 50/103 [00:00<00:00, 6347.12it/s, Materializing param=encoder.layer.2.output.LayerNorm.bias]Loading weights:  50%|████▉     | 51/103 [00:00<00:00, 6442.48it/s, Materializing param=encoder.layer.2.output.LayerNorm.weight]Loading weights:  50%|████▉     | 51/103 [00:00<00:00, 6424.87it/s, Materializing param=encoder.layer.2.output.LayerNorm.weight]Loading weights:  50%|█████     | 52/103 [00:00<00:00, 6520.10it/s, Materializing param=encoder.layer.2.output.dense.bias]      Loading weights:  50%|█████     | 52/103 [00:00<00:00, 6503.18it/s, Materializing param=encoder.layer.2.output.dense.bias]Loading weights:  51%|█████▏    | 53/103 [00:00<00:00, 6597.56it/s, Materializing param=encoder.layer.2.output.dense.weight]Loading weights:  51%|█████▏    | 53/103 [00:00<00:00, 6579.79it/s, Materializing param=encoder.layer.2.output.dense.weight]Loading weights:  52%|█████▏    | 54/103 [00:00<00:00, 6651.76it/s, Materializing param=encoder.layer.3.attention.output.LayerNorm.bias]Loading weights:  52%|█████▏    | 54/103 [00:00<00:00, 6613.30it/s, Materializing param=encoder.layer.3.attention.output.LayerNorm.bias]Loading weights:  53%|█████▎    | 55/103 [00:00<00:00, 6683.28it/s, Materializing param=encoder.layer.3.attention.output.LayerNorm.weight]Loading weights:  53%|█████▎    | 55/103 [00:00<00:00, 6658.78it/s, Materializing param=encoder.layer.3.attention.output.LayerNorm.weight]Loading weights:  54%|█████▍    | 56/103 [00:00<00:00, 6739.00it/s, Materializing param=encoder.layer.3.attention.output.dense.bias]      Loading weights:  54%|█████▍    | 56/103 [00:00<00:00, 6717.80it/s, Materializing param=encoder.layer.3.attention.output.dense.bias]Loading weights:  55%|█████▌    | 57/103 [00:00<00:00, 6800.03it/s, Materializing param=encoder.layer.3.attention.output.dense.weight]Loading weights:  55%|█████▌    | 57/103 [00:00<00:00, 6779.97it/s, Materializing param=encoder.layer.3.attention.output.dense.weight]Loading weights:  56%|█████▋    | 58/103 [00:00<00:00, 6859.43it/s, Materializing param=encoder.layer.3.attention.self.key.bias]      Loading weights:  56%|█████▋    | 58/103 [00:00<00:00, 6839.56it/s, Materializing param=encoder.layer.3.attention.self.key.bias]Loading weights:  57%|█████▋    | 59/103 [00:00<00:00, 6921.68it/s, Materializing param=encoder.layer.3.attention.self.key.weight]Loading weights:  57%|█████▋    | 59/103 [00:00<00:00, 6902.76it/s, Materializing param=encoder.layer.3.attention.self.key.weight]Loading weights:  58%|█████▊    | 60/103 [00:00<00:00, 6984.49it/s, Materializing param=encoder.layer.3.attention.self.query.bias]Loading weights:  58%|█████▊    | 60/103 [00:00<00:00, 6965.16it/s, Materializing param=encoder.layer.3.attention.self.query.bias]Loading weights:  59%|█████▉    | 61/103 [00:00<00:00, 7039.36it/s, Materializing param=encoder.layer.3.attention.self.query.weight]Loading weights:  59%|█████▉    | 61/103 [00:00<00:00, 7016.96it/s, Materializing param=encoder.layer.3.attention.self.query.weight]Loading weights:  60%|██████    | 62/103 [00:00<00:00, 7096.38it/s, Materializing param=encoder.layer.3.attention.self.value.bias]  Loading weights:  60%|██████    | 62/103 [00:00<00:00, 7077.26it/s, Materializing param=encoder.layer.3.attention.self.value.bias]Loading weights:  61%|██████    | 63/103 [00:00<00:00, 7157.71it/s, Materializing param=encoder.layer.3.attention.self.value.weight]Loading weights:  61%|██████    | 63/103 [00:00<00:00, 7135.67it/s, Materializing param=encoder.layer.3.attention.self.value.weight]Loading weights:  62%|██████▏   | 64/103 [00:00<00:00, 7212.52it/s, Materializing param=encoder.layer.3.intermediate.dense.bias]    Loading weights:  62%|██████▏   | 64/103 [00:00<00:00, 7193.96it/s, Materializing param=encoder.layer.3.intermediate.dense.bias]Loading weights:  63%|██████▎   | 65/103 [00:00<00:00, 7273.81it/s, Materializing param=encoder.layer.3.intermediate.dense.weight]Loading weights:  63%|██████▎   | 65/103 [00:00<00:00, 7255.62it/s, Materializing param=encoder.layer.3.intermediate.dense.weight]Loading weights:  64%|██████▍   | 66/103 [00:00<00:00, 7334.84it/s, Materializing param=encoder.layer.3.output.LayerNorm.bias]    Loading weights:  64%|██████▍   | 66/103 [00:00<00:00, 7316.81it/s, Materializing param=encoder.layer.3.output.LayerNorm.bias]Loading weights:  65%|██████▌   | 67/103 [00:00<00:00, 7395.80it/s, Materializing param=encoder.layer.3.output.LayerNorm.weight]Loading weights:  65%|██████▌   | 67/103 [00:00<00:00, 7375.81it/s, Materializing param=encoder.layer.3.output.LayerNorm.weight]Loading weights:  66%|██████▌   | 68/103 [00:00<00:00, 7446.61it/s, Materializing param=encoder.layer.3.output.dense.bias]      Loading weights:  66%|██████▌   | 68/103 [00:00<00:00, 7427.99it/s, Materializing param=encoder.layer.3.output.dense.bias]Loading weights:  67%|██████▋   | 69/103 [00:00<00:00, 7505.37it/s, Materializing param=encoder.layer.3.output.dense.weight]Loading weights:  67%|██████▋   | 69/103 [00:00<00:00, 7487.89it/s, Materializing param=encoder.layer.3.output.dense.weight]Loading weights:  68%|██████▊   | 70/103 [00:00<00:00, 7565.68it/s, Materializing param=encoder.layer.4.attention.output.LayerNorm.bias]Loading weights:  68%|██████▊   | 70/103 [00:00<00:00, 7547.01it/s, Materializing param=encoder.layer.4.attention.output.LayerNorm.bias]Loading weights:  69%|██████▉   | 71/103 [00:00<00:00, 7621.71it/s, Materializing param=encoder.layer.4.attention.output.LayerNorm.weight]Loading weights:  69%|██████▉   | 71/103 [00:00<00:00, 7603.62it/s, Materializing param=encoder.layer.4.attention.output.LayerNorm.weight]Loading weights:  70%|██████▉   | 72/103 [00:00<00:00, 7678.75it/s, Materializing param=encoder.layer.4.attention.output.dense.bias]      Loading weights:  70%|██████▉   | 72/103 [00:00<00:00, 7661.02it/s, Materializing param=encoder.layer.4.attention.output.dense.bias]Loading weights:  71%|███████   | 73/103 [00:00<00:00, 7735.05it/s, Materializing param=encoder.layer.4.attention.output.dense.weight]Loading weights:  71%|███████   | 73/103 [00:00<00:00, 7713.42it/s, Materializing param=encoder.layer.4.attention.output.dense.weight]Loading weights:  72%|███████▏  | 74/103 [00:00<00:00, 7786.33it/s, Materializing param=encoder.layer.4.attention.self.key.bias]      Loading weights:  72%|███████▏  | 74/103 [00:00<00:00, 7768.20it/s, Materializing param=encoder.layer.4.attention.self.key.bias]Loading weights:  73%|███████▎  | 75/103 [00:00<00:00, 7840.21it/s, Materializing param=encoder.layer.4.attention.self.key.weight]Loading weights:  73%|███████▎  | 75/103 [00:00<00:00, 7821.89it/s, Materializing param=encoder.layer.4.attention.self.key.weight]Loading weights:  74%|███████▍  | 76/103 [00:00<00:00, 7892.03it/s, Materializing param=encoder.layer.4.attention.self.query.bias]Loading weights:  74%|███████▍  | 76/103 [00:00<00:00, 7873.90it/s, Materializing param=encoder.layer.4.attention.self.query.bias]Loading weights:  75%|███████▍  | 77/103 [00:00<00:00, 7946.30it/s, Materializing param=encoder.layer.4.attention.self.query.weight]Loading weights:  75%|███████▍  | 77/103 [00:00<00:00, 7920.96it/s, Materializing param=encoder.layer.4.attention.self.query.weight]Loading weights:  76%|███████▌  | 78/103 [00:00<00:00, 7988.37it/s, Materializing param=encoder.layer.4.attention.self.value.bias]  Loading weights:  76%|███████▌  | 78/103 [00:00<00:00, 7970.08it/s, Materializing param=encoder.layer.4.attention.self.value.bias]Loading weights:  77%|███████▋  | 79/103 [00:00<00:00, 8040.91it/s, Materializing param=encoder.layer.4.attention.self.value.weight]Loading weights:  77%|███████▋  | 79/103 [00:00<00:00, 8022.42it/s, Materializing param=encoder.layer.4.attention.self.value.weight]Loading weights:  78%|███████▊  | 80/103 [00:00<00:00, 8090.67it/s, Materializing param=encoder.layer.4.intermediate.dense.bias]    Loading weights:  78%|███████▊  | 80/103 [00:00<00:00, 8072.18it/s, Materializing param=encoder.layer.4.intermediate.dense.bias]Loading weights:  79%|███████▊  | 81/103 [00:00<00:00, 8140.57it/s, Materializing param=encoder.layer.4.intermediate.dense.weight]Loading weights:  79%|███████▊  | 81/103 [00:00<00:00, 8122.67it/s, Materializing param=encoder.layer.4.intermediate.dense.weight]Loading weights:  80%|███████▉  | 82/103 [00:00<00:00, 8190.83it/s, Materializing param=encoder.layer.4.output.LayerNorm.bias]    Loading weights:  80%|███████▉  | 82/103 [00:00<00:00, 8171.37it/s, Materializing param=encoder.layer.4.output.LayerNorm.bias]Loading weights:  81%|████████  | 83/103 [00:00<00:00, 8238.72it/s, Materializing param=encoder.layer.4.output.LayerNorm.weight]Loading weights:  81%|████████  | 83/103 [00:00<00:00, 8215.59it/s, Materializing param=encoder.layer.4.output.LayerNorm.weight]Loading weights:  82%|████████▏ | 84/103 [00:00<00:00, 8282.71it/s, Materializing param=encoder.layer.4.output.dense.bias]      Loading weights:  82%|████████▏ | 84/103 [00:00<00:00, 8264.64it/s, Materializing param=encoder.layer.4.output.dense.bias]Loading weights:  83%|████████▎ | 85/103 [00:00<00:00, 8331.76it/s, Materializing param=encoder.layer.4.output.dense.weight]Loading weights:  83%|████████▎ | 85/103 [00:00<00:00, 8314.66it/s, Materializing param=encoder.layer.4.output.dense.weight]Loading weights:  83%|████████▎ | 86/103 [00:00<00:00, 8381.79it/s, Materializing param=encoder.layer.5.attention.output.LayerNorm.bias]Loading weights:  83%|████████▎ | 86/103 [00:00<00:00, 8363.32it/s, Materializing param=encoder.layer.5.attention.output.LayerNorm.bias]Loading weights:  84%|████████▍ | 87/103 [00:00<00:00, 8427.74it/s, Materializing param=encoder.layer.5.attention.output.LayerNorm.weight]Loading weights:  84%|████████▍ | 87/103 [00:00<00:00, 8409.68it/s, Materializing param=encoder.layer.5.attention.output.LayerNorm.weight]Loading weights:  85%|████████▌ | 88/103 [00:00<00:00, 8474.12it/s, Materializing param=encoder.layer.5.attention.output.dense.bias]      Loading weights:  85%|████████▌ | 88/103 [00:00<00:00, 8456.26it/s, Materializing param=encoder.layer.5.attention.output.dense.bias]Loading weights:  86%|████████▋ | 89/103 [00:00<00:00, 8516.84it/s, Materializing param=encoder.layer.5.attention.output.dense.weight]Loading weights:  86%|████████▋ | 89/103 [00:00<00:00, 8499.19it/s, Materializing param=encoder.layer.5.attention.output.dense.weight]Loading weights:  87%|████████▋ | 90/103 [00:00<00:00, 8562.33it/s, Materializing param=encoder.layer.5.attention.self.key.bias]      Loading weights:  87%|████████▋ | 90/103 [00:00<00:00, 8544.50it/s, Materializing param=encoder.layer.5.attention.self.key.bias]Loading weights:  88%|████████▊ | 91/103 [00:00<00:00, 8608.65it/s, Materializing param=encoder.layer.5.attention.self.key.weight]Loading weights:  88%|████████▊ | 91/103 [00:00<00:00, 8589.28it/s, Materializing param=encoder.layer.5.attention.self.key.weight]Loading weights:  89%|████████▉ | 92/103 [00:00<00:00, 8651.93it/s, Materializing param=encoder.layer.5.attention.self.query.bias]Loading weights:  89%|████████▉ | 92/103 [00:00<00:00, 8634.89it/s, Materializing param=encoder.layer.5.attention.self.query.bias]Loading weights:  90%|█████████ | 93/103 [00:00<00:00, 8697.80it/s, Materializing param=encoder.layer.5.attention.self.query.weight]Loading weights:  90%|█████████ | 93/103 [00:00<00:00, 8680.57it/s, Materializing param=encoder.layer.5.attention.self.query.weight]Loading weights:  91%|█████████▏| 94/103 [00:00<00:00, 8743.56it/s, Materializing param=encoder.layer.5.attention.self.value.bias]  Loading weights:  91%|█████████▏| 94/103 [00:00<00:00, 8716.88it/s, Materializing param=encoder.layer.5.attention.self.value.bias]Loading weights:  92%|█████████▏| 95/103 [00:00<00:00, 8774.50it/s, Materializing param=encoder.layer.5.attention.self.value.weight]Loading weights:  92%|█████████▏| 95/103 [00:00<00:00, 8756.57it/s, Materializing param=encoder.layer.5.attention.self.value.weight]Loading weights:  93%|█████████▎| 96/103 [00:00<00:00, 8817.54it/s, Materializing param=encoder.layer.5.intermediate.dense.bias]    Loading weights:  93%|█████████▎| 96/103 [00:00<00:00, 8800.20it/s, Materializing param=encoder.layer.5.intermediate.dense.bias]Loading weights:  94%|█████████▍| 97/103 [00:00<00:00, 8862.62it/s, Materializing param=encoder.layer.5.intermediate.dense.weight]Loading weights:  94%|█████████▍| 97/103 [00:00<00:00, 8845.86it/s, Materializing param=encoder.layer.5.intermediate.dense.weight]Loading weights:  95%|█████████▌| 98/103 [00:00<00:00, 8907.81it/s, Materializing param=encoder.layer.5.output.LayerNorm.bias]    Loading weights:  95%|█████████▌| 98/103 [00:00<00:00, 8891.04it/s, Materializing param=encoder.layer.5.output.LayerNorm.bias]Loading weights:  96%|█████████▌| 99/103 [00:00<00:00, 8951.95it/s, Materializing param=encoder.layer.5.output.LayerNorm.weight]Loading weights:  96%|█████████▌| 99/103 [00:00<00:00, 8934.04it/s, Materializing param=encoder.layer.5.output.LayerNorm.weight]Loading weights:  97%|█████████▋| 100/103 [00:00<00:00, 8986.96it/s, Materializing param=encoder.layer.5.output.dense.bias]     Loading weights:  97%|█████████▋| 100/103 [00:00<00:00, 8969.28it/s, Materializing param=encoder.layer.5.output.dense.bias]Loading weights:  98%|█████████▊| 101/103 [00:00<00:00, 9028.85it/s, Materializing param=encoder.layer.5.output.dense.weight]Loading weights:  98%|█████████▊| 101/103 [00:00<00:00, 9011.76it/s, Materializing param=encoder.layer.5.output.dense.weight]Loading weights:  99%|█████████▉| 102/103 [00:00<00:00, 9072.80it/s, Materializing param=pooler.dense.bias]                  Loading weights:  99%|█████████▉| 102/103 [00:00<00:00, 9056.29it/s, Materializing param=pooler.dense.bias]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 9119.21it/s, Materializing param=pooler.dense.weight]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 9102.68it/s, Materializing param=pooler.dense.weight]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 9068.48it/s, Materializing param=pooler.dense.weight]
+[1mBertModel LOAD REPORT[0m from: sentence-transformers/all-MiniLM-L6-v2
+Key                     | Status     |  | 
+------------------------+------------+--+-
+embeddings.position_ids | UNEXPECTED |  | 
+
+[3mNotes:
+- UNEXPECTED[3m	:can be ignored when loading from different task/architecture; not ok if you expect identical arch.[0m
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/tokenizer_config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/1_Pooling/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/1_Pooling%2Fconfig.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2 "HTTP/1.1 200 OK"
+INFO:LucyC.RAG:Memory engine initialized. Collection has 0 documents.
+INFO:Moltbot:RAG Memory Engine initialized.
+INFO:LucyC.ToolRouter:Tool registered: remember
+INFO:LucyC.ToolRouter:Tool registered: forget
+INFO:LucyC.ToolRouter:Tool registered: screenshot
+INFO:LucyC.ToolRouter:Tool registered: type
+INFO:LucyC.ToolRouter:Tool registered: press
+INFO:LucyC.ToolRouter:Tool registered: click
+INFO:LucyC.ToolRouter:Tool registered: hotkey
+INFO:LucyC.ToolRouter:Tool registered: wait
+INFO:LucyC.ToolRouter:Tool registered: move
+INFO:LucyC.ToolRouter:Tool registered: read_file
+INFO:LucyC.ToolRouter:Tool registered: write_file
+INFO:LucyC.ToolRouter:Tool registered: get_info
+INFO:LucyC.ToolRouter:Tool registered: check_shipping
+INFO:LucyC.ToolRouter:Tool registered: process_payment
+INFO:LucyC.ToolRouter:Tool registered: generate_budget_pdf
+INFO:LucyC.ToolRouter:Tool registered: search_web
+INFO:LucyC.ToolRouter:Tool registered: open_url
+INFO:LucyC.ToolRouter:Tool registered: read_url
+INFO:LucyC.ToolRouter:Tool registered: os_run
+INFO:LucyC.ToolRouter:Tool registered: window_manager
+INFO:LucyC.ToolRouter:Tool registered: windows
+INFO:LucyC.ToolRouter:Tool registered: browser.open_url
+INFO:LucyC.ToolRouter:Tool registered: google_search
+INFO:LucyC.ToolRouter:Tool registered: web_search
+INFO:LucyC.ToolRouter:Tool registered: browser.run
+INFO:LucyC.ToolRouter:Tool registered: browser.screenshot
+INFO:LucyC.ToolRouter:Tool registered: trigger_workflow
+INFO:LucyC.ToolRouter:Tool registered: ask_sota
+INFO:LucyC.ToolRouter:Tool registered: memorize_file
+INFO:LucyC.ToolRouter:Tool registered: recall
+INFO:LucyC.ToolRouter:Tool registered: memory_stats
+INFO:LucyC.ToolRouter:Tool registered: assistant
+INFO:LucyC.ToolRouter:Tool registered: scan_ui
+INFO:LucyC.ToolRouter:Tool registered: click_text
+INFO:LucyC.ToolRouter:Tool registered: peek
+INFO:LucyC.ToolRouter:Tool registered: peek_desktop
+INFO:LucyC.ToolRouter:Tool registered: scroll
+INFO:httpx:HTTP Request: GET http://127.0.0.1:11434/api/tags "HTTP/1.1 200 OK"
+INFO:LucyC.ASR:Loading Whisper model 'Systran/faster-whisper-large-v3' (device=cuda compute=float16) [lazy]
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-large-v3/revision/main "HTTP/1.1 200 OK"
+INFO:faster_whisper:Processing audio with duration 00:06.232
+INFO:faster_whisper:VAD filter removed 00:02.840 of audio
+INFO:Moltbot:Applying persisted brain for lucy-c:8cc47421-2e95-4d37-a1cf-d28b70e350f4: qwen2.5vl:7b (ollama)
+INFO:Moltbot:Moltbot processing prompt using ollama (qwen2.5vl:7b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+INFO:Moltbot:Moltbot response received in 2906ms: ¡Hola! Sí, estoy aquí para ayudarte. ¿En qué puedo asistirte hoy?
+WARNING:Moltbot:TTS failed (mimic3 not found). Continuing with text-only.
+INFO:faster_whisper:Processing audio with duration 00:03.288
+INFO:faster_whisper:VAD filter removed 00:00.144 of audio
+INFO:Moltbot:Moltbot processing prompt using ollama (qwen2.5vl:7b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+INFO:Moltbot:Moltbot response received in 3681ms: ¡Hola! Sí, estoy escuchando. ¿En qué puedo ayudarte hoy?
+WARNING:Moltbot:TTS failed (mimic3 not found). Continuing with text-only.
+INFO:faster_whisper:Processing audio with duration 00:06.061
+INFO:faster_whisper:VAD filter removed 00:00.208 of audio
+INFO:Moltbot:Moltbot processing prompt using ollama (qwen2.5vl:7b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+INFO:Moltbot:TOOLS DETECTED in response: [('os_run', '"ls"')]
+INFO:LucyC.ToolRouter:Parsed 1 tool calls: [('os_run', '"ls"')]
+INFO:LucyC.ToolRouter:Activating tool: os_run("ls")
+INFO:LucyC.OSTools:Executing OS command: ls
+INFO:LucyC.ToolRouter:🖥️ OS result: BROWSER_SETUP.md
+config
+data
+debug_additional_imports.py
+debug_app.py
+debug_imports.py
+docs
+LICENSE
+lucy_c
+lucy_c.egg-info
+NETWORK_ACCESS.md
+PORT_CHANGE.md
+pyproject.toml
+quick_test.py
+README.md
+requirements.txt
+scripts
+secreto.txt
+server_final.log
+server_fixed.log
+server_fresh.log
+server_fresh_v2.log
+server.log
+server_nuclear.log
+setup.py
+smoke_results_v3.txt
+smoke_results_v4.txt
+start_lucy.sh
+stress_test_web.py
+test_audio.py
+test_audio_system.sh
+test_web_search.py
+verify_memory.py
+INFO:Moltbot:Moltbot entering reflection loop...
+INFO:httpx:HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+INFO:Moltbot:Moltbot response received in 1292ms: En el escritorio, hay archivos y carpetas como `BROWSER_SETUP.md`, `config`, `data`, `docs`, `LICENS...
+WARNING:Moltbot:TTS failed (mimic3 not found). Continuing with text-only.
+INFO:faster_whisper:Processing audio with duration 00:06.872
+INFO:faster_whisper:VAD filter removed 00:00.000 of audio
+INFO:Moltbot:Moltbot processing prompt using ollama (qwen2.5vl:7b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+INFO:Moltbot:Moltbot response received in 393ms: ¡Claro! Vamos a abrir Firefox y buscar YouTube.
+
+1. Abriendo Firefox.
+2. Buscando "YouTube" en DuckD...
+WARNING:Moltbot:TTS failed (mimic3 not found). Continuing with text-only.
+INFO:faster_whisper:Processing audio with duration 00:07.896
+INFO:faster_whisper:VAD filter removed 00:00.176 of audio
+INFO:Moltbot:Moltbot processing prompt using ollama (qwen2.5vl:7b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+INFO:Moltbot:Moltbot response received in 4096ms: ¡Hola! Parece que hay un malentendido. Como asistente virtual, no tengo la capacidad de abrir aplica...
+WARNING:Moltbot:TTS failed (mimic3 not found). Continuing with text-only.
+INFO:faster_whisper:Processing audio with duration 00:04.312
+INFO:faster_whisper:VAD filter removed 00:00.208 of audio
+INFO:Moltbot:Moltbot processing prompt using ollama (qwen2.5vl:7b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+INFO:Moltbot:Moltbot response received in 175ms: ¡Claro! ¿En qué puedo ayudarte hoy?
+WARNING:Moltbot:TTS failed (mimic3 not found). Continuing with text-only.
+INFO:faster_whisper:Processing audio with duration 00:05.933
+INFO:faster_whisper:VAD filter removed 00:00.208 of audio
+INFO:Moltbot:Moltbot processing prompt using ollama (qwen2.5vl:7b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+INFO:Moltbot:Moltbot response received in 283ms: ¡Claro! ¿Podrías proporcionar más detalles sobre lo que estás buscando? ¿Es un archivo, una informac...
+WARNING:Moltbot:TTS failed (mimic3 not found). Continuing with text-only.
+INFO:faster_whisper:Processing audio with duration 00:03.629
+INFO:faster_whisper:VAD filter removed 00:00.208 of audio
+INFO:Moltbot:Moltbot processing prompt using ollama (qwen2.5vl:7b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+INFO:Moltbot:Moltbot response received in 253ms: Lo siento, pero no estoy seguro de lo que te estás pidiendo. ¿Podrías aclarar tu solicitud?
+WARNING:Moltbot:TTS failed (mimic3 not found). Continuing with text-only.
+INFO:Moltbot:Persisted brain choice for lucy-c:8cc47421-2e95-4d37-a1cf-d28b70e350f4: lucy:32b (ollama)
+INFO:Moltbot:BRAIN EXCHANGE: ollama (qwen2.5vl:7b) -> ollama (lucy:32b)
+INFO:LucyC.Web:BRAIN EXCHANGE: ollama (lucy:32b) -> ollama (lucy:32b) for lucy-c:8cc47421-2e95-4d37-a1cf-d28b70e350f4
+INFO:faster_whisper:Processing audio with duration 00:03.971
+INFO:faster_whisper:VAD filter removed 00:00.240 of audio
+INFO:Moltbot:Moltbot processing prompt using ollama (lucy:32b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+INFO:Moltbot:TOOLS DETECTED in response: [('os_run', '"firefox"')]
+INFO:LucyC.ToolRouter:Parsed 1 tool calls: [('os_run', '"firefox"')]
+INFO:LucyC.ToolRouter:Activating tool: os_run("firefox")
+INFO:LucyC.OSTools:Executing OS command: firefox
+INFO:LucyC.ToolRouter:🖥️ OS result: Ejecutando 'firefox' en segundo plano.
+INFO:Moltbot:Moltbot entering reflection loop...
+INFO:httpx:HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+INFO:Moltbot:Moltbot response received in 4742ms: Listo, che. Firefox ya está abierto. ¿Necesitás que haga algo más?
+WARNING:Moltbot:TTS failed (mimic3 not found). Continuing with text-only.
+INFO:faster_whisper:Processing audio with duration 00:06.445
+INFO:faster_whisper:VAD filter removed 00:00.176 of audio
+INFO:Moltbot:Moltbot processing prompt using ollama (lucy:32b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+INFO:Moltbot:TOOLS DETECTED in response: [('os_run', '"firefox"'), ('open_url', '"https://www.youtube.com"')]
+INFO:LucyC.ToolRouter:Parsed 2 tool calls: [('os_run', '"firefox"'), ('open_url', '"https://www.youtube.com"')]
+INFO:LucyC.ToolRouter:Activating tool: os_run("firefox")
+INFO:LucyC.OSTools:Executing OS command: firefox
+INFO:LucyC.ToolRouter:🖥️ OS result: Ejecutando 'firefox' en segundo plano.
+INFO:LucyC.ToolRouter:Activating tool: open_url("https://www.youtube.com")
+INFO:LucyC.WebTools:Opening Firefox towards: https://www.youtube.com
+INFO:LucyC.ToolRouter:🌐 RED result: Abriendo https://www.youtube.com en Firefox.
+INFO:Moltbot:Moltbot entering reflection loop...
+Gtk-Message: 00:34:33.820: Not loading module "atk-bridge": The functionality is provided by GTK natively. Please try to not load it.
+[112628, Main Thread] WARNING: GTK+ module /snap/firefox/7766/gnome-platform/usr/lib/gtk-2.0/modules/libcanberra-gtk-module.so cannot be loaded.
+GTK+ 2.x symbols detected. Using GTK+ 2.x and GTK+ 3 in the same process is not supported.: 'glib warning', file /build/firefox/parts/firefox/build/toolkit/xre/nsSigHandlers.cpp:201
+
+(firefox_firefox:112628): Gtk-WARNING **: 00:34:33.861: GTK+ module /snap/firefox/7766/gnome-platform/usr/lib/gtk-2.0/modules/libcanberra-gtk-module.so cannot be loaded.
+GTK+ 2.x symbols detected. Using GTK+ 2.x and GTK+ 3 in the same process is not supported.
+Gtk-Message: 00:34:33.861: Failed to load module "canberra-gtk-module"
+[112628, Main Thread] WARNING: GTK+ module /snap/firefox/7766/gnome-platform/usr/lib/gtk-2.0/modules/libcanberra-gtk-module.so cannot be loaded.
+GTK+ 2.x symbols detected. Using GTK+ 2.x and GTK+ 3 in the same process is not supported.: 'glib warning', file /build/firefox/parts/firefox/build/toolkit/xre/nsSigHandlers.cpp:201
+
+(firefox_firefox:112628): Gtk-WARNING **: 00:34:33.862: GTK+ module /snap/firefox/7766/gnome-platform/usr/lib/gtk-2.0/modules/libcanberra-gtk-module.so cannot be loaded.
+GTK+ 2.x symbols detected. Using GTK+ 2.x and GTK+ 3 in the same process is not supported.
+Gtk-Message: 00:34:33.862: Failed to load module "canberra-gtk-module"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+INFO:Moltbot:Moltbot response received in 1398ms: Listo, che. Abrí Firefox y ya tenés YouTube cargado. ¡A disfrutar!
+WARNING:Moltbot:TTS failed (mimic3 not found). Continuing with text-only.
+INFO:faster_whisper:Processing audio with duration 00:04.611
+INFO:faster_whisper:VAD filter removed 00:00.000 of audio
+INFO:Moltbot:Moltbot processing prompt using ollama (lucy:32b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+INFO:Moltbot:TOOLS DETECTED in response: [('open_url', '"https://www.youtube.com/results?search_query=programa+escucha+ofertas"')]
+INFO:LucyC.ToolRouter:Parsed 1 tool calls: [('open_url', '"https://www.youtube.com/results?search_query=programa+escucha+ofertas"')]
+INFO:LucyC.ToolRouter:Activating tool: open_url("https://www.youtube.com/results?search_query=programa+escucha+ofertas")
+INFO:LucyC.WebTools:Opening Firefox towards: https://www.youtube.com/results?search_query=programa+escucha+ofertas
+INFO:LucyC.ToolRouter:🌐 RED result: Abriendo https://www.youtube.com/results?search_query=programa+escucha+ofertas en Firefox.
+INFO:Moltbot:Moltbot entering reflection loop...
+Gtk-Message: 00:34:43.630: Not loading module "atk-bridge": The functionality is provided by GTK natively. Please try to not load it.
+[113239, Main Thread] WARNING: GTK+ module /snap/firefox/7766/gnome-platform/usr/lib/gtk-2.0/modules/libcanberra-gtk-module.so cannot be loaded.
+GTK+ 2.x symbols detected. Using GTK+ 2.x and GTK+ 3 in the same process is not supported.: 'glib warning', file /build/firefox/parts/firefox/build/toolkit/xre/nsSigHandlers.cpp:201
+
+(firefox_firefox:113239): Gtk-WARNING **: 00:34:43.678: GTK+ module /snap/firefox/7766/gnome-platform/usr/lib/gtk-2.0/modules/libcanberra-gtk-module.so cannot be loaded.
+GTK+ 2.x symbols detected. Using GTK+ 2.x and GTK+ 3 in the same process is not supported.
+Gtk-Message: 00:34:43.678: Failed to load module "canberra-gtk-module"
+[113239, Main Thread] WARNING: GTK+ module /snap/firefox/7766/gnome-platform/usr/lib/gtk-2.0/modules/libcanberra-gtk-module.so cannot be loaded.
+GTK+ 2.x symbols detected. Using GTK+ 2.x and GTK+ 3 in the same process is not supported.: 'glib warning', file /build/firefox/parts/firefox/build/toolkit/xre/nsSigHandlers.cpp:201
+
+(firefox_firefox:113239): Gtk-WARNING **: 00:34:43.679: GTK+ module /snap/firefox/7766/gnome-platform/usr/lib/gtk-2.0/modules/libcanberra-gtk-module.so cannot be loaded.
+GTK+ 2.x symbols detected. Using GTK+ 2.x and GTK+ 3 in the same process is not supported.
+Gtk-Message: 00:34:43.679: Failed to load module "canberra-gtk-module"
+INFO:httpx:HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+INFO:Moltbot:Moltbot response received in 1679ms: Listo, che. Ya abrí la búsqueda del programa "Escucha Ofertas" en YouTube. Podés ver los resultados ...
+WARNING:Moltbot:TTS failed (mimic3 not found). Continuing with text-only.
+INFO:Moltbot:Moltbot processing prompt using ollama (lucy:32b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+INFO:Moltbot:Moltbot response received in 7211ms: ¡Hola che! ¿Cómo andás? ¿Qué necesitás hacer ahora?
+WARNING:Moltbot:TTS failed (mimic3 not found). Continuing with text-only.

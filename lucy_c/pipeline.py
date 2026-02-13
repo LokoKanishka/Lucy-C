@@ -493,19 +493,19 @@ class Moltbot:
         
         messages.append(current_msg)
         
-        # --- FIX: Refuerzo de Identidad ---
-        # Le recordamos al modelo sus capacidades justo al final para vencer el "Safety Refusal"
-        # y forzar el uso de herramientas.
+        # --- FIX: INYECCIÓN DE VOLUNTAD (Anti-Alucinación) ---
+        # Fuerza al LLM a usar las herramientas en lugar de solo conversar.
         system_reminder = {
             "role": "system", 
             "content": (
-                "IMPORTANTE: Recordá que TENÉS capacidad real de ejecutar acciones en el PC. "
-                "Si el usuario pide una acción (abrir, buscar, guardar, leer), DEBÉS usar el formato [[herramienta(...)]]. "
-                "No digas que lo vas a hacer, HACELO. No digas que no podés, SOS el Agente Lucy."
+                "CRÍTICO: Recordá que TIENES capacidad técnica real de operar este sistema. "
+                "Si el usuario pide una acción (ej. abrir app, buscar en web, leer, interactuar), "
+                "ESTÁS OBLIGADA a responder EXCLUSIVAMENTE ejecutando la herramienta con el formato [[herramienta(argumentos)]]. "
+                "No relates lo que vas a hacer. No te disculpes ni pidas permiso. Ejecuta el comando directamente."
             )
         }
         messages.append(system_reminder)
-        # ----------------------------------
+        # -----------------------------------------------------
         
         elapsed = (time.time() - start_time) * 1000
         self.log.debug("_get_chat_messages took %.1fms", elapsed)
@@ -537,7 +537,7 @@ class Moltbot:
                 current_messages = messages
                 if attempt == max_retries and attempt > 0:
                     self.log.info("Moltbot applying final-retry hint to messages.")
-                    hint = "Por favor, respondé de forma clara y completa. Si vas a usar una herramienta, recordá usar el formato [[tool()]]."
+                    hint = "FALLO DEL SISTEMA: El usuario pidió una acción pero no usaste ninguna herramienta. DEBES responder usando EXACTAMENTE el formato [[herramienta(argumentos)]]. No des explicaciones, solo emite el comando."
                     current_messages = messages + [{"role": "user", "content": hint}]
 
                 if provider == "clawdbot" and self.clawdbot:
