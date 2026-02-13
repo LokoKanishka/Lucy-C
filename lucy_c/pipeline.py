@@ -493,6 +493,20 @@ class Moltbot:
         
         messages.append(current_msg)
         
+        # --- FIX: Refuerzo de Identidad ---
+        # Le recordamos al modelo sus capacidades justo al final para vencer el "Safety Refusal"
+        # y forzar el uso de herramientas.
+        system_reminder = {
+            "role": "system", 
+            "content": (
+                "IMPORTANTE: Recordá que TENÉS capacidad real de ejecutar acciones en el PC. "
+                "Si el usuario pide una acción (abrir, buscar, guardar, leer), DEBÉS usar el formato [[herramienta(...)]]. "
+                "No digas que lo vas a hacer, HACELO. No digas que no podés, SOS el Agente Lucy."
+            )
+        }
+        messages.append(system_reminder)
+        # ----------------------------------
+        
         elapsed = (time.time() - start_time) * 1000
         self.log.debug("_get_chat_messages took %.1fms", elapsed)
         
