@@ -105,6 +105,11 @@ class Moltbot:
                 self.log.warning("Virtual Display not available: %s", e)
                 self.virtual_display = None
         
+        # Phase 4/5: Sensors and Actuators (The "Body")
+        self._eyes = None
+        self._hands = None
+        self._body_available = True
+
         self._register_default_tools()
     
     def _initialize_tts(self, cfg):
@@ -128,12 +133,6 @@ class Moltbot:
         # Fallback to Mimic3
         self.log.info("Using Mimic3 TTS")
         return Mimic3TTS(cfg.tts)
-        
-        # Phase 4/5: Sensors and Actuators (The "Body")
-        # These are lazy-loaded to ensure Core stability even if dependencies are missing.
-        self._eyes = None
-        self._hands = None
-        self._body_available = True
 
     @property
     def eyes(self):

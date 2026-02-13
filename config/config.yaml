@@ -1,6 +1,4 @@
 # Lucy-C configuration
-
-# ASR
 asr:
   model: "Systran/faster-whisper-large-v3"
   device: "cuda"
@@ -9,30 +7,23 @@ asr:
   task: "transcribe"
   force_language: true
 
-# LLM
 llm:
-  provider: "ollama"       # ollama | clawdbot
+  provider: "clawdbot"
 
-# LLM (Ollama)
 ollama:
   host: "http://127.0.0.1:11434"
-  model: "gpt-oss:20b"
+  model: "lucy:32b"
 
-# LLM (Clawdbot Gateway)
 clawdbot:
   host: "http://127.0.0.1:18789"
   agent_id: "lucy"
-  # token: ""   # leave empty; run_web_ui.sh will try to export CLAWDBOT_GATEWAY_TOKEN
 
-# TTS (Mimic3 CLI)
 tts:
   voice: "es_ES/m-ailabs_low#karen_savage"
 
-# Audio
 audio:
   sample_rate: 16000
 
-# n8n Orchestration
 n8n:
   base_url: "http://localhost:5678"
   webhook_prefix: "lucy-"

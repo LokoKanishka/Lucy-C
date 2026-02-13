@@ -1,4 +1,5 @@
 .venv/
+venv/
 __pycache__/
 *.pyc
 .env
@@ -6,6 +7,7 @@ __pycache__/
 
 # runtime data
 /data/
+*.log
 diagnosis.log
 server_verification*.log
 smoke_results*.txt

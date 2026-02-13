@@ -1,4 +1,5 @@
 import subprocess
+import webbrowser
 import platform
 import urllib.parse
 import logging
@@ -34,7 +35,7 @@ def tool_web_search(args, ctx):
         return ToolResult(False, f"Error en la búsqueda web: {e}", "🌐 RED")
 
 def tool_open_url(args, ctx):
-    """Open a URL specifically using Firefox for privacy."""
+    """Open a URL using the system's default browser reliably."""
     if not args:
         return ToolResult(False, "Falta la URL para abrir.", "🌐 RED")
     
@@ -47,14 +48,14 @@ def tool_open_url(args, ctx):
             # Maybe it's a search?
             return tool_web_search(args, ctx)
         
-    log.info("Opening Firefox towards: %s", url)
+    log.info("Opening URL via webbrowser: %s", url)
     try:
-        # We use subprocess directly to enforce firefox instead of system default
-        subprocess.Popen(["firefox", url])
-        return ToolResult(True, f"Abriendo {url} en Firefox.", "🌐 RED")
+        # webbrowser.open() is much more secure in Linux/Snap than subprocess.Popen
+        webbrowser.open(url)
+        return ToolResult(True, f"Abriendo {url} en el navegador del sistema.", "🌐 RED")
     except Exception as e:
-        log.error("Failed to launch Firefox: %s", e)
-        return ToolResult(False, f"Error al abrir Firefox: {e}", "🌐 RED")
+        log.error("Failed to launch browser: %s", e)
+        return ToolResult(False, f"Error al abrir el navegador: {e}", "🌐 RED")
 
 def tool_read_url(args, ctx):
     """Read and extract clean text content from a web page."""
