@@ -95,6 +95,15 @@ if (window.lucySocket) {
   window.lucySocket.on('moltbot_log', (data) => {
     addLog(data.message, data.type || 'info');
   });
+
+  // --- FIX INICIO: Borrar animación cuando Lucy termina ---
+  window.lucySocket.on('status', (data) => {
+    // Si Lucy dice "Ready" o da error, dejamos de pensar
+    if (data.message === 'Ready' || data.type === 'error') {
+      hideTypingIndicator();
+    }
+  });
+  // --- FIX FIN ---
 }
 
 function scrollChatToTop() {
