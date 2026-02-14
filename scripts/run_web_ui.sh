@@ -16,6 +16,7 @@ export PYTHONPATH="$ROOT"
 export LUCY_C_CONFIG="$ROOT/config/config.yaml"
 # Ensure venv executables (e.g., mimic3) and npm globals (e.g., clawdbot) are on PATH
 export PATH="$VENV/bin:$HOME/.npm-global/bin:$PATH"
+export PATH="$ROOT/.venv/bin:$PATH" # Redundant but safe
 
 # CUDA runtime fallback: Ollama ships CUDA 12 libs here.
 # If system CUDA runtime isn't installed, this makes libcublas.so.12 visible.

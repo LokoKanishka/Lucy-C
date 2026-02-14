@@ -97,7 +97,12 @@ def create_app() -> tuple[Flask, SocketIO, Moltbot]:
                 models_data.append(asdict(claw_meta))
         except Exception as e:
             log.exception("Failed to list models")
-            return jsonify({"models": [], "current": moltbot.cfg.ollama.model, "error": str(e)})
+            current_model = moltbot.cfg.ollama.model if moltbot.cfg.llm.provider == "ollama" else (moltbot.cfg.clawdbot.agent_id or "lucy")
+            return jsonify({
+                "models": [{"name": current_model, "id": current_model}], 
+                "current": current_model, 
+                "error": str(e)
+            })
         
         current_model = moltbot.cfg.ollama.model if moltbot.cfg.llm.provider == "ollama" else (moltbot.cfg.clawdbot.agent_id or "lucy")
         

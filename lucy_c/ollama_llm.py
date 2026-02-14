@@ -4,7 +4,7 @@ import logging
 from dataclasses import dataclass
 from typing import List, Optional
 
-import httpx
+import requests
 
 from lucy_c.config import OllamaConfig
 from lucy_c.models_registry import ModelMetadata, get_enriched_models_list
@@ -46,10 +46,9 @@ class OllamaLLM:
         """Helper to fetch raw tags from Ollama API."""
         url = f"{self.cfg.host.rstrip('/')}/api/tags"
         try:
-            with httpx.Client(timeout=10.0) as client:
-                r = client.get(url)
-                r.raise_for_status()
-                return r.json() or {}
+            r = requests.get(url, timeout=10.0)
+            r.raise_for_status()
+            return r.json() or {}
         except Exception as e:
             self.log.error("Failed to fetch Ollama tags: %s", e)
             return {}
@@ -60,10 +59,9 @@ class OllamaLLM:
         target_model = model or self.cfg.model
         payload = {"model": target_model, "prompt": prompt, "stream": False}
         try:
-            with httpx.Client(timeout=120.0) as client:
-                r = client.post(url, json=payload, timeout=120.0)
-                r.raise_for_status()
-                data = r.json()
+            r = requests.post(url, json=payload, timeout=120.0)
+            r.raise_for_status()
+            data = r.json()
             return LLMResult(text=(data.get("response") or "").strip())
         except Exception as e:
             self.log.error("Ollama generate failed: %s", e)
@@ -85,10 +83,9 @@ class OllamaLLM:
                 self.log.warning("ollama_tools module not found, tools disabled")
         
         try:
-            with httpx.Client(timeout=120.0) as client:
-                r = client.post(url, json=payload, timeout=120.0)
-                r.raise_for_status()
-                data = r.json()
+            r = requests.post(url, json=payload, timeout=120.0)
+            r.raise_for_status()
+            data = r.json()
             # Response in data["message"]["content"] for /api/chat
             msg = data.get("message", {})
             content = msg.get("content") or ""
