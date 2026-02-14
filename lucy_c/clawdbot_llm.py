@@ -3,28 +3,29 @@ from __future__ import annotations
 import json
 import logging
 import subprocess
-from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional, Any
 
 from lucy_c.config import ClawdbotConfig
+from lucy_c.interfaces.llm import LLMProvider, LLMResponse
 
 
-@dataclass
-class LLMResult:
-    text: str
-
-
-class ClawdbotLLM:
+class ClawdbotLLM(LLMProvider):
     """LLM provider backed by the local Clawdbot Gateway OpenAI-compatible endpoint."""
 
     def __init__(self, cfg: ClawdbotConfig):
         self.cfg = cfg
         self.log = logging.getLogger("LucyC.Clawdbot")
 
-    def generate(self, prompt: str, *, model: Optional[str] = None, user: Optional[str] = None) -> LLMResult:
+    def list_models(self) -> List[str]:
+        """List available agents/models. For now returns the configured agent."""
+        return [self.cfg.agent_id or "lucy"]
+
+    def generate(self, prompt: str, **kwargs) -> LLMResponse:
         """Single-turn generation using the 'clawdbot agent' CLI."""
+        target_model = kwargs.get("model")
+        user = kwargs.get("user")
+        
         # Use the session_user as session-id for Clawdbot's internal memory
-        # to ensure the CLI itself can manage context if needed.
         session_id = user or "lucy-c:anonymous"
         
         cmd = [
@@ -37,34 +38,28 @@ class ClawdbotLLM:
             "--timeout", "120"
         ]
 
-        if model:
-            # If the user provides a specific model, we can try passing it as the agent
-            # if the agent_id is generic, but the ticket says "by flag CLI".
-            # We'll stick to the agent_id from config or let model override it if it looks like an agent id.
-            if ":" not in model: # Crude check to see if it's a clawdbot agent ID vs ollama model
-                 cmd[3] = model 
+        if target_model:
+            if ":" not in target_model: 
+                 cmd[3] = target_model 
 
         self.log.info("Clawdbot CLI Execution: %s", " ".join(cmd))
         try:
             res = subprocess.run(cmd, capture_output=True, text=True, timeout=130)
             if res.returncode != 0:
                 self.log.error("Clawdbot CLI failed (exit %d): %s", res.returncode, res.stderr)
-                return LLMResult(text=f"Error (Clawdbot CLI): {res.stderr.strip() or 'Unknown error'}")
+                return LLMResponse(text=f"Error (Clawdbot CLI): {res.stderr.strip() or 'Unknown error'}")
 
             stdout_clean = res.stdout.strip()
             if not stdout_clean:
-                return LLMResult(text="Error: Clawdbot CLI returned no output.")
+                return LLMResponse(text="Error: Clawdbot CLI returned no output.")
 
             try:
                 data = json.loads(stdout_clean)
             except json.JSONDecodeError as je:
                 self.log.error("Clawdbot CLI returned invalid JSON: %s", stdout_clean)
-                # Fallback to raw text if it's not JSON but might be the answer
-                return LLMResult(text=stdout_clean)
+                return LLMResponse(text=stdout_clean)
 
-            # Robust extraction: 
-            # 1. Look for result.payloads[0].text (Clawdbot standard)
-            # 2. Look for 'reply' or 'message' keys
+            # Robust extraction logic
             content = ""
             if isinstance(data, dict):
                 result_obj = data.get("result", {})
@@ -77,21 +72,21 @@ class ClawdbotLLM:
             
             if not content:
                 self.log.warning("Clawdbot CLI returned empty content: %s", data)
-                return LLMResult(text="Error: No se pudo extraer la respuesta de Clawdbot.")
+                return LLMResponse(text="Error: No se pudo extraer la respuesta de Clawdbot.", raw_response=data)
 
-            return LLMResult(text=str(content).strip())
+            return LLMResponse(text=str(content).strip(), raw_response=data)
         except subprocess.TimeoutExpired:
             self.log.error("Clawdbot CLI timed out")
-            return LLMResult(text="Error: La operación de Clawdbot excedió el tiempo límite.")
+            return LLMResponse(text="Error: La operación de Clawdbot excedió el tiempo límite.")
         except Exception as e:
             self.log.exception("Clawdbot CLI exception")
-            return LLMResult(text=f"Error inesperado al llamar a Clawdbot: {e}")
+            return LLMResponse(text=f"Error inesperado al llamar a Clawdbot: {e}")
 
-    def chat(self, messages: list[dict], *, model: Optional[str] = None, user: Optional[str] = None) -> LLMResult:
+    def chat(self, messages: List[dict], **kwargs) -> LLMResponse:
         """Chat wrapper. Since CLI handles session internally via --session-id, 
         we just send the last message here."""
         if not messages:
-            return LLMResult(text="")
+            return LLMResponse(text="")
         
         last_msg = messages[-1].get("content", "")
-        return self.generate(last_msg, model=model, user=user)
+        return self.generate(last_msg, **kwargs)

@@ -42,6 +42,7 @@ class ToolRouter:
         Parses [[tool_name(args)]] from text and executes them.
         Returns the original text with tool results appended.
         """
+        import ast
         # Matches [[ name ( args ) ]] - allowing dots in names just in case
         tool_pattern = re.compile(r'\[\[\s*([\w\.]+)\s*\((.*?)\)\s*\]\]')
         matches = tool_pattern.findall(text)
@@ -68,11 +69,20 @@ class ToolRouter:
                 final_response += f"\n\n[⚠️ BASE CORE]: Herramienta '{tool_name}' no disponible."
                 continue
 
-            # 3. Parse Args (Improved: handles quoted strings with commas)
+            # 3. Parse Args (Secure AST parsing)
             try:
-                # Basic comma split but careful with quotes would be better.
-                # For now, improved split:
-                args = self._smart_split(args_str)
+                # Wrap args in tuple to make it a valid python literal expression
+                # e.g. "arg1, arg2" -> "('arg1', 'arg2')"
+                # If args_str is empty, ast.literal_eval("()") returns ()
+                literal_expr = f"({args_str})" if args_str.strip() else "()"
+                
+                parsed_args = ast.literal_eval(literal_expr)
+                
+                # Ensure it's a tuple or list, converting to list for tool call
+                if not isinstance(parsed_args, (list, tuple)):
+                    parsed_args = [parsed_args]
+                
+                args = list(parsed_args)
                 
                 # 4. Execute
                 result: ToolResult = self.tools[tool_name](args, context)
@@ -80,34 +90,11 @@ class ToolRouter:
                 self.log.info("%s result: %s", result.tag, result.output)
                 final_response += f"\n\n[{result.tag}]: {result.output}"
                 
+            except (ValueError, SyntaxError) as e:
+                self.log.error("Tool argument parsing failed for '%s': %s", args_str, e)
+                final_response += f"\n\n[⚠️ ERROR SINTAXIS]: No pude entender los argumentos de {tool_name}: {e}"
             except Exception as e:
                 self.log.error("Tool execution failed: %s", e)
                 final_response += f"\n\n[Moltbot Error]: Hubo un fallo inesperadamente ejecutando {tool_name}."
                 
         return final_response
-
-    def _smart_split(self, s: str) -> List[str]:
-        """Split arguments by comma but respect quotes."""
-        # This is a basic implementation; a full parser would be better but this covers most cases.
-        parts = []
-        current = []
-        in_quotes = False
-        quote_char = ""
-        
-        for char in s:
-            if char in ('"', "'"):
-                if not in_quotes:
-                    in_quotes = True
-                    quote_char = char
-                elif quote_char == char:
-                    in_quotes = False
-                else:
-                    current.append(char)
-            elif char == ',' and not in_quotes:
-                parts.append("".join(current).strip())
-                current = []
-            else:
-                current.append(char)
-        
-        parts.append("".join(current).strip())
-        return [p for p in parts if p]

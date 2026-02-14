@@ -1,18 +1,13 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Any
 
 import requests
 
 from lucy_c.config import OllamaConfig
 from lucy_c.models_registry import ModelMetadata, get_enriched_models_list
-
-
-@dataclass
-class LLMResult:
-    text: str
+from lucy_c.interfaces.llm import LLMProvider, LLMResponse
 
 
 class OllamaChatError(Exception):
@@ -21,7 +16,7 @@ class OllamaChatError(Exception):
         self.original_exc = original_exc
 
 
-class OllamaLLM:
+class OllamaLLM(LLMProvider):
     def __init__(self, cfg: OllamaConfig):
         self.cfg = cfg
         self.log = logging.getLogger("LucyC.Ollama")
@@ -53,24 +48,27 @@ class OllamaLLM:
             self.log.error("Failed to fetch Ollama tags: %s", e)
             return {}
 
-    def generate(self, prompt: str, *, model: Optional[str] = None) -> LLMResult:
+    def generate(self, prompt: str, **kwargs) -> LLMResponse:
         """Simple single-prompt generation."""
         url = f"{self.cfg.host.rstrip('/')}/api/generate"
-        target_model = model or self.cfg.model
+        target_model = kwargs.get("model") or self.cfg.model
         payload = {"model": target_model, "prompt": prompt, "stream": False}
         try:
             r = requests.post(url, json=payload, timeout=120.0)
             r.raise_for_status()
             data = r.json()
-            return LLMResult(text=(data.get("response") or "").strip())
+            text = (data.get("response") or "").strip()
+            return LLMResponse(text=text, raw_response=data)
         except Exception as e:
             self.log.error("Ollama generate failed: %s", e)
             raise OllamaChatError(f"Error generando con Ollama: {e}", e)
 
-    def chat(self, messages: List[dict], *, model: Optional[str] = None, enable_tools: bool = False) -> LLMResult:
+    def chat(self, messages: List[dict], **kwargs) -> LLMResponse:
         """Multi-turn chat completion using /api/chat."""
         url = f"{self.cfg.host.rstrip('/')}/api/chat"
-        target_model = model or self.cfg.model
+        target_model = kwargs.get("model") or self.cfg.model
+        enable_tools = kwargs.get("enable_tools", False)
+        
         payload = {"model": target_model, "messages": messages, "stream": False}
         
         # Enable native tool calling if requested
@@ -90,24 +88,22 @@ class OllamaLLM:
             msg = data.get("message", {})
             content = msg.get("content") or ""
             tool_calls = msg.get("tool_calls") or []
-            thinking = msg.get("thinking") or ""
-
+            
             self.log.debug("RAW content: %s", content)
             if tool_calls:
                 self.log.info("NATIVE tool_calls detected: %s", tool_calls)
 
             # Bridge: Convert native tool calls to Moltbot's [[tool(args)]] format
+            # (Logic maintained from original file)
             if tool_calls:
                 tool_lines = []
                 for call in tool_calls:
                     fn = call.get("function", {})
                     name = fn.get("name")
-                    # Strip 'tool.' prefix if Ollama adds it
                     if name and name.startswith("tool."):
                         name = name[5:]
                     args = fn.get("arguments", {})
                     if name:
-                        # Convert dict args to positional string args for smart_split
                         if isinstance(args, dict):
                             arg_strs = [f'"{v}"' if isinstance(v, str) else str(v) for v in args.values()]
                         else:
@@ -116,14 +112,10 @@ class OllamaLLM:
                 
                 if tool_lines:
                     bridge_text = " ".join(tool_lines)
-                    if content:
-                        content = f"{content}\n\n{bridge_text}"
-                    else:
-                        content = bridge_text
+                    content = f"{content}\n\n{bridge_text}" if content else bridge_text
             
             final_content = content.strip()
-            self.log.debug("FINAL content after bridge: %s", final_content)
-            return LLMResult(text=final_content)
+            return LLMResponse(text=final_content, raw_response=data)
         except Exception as e:
             self.log.error("Ollama chat failed: %s", e)
             raise OllamaChatError(f"No pude conectar con Ollama o el modelo falló: {e}", e)

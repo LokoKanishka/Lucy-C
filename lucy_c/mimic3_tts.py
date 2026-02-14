@@ -3,21 +3,15 @@ from __future__ import annotations
 import io
 import logging
 import subprocess
-from dataclasses import dataclass
 
 import numpy as np
 import soundfile as sf
 
 from lucy_c.config import TTSConfig
+from lucy_c.interfaces.audio import TTSProvider, TTSResult
 
 
-@dataclass
-class TTSResult:
-    audio_f32: np.ndarray
-    sample_rate: int
-
-
-class Mimic3TTS:
+class Mimic3TTS(TTSProvider):
     def __init__(self, cfg: TTSConfig):
         self.cfg = cfg
         self.log = logging.getLogger("LucyC.Mimic3")

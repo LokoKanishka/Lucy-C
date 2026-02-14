@@ -3,22 +3,16 @@ from __future__ import annotations
 import logging
 import os
 import threading
-from dataclasses import dataclass
 from typing import Tuple
 
 import numpy as np
 from faster_whisper import WhisperModel
 
 from lucy_c.config import ASRConfig
+from lucy_c.interfaces.audio import ASRProvider, ASRResult
 
 
-@dataclass
-class ASRResult:
-    text: str
-    language: str
-
-
-class FasterWhisperASR:
+class FasterWhisperASR(ASRProvider):
     def __init__(self, cfg: ASRConfig):
         self.cfg = cfg
         self.log = logging.getLogger("LucyC.ASR")
