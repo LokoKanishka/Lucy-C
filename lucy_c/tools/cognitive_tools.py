@@ -37,9 +37,9 @@ def create_cognitive_tools(n8n_tools):
         
         if result.success:
             # Extract the SOTA response from the result
-            return ToolResult(True, f"Respuesta del modelo SOTA:\n{result.message}", "🧠 SOTA")
+            return ToolResult(True, f"Respuesta del modelo SOTA:\n{result.output}", "🧠 SOTA")
         else:
-            return ToolResult(False, f"Error al consultar SOTA: {result.message}", "🧠 SOTA")
+            return ToolResult(False, f"Error al consultar SOTA: {result.output}", "🧠 SOTA")
     
     return {
         "ask_sota": tool_ask_sota

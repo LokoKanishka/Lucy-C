@@ -4,6 +4,7 @@ import logging
 import platform
 import uuid
 import datetime
+import os
 from typing import List, Optional, Dict, Any
 
 from lucy_c.interfaces.llm import LLMProvider, LLMResponse
@@ -65,9 +66,18 @@ class CognitiveEngine:
         now = datetime.datetime.now()
         dynamic_context = f"\n\n[SISTEMA - {now.strftime('%d/%m/%Y %H:%M:%S')}]\n"
         dynamic_context += f"- Hora actual: {now.strftime('%H:%M')}\n"
+        dynamic_context += f"- Directorio actual: {os.getcwd()}\n"
         dynamic_context += f"- SO: {platform.system()} {platform.release()}\n"
         
+        # Integrate Action Enforcer into the main system content
         system_content = SYSTEM_PROMPT + dynamic_context
+        system_content += (
+            "\n\n[INSTRUCCIONES CRÍTICAS DE AGENCIA]\n"
+            "- Recordá que TIENES capacidad técnica real de operar este sistema.\n"
+            "- Si el usuario pide una acción (abrir app, buscar web, archivos, etc.), "
+            "DEBÉS responder EXCLUSIVAMENTE ejecutando la herramienta con el formato [[herramienta(argumentos)]].\n"
+            "- No relatés lo que vas a hacer. No pidas permiso. Ejecutá directamente."
+        )
         
         # 2. Facts
         if self.facts:
@@ -105,17 +115,5 @@ class CognitiveEngine:
             messages.extend(history_messages)
             
         messages.append(current_msg)
-        
-        # 4. Will Injection (Action enforcer)
-        system_reminder = {
-            "role": "system", 
-            "content": (
-                "CRÍTICO: Recordá que TIENES capacidad técnica real de operar este sistema. "
-                "Si el usuario pide una acción (ej. abrir app, buscar en web, leer, interactuar), "
-                "ESTÁS OBLIGADA a responder EXCLUSIVAMENTE ejecutando la herramienta con el formato [[herramienta(argumentos)]]. "
-                "No relates lo que vas a hacer. No te disculpes ni pidas permiso. Ejecuta el comando directamente."
-            )
-        }
-        messages.append(system_reminder)
         
         return messages
