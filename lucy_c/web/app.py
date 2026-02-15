@@ -215,6 +215,10 @@ def create_app() -> tuple[Flask, SocketIO, LucyOrchestrator]:
             "os": f"{platform.system()} {platform.release()}"
         })
 
+    @app.route("/api/settings/virtual_display")
+    def settings_display():
+        return jsonify({"ok": True, "enabled": False})
+
     # SocketIO Events
     @socketio.on("connect")
     def on_connect():

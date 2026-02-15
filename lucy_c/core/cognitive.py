@@ -51,10 +51,15 @@ class CognitiveEngine:
         self.log.info("CognitiveEngine reflecting on tool output...")
         
         # Append tool output to the conversation context
-        # We need to reconstruct the messages similar to how they were sent, + the tool result
         reflection_messages = original_context + [
             {"role": "assistant", "content": tool_output},
-            {"role": "user", "content": "Mirá los resultados de las herramientas arriba y dame una respuesta final natural condensada para el usuario. No repitas los bloques [TAG]."}
+            {"role": "user", "content": (
+                "ACTUALIZACIÓN: Los resultados de las herramientas arriba son la VERDAD ACTUAL Y ABSOLUTA. "
+                "Si los resultados contradicen tu conocimiento interno, IGNORÁ tu conocimiento interno. "
+                "Dáme la respuesta final para el usuario basada estrictamente en los datos obtenidos. "
+                "Mantené tu personalidad argentina pero sé precisa con los datos. "
+                "No menciones los bloques [TAG] ni que usaste herramientas."
+            )}
         ]
         
         response = self.llm.chat(reflection_messages, model=model_name, user=session_user)
@@ -64,31 +69,30 @@ class CognitiveEngine:
         """Constructs the list of messages including dynamic system prompt & history."""
         # 1. System Prompt & Dynamic Info
         now = datetime.datetime.now()
-        dynamic_context = f"\n\n[SISTEMA - {now.strftime('%d/%m/%Y %H:%M:%S')}]\n"
+        dynamic_context = f"\n\n[CONTEXTO DEL SISTEMA - {now.strftime('%d/%m/%Y %H:%M:%S')}]\n"
         dynamic_context += f"- Hora actual: {now.strftime('%H:%M')}\n"
-        dynamic_context += f"- Directorio actual: {os.getcwd()}\n"
+        dynamic_context += f"- Directorio: {os.getcwd()}\n"
         dynamic_context += f"- SO: {platform.system()} {platform.release()}\n"
         
-        # Integrate Action Enforcer into the main system content
-        system_content = SYSTEM_PROMPT + dynamic_context
-        system_content += (
-            "\n\n[INSTRUCCIONES CRÍTICAS DE AGENCIA]\n"
-            "- Recordá que TIENES capacidad técnica real de operar este sistema.\n"
-            "- Si el usuario pide una acción (abrir app, buscar web, archivos, etc.), "
-            "DEBÉS responder EXCLUSIVAMENTE ejecutando la herramienta con el formato [[herramienta(argumentos)]].\n"
-            "- No relatés lo que vas a hacer. No pidas permiso. Ejecutá directamente."
+        # Action Enforcer Instructions - simplified and direct
+        action_instructions = (
+            "\n\n[INSTRUCCIONES DE AGENCIA - PRIORIDAD MÁXIMA]\n"
+            "- Tenés capacidad técnica REAL. Si el usuario pide una acción (web, archivos, app), "
+            "DEBÉS usar [[herramienta(args)]] de inmediato.\n"
+            "- IMPORTANTE: No respondas con texto plano si podés usar una herramienta."
         )
+        
+        system_content = SYSTEM_PROMPT + dynamic_context + action_instructions
         
         # 2. Facts
         if self.facts:
             fact_summary = self.facts.get_facts_summary(session_user)
             if fact_summary:
-                system_content += f"\n\n{fact_summary}"
-        
-        messages = [{"role": "system", "content": system_content}]
-        current_msg = {"role": "user", "content": user_text}
+                system_content += f"\n\n[DATOS DEL USUARIO]\n{fact_summary}"
         
         # 3. History (truncated)
+        messages = [{"role": "system", "content": system_content}]
+        
         base_size = len(system_content) + len(user_text)
         available_chars = self.max_context_chars - base_size
         
@@ -98,22 +102,21 @@ class CognitiveEngine:
             total_chars = 0
             
             for item in reversed(past_items):
-                user_content = item.get("transcript") or item.get("user_text") or ""
-                assistant_content = item.get("reply") or ""
+                u_text = item.get("transcript") or item.get("user_text") or ""
+                a_text = item.get("reply") or ""
                 
-                pair_size = len(user_content) + len(assistant_content)
+                pair_size = len(u_text) + len(a_text)
                 if total_chars + pair_size > available_chars:
                     break
                 
-                if assistant_content:
-                    history_messages.insert(0, {"role": "assistant", "content": assistant_content})
-                if user_content:
-                    history_messages.insert(0, {"role": "user", "content": user_content})
+                if a_text:
+                    history_messages.insert(0, {"role": "assistant", "content": a_text})
+                if u_text:
+                    history_messages.insert(0, {"role": "user", "content": u_text})
                 
                 total_chars += pair_size
             
             messages.extend(history_messages)
             
-        messages.append(current_msg)
-        
+        messages.append({"role": "user", "content": user_text})
         return messages

@@ -101,9 +101,28 @@ if (window.lucySocket) {
     // Si Lucy dice "Ready" o da error, dejamos de pensar
     if (data.message === 'Ready' || data.type === 'error') {
       hideTypingIndicator();
+      updateStatus(data.message, data.type);
+    } else {
+      updateStatus(data.message, data.type || 'info');
     }
   });
-  // --- FIX FIN ---
+
+  window.lucySocket.on('tool_event', (data) => {
+    console.log('Tool Event:', data);
+    // Show a temporary "activity" badge in the status bar or add a log
+    addLog(`${data.emoji} ${data.message}`, data.category);
+
+    // We could also trigger a specific HUD update here if we had one
+    const hud = document.getElementById('monitoring-hud');
+    if (hud) {
+      // Logic to light up a specific indicator
+      const target = hud.querySelector(`[data-tool="${data.tool}"]`);
+      if (target) {
+        target.classList.add('active');
+        setTimeout(() => target.classList.remove('active'), 2000);
+      }
+    }
+  });
 }
 
 function scrollChatToTop() {

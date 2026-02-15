@@ -16,10 +16,18 @@ ALLOWED_BINARIES = {
     "whoami": {"allow_args": False},
     "gnome-calculator": {"allow_args": False},
     "calc": {"allow_args": False, "alias_for": "gnome-calculator"},
-    "code": {
-        "allow_args": True,
-        "path_restriction": "PROJECT_ROOT"
-    },
+    "firefox": {"allow_args": True},
+    "google-chrome-stable": {"allow_args": True},
+    "google-chrome": {"allow_args": True, "alias_for": "google-chrome-stable"},
+    "chrome": {"allow_args": True, "alias_for": "google-chrome-stable"},
+    "chromium-browser": {"allow_args": True},
+    "code": {"allow_args": True}, # VSCode
+    "nautilus": {"allow_args": True},
+    "archivos": {"allow_args": True, "alias_for": "nautilus"},
+    "gnome-terminal": {"allow_args": True},
+    "terminal": {"allow_args": True, "alias_for": "gnome-terminal"},
+    "xdg-open": {"allow_args": True},
+    "wmctrl": {"allow_args": True},
     "date": {"allow_args": False},
     "echo": {"allow_args": True}, # Be careful with this, but often useful for testing
     "cat": {
@@ -93,6 +101,19 @@ def tool_os_run_secure(args, ctx):
             real_binary = policy["alias_for"]
             parts[0] = real_binary
             
+        # Detect if it's a GUI app or should be backgrounded
+        # Firefox, Chrome, VSCode, etc. should not block the loop.
+        gui_indicators = [
+            "firefox", "chrome", "chromium", "code", "nautilus", 
+            "gnome-calculator", "calc", "gnome-terminal", "xdg-open"
+        ]
+        is_gui = any(x in binary.lower() for x in gui_indicators)
+        
+        if is_gui:
+            log.info("Launching GUI application in background: %s", parts)
+            subprocess.Popen(parts, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, preexec_fn=os.setpgrp)
+            return ToolResult(True, f"Ejecutando '{raw_cmd}' en segundo plano.", "🖥️ OS")
+
         # Run with shell=False for maximum security
         res = subprocess.run(
             parts, 

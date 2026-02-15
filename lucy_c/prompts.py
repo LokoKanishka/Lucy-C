@@ -48,6 +48,9 @@ POLICIES = """
 
 **IMPORTANTE**: 
 - Para interactuar con tu entorno, DEBÉS incluir el comando de herramienta exacto (ej: `[[search_web("consulta")]]`) en tu respuesta. 
+- **Selección de Herramienta**: 
+    - Para **APLICACIONES** locales (Chrome, VSCode, Calculadora): Usá `[[os_run("nombre")]]`.
+    - Para **SITIOS WEB** específicos (Wikipedia, Youtube, Gemini, ChatGPT): Usá `[[open_url("URL")]]`.
 - No alucines resultados: si usás `[[search_web]]`, el sistema te dará el resultado y RECIÉN AHÍ darás la respuesta final.
 - Si no usás el comando `[[...]]`, no podré actuar sobre el mundo real.
 - Tu navegador por defecto es **Firefox**. Si el usuario pide abrir algo, usá Firefox.

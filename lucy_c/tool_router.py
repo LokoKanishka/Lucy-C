@@ -37,14 +37,14 @@ class ToolRouter:
         
         return None
 
-    def parse_and_execute(self, text: str, context: Dict[str, Any]) -> str:
+    def parse_and_execute(self, text: str, context: Dict[str, Any], status_callback: Optional[Callable[[str, str], None]] = None) -> str:
         """
         Parses [[tool_name(args)]] from text and executes them.
         Returns the original text with tool results appended.
         """
         import ast
         # Matches [[ name ( args ) ]] - allowing dots in names just in case
-        tool_pattern = re.compile(r'\[\[\s*([\w\.]+)\s*\((.*?)\)\s*\]\]')
+        tool_pattern = re.compile(r'\[\[\s*([\w\.]+)\s*\((.*?)\)\s*\]\]', re.DOTALL)
         matches = tool_pattern.findall(text)
         
         if not matches:
@@ -61,6 +61,8 @@ class ToolRouter:
             if sec_error:
                 self.log.warning("Security trigger: %s", sec_error)
                 final_response += f"\n\n[⚠️ SEGURIDAD]: {sec_error}"
+                if status_callback:
+                    status_callback(f"⚠️ Bloqueo de seguridad: {tool_name}", "warning")
                 continue
 
             # 2. Find Tool
@@ -85,6 +87,20 @@ class ToolRouter:
                 args = list(parsed_args)
                 
                 # 4. Execute
+                if status_callback:
+                    # Map tool names to friendly status messages for app.py badges
+                    status_map = {
+                        "search_web": "Buscando en internet...",
+                        "web_search": "Buscando en internet...",
+                        "os_run": "Ejecutando comando...",
+                        "screenshot": "Mirando pantalla...",
+                        "read_file": "Leyendo archivo...",
+                        "write_file": "Escribiendo archivo...",
+                        "remember": "Guardando en memoria..."
+                    }
+                    status_msg = status_map.get(tool_name, f"Ejecutando {tool_name}...")
+                    status_callback(status_msg, "info")
+
                 result: ToolResult = self.tools[tool_name](args, context)
                 
                 self.log.info("%s result: %s", result.tag, result.output)

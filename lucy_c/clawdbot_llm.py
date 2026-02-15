@@ -83,10 +83,32 @@ class ClawdbotLLM(LLMProvider):
             return LLMResponse(text=f"Error inesperado al llamar a Clawdbot: {e}")
 
     def chat(self, messages: List[dict], **kwargs) -> LLMResponse:
-        """Chat wrapper. Since CLI handles session internally via --session-id, 
-        we just send the last message here."""
+        """Chat wrapper with history compression. 
+        We pass the messages in a structured way that works best with the CLI.
+        """
         if not messages:
             return LLMResponse(text="")
         
-        last_msg = messages[-1].get("content", "")
-        return self.generate(last_msg, **kwargs)
+        # Identify System Prompt
+        system_msg = next((m.get("content", "") for m in messages if m.get("role") == "system"), "")
+        
+        # Get history (excluding system prompt)
+        history_msgs = [m for m in messages if m.get("role") != "system"]
+        
+        # Take last 5 messages for context
+        recent_history = history_msgs[-6:] if len(history_msgs) > 6 else history_msgs
+        
+        # Use a flatter format to avoid confusion in the local agent
+        prompt_parts = []
+        if system_msg:
+            prompt_parts.append(system_msg)
+            prompt_parts.append("---")
+        
+        for m in recent_history:
+            role = m.get("role", "user").upper()
+            content = m.get("content", "")
+            prompt_parts.append(f"{role}: {content}")
+            
+        full_prompt = "\n".join(prompt_parts)
+        
+        return self.generate(full_prompt, **kwargs)

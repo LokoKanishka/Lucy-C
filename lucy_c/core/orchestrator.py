@@ -72,7 +72,11 @@ class LucyOrchestrator:
         final_text = thought_text
         try:
             # We check if execution changes the text (meaning tools ran and appended output)
-            processed_text = self.body.execute(thought_text, context={"session_user": session_user})
+            processed_text = self.body.execute(
+                thought_text, 
+                context={"session_user": session_user},
+                status_callback=self.status_callback
+            )
             
             if processed_text != thought_text:
                 # Tools ran. We need to reflect.

@@ -52,13 +52,13 @@ class ActionController:
                 self.log.warning("Lucy Body: Hands (Automation) not available: %s", e)
         return self._hands
 
-    def execute(self, text_with_tools: str, context: Dict[str, Any] | None = None) -> str:
+    def execute(self, text_with_tools: str, context: Dict[str, Any] | None = None, status_callback: Optional[Callable[[str, str], None]] = None) -> str:
         """
         Parses and executes tools found in the text.
         Returns the original text with tool results appended.
         """
         import re
-        tool_pattern = re.compile(r'\[\[\s*([\w.]+)\s*\((.*?)\)\s*\]\]')
+        tool_pattern = re.compile(r'\[\[\s*([\w.]+)\s*\((.*?)\)\s*\]\]', re.DOTALL)
         matches = tool_pattern.findall(text_with_tools)
         
         if matches:
@@ -67,7 +67,7 @@ class ActionController:
             return text_with_tools
 
         try:
-            result_text = self.tool_router.parse_and_execute(text_with_tools, context or {})
+            result_text = self.tool_router.parse_and_execute(text_with_tools, context or {}, status_callback=status_callback)
             return result_text
         except Exception as e:
             self.log.error("Action execution failed: %s", e, exc_info=True)
