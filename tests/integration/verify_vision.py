@@ -3,7 +3,7 @@ from pathlib import Path
 import logging
 
 # Add the project root to sys.path
-root = Path(__file__).resolve().parents[1]
+root = Path(__file__).resolve().parents[2]
 sys.path.append(str(root))
 
 from lucy_c.config import LucyConfig

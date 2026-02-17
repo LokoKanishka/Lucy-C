@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 # Add the project root to sys.path
-root = Path(__file__).resolve().parents[1]
+root = Path(__file__).resolve().parents[2]
 sys.path.append(str(root))
 
 from lucy_c.prompts import get_canonical_prompt, PROMPT_VERSION

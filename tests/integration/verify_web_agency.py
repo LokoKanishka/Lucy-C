@@ -4,7 +4,7 @@ import sys
 import logging
 from pathlib import Path
 
-root = Path(__file__).resolve().parents[1]
+root = Path(__file__).resolve().parents[2]
 sys.path.append(str(root))
 
 from lucy_c.config import LucyConfig

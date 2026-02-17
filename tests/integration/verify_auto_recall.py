@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 import time
 
-root = Path(__file__).resolve().parents[1]
+root = Path(__file__).resolve().parents[2]
 sys.path.append(str(root))
 
 from lucy_c.config import LucyConfig
