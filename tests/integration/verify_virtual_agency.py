@@ -10,7 +10,7 @@ import time
 import subprocess
 
 # Add parent dir to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
 
 
 def test_virtual_display():
