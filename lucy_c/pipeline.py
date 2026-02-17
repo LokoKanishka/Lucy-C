@@ -34,6 +34,7 @@ from lucy_c.tools.n8n_tools import create_n8n_tools
 from lucy_c.tools.cognitive_tools import create_cognitive_tools
 from lucy_c.rag_engine import MemoryEngine
 from lucy_c.tools.knowledge_tools import create_knowledge_tools
+from lucy_c.tools.core_tools import create_core_tools
 
 
 @dataclass
@@ -167,110 +168,12 @@ class Moltbot:
                 return f"Acción '{action}' bloqueada por Modo Seguro. Por favor, confirmá explícitamente."
             return None
 
-        def tool_remember(args, ctx):
-            session_user = ctx.get("session_user")
-            if not self.facts or not session_user:
-                return ToolResult(False, "Almacén de hechos no disponible.", "⚠️ ERROR CORE")
-            if len(args) < 2:
-                return ToolResult(False, "Faltan argumentos para remember(clave, valor).", "⚠️ ERROR CORE")
-            
-            # Sensitivity check (example key)
-            if self.cfg.safe_mode and args[0] in ["password", "token", "secreto"]:
-                return ToolResult(False, f"Seguridad: No puedo guardar '{args[0]}' en Modo Seguro.", "🛡️ SEGURIDAD")
-
-            self.facts.set_fact(session_user, args[0], args[1])
-            return ToolResult(True, f"Recordado: {args[0]} = {args[1]}", "🧠 MEMORIA")
-
-        def tool_forget(args, ctx):
-            if self.cfg.safe_mode:
-                return ToolResult(False, "Olvidar está bloqueado en Modo Seguro por precaución.", "🛡️ SEGURIDAD")
-            
-            session_user = ctx.get("session_user")
-            if not self.facts or not session_user:
-                return ToolResult(False, "Almacén de hechos no disponible.", "⚠️ ERROR CORE")
-            if not args:
-                return ToolResult(False, "Falta argumento para forget(clave).", "⚠️ ERROR CORE")
-            self.facts.remove_fact(session_user, args[0])
-            return ToolResult(True, f"Olvidado: {args[0]}", "🧠 MEMORIA")
-
-        def tool_screenshot(args, ctx):
-            if not self.eyes:
-                return ToolResult(False, "Sensores de visión no disponibles.", "⚠️ ERROR CORE")
-            return ToolResult(True, self.eyes.describe_screen(), "👁️ OJOS")
-
-        def tool_type(args, ctx):
-            if not self.hands or not args:
-                return ToolResult(False, "Actuadores no disponibles o faltan argumentos.", "🖐️ MANOS")
-            return ToolResult(True, self.hands.type_text(args[0]), "🖐️ MANOS")
-
-        def tool_press(args, ctx):
-            if not self.hands or not args:
-                return ToolResult(False, "Actuadores no disponibles o faltan argumentos.", "🖐️ MANOS")
-            return ToolResult(True, self.hands.press_key(args[0]), "🖐️ MANOS")
-
-        def tool_click(args, ctx):
-            if not self.hands:
-                return ToolResult(False, "Actuadores no disponibles.", "🖐️ MANOS")
-            
-            # click(x, y, button, clicks)
-            x = int(args[0]) if len(args) > 0 and args[0].isdigit() else None
-            y = int(args[1]) if len(args) > 1 and args[1].isdigit() else None
-            button = args[2] if len(args) > 2 else 'left'
-            clicks = int(args[3]) if len(args) > 3 and args[3].isdigit() else 1
-            
-            return ToolResult(True, self.hands.click(x, y, button, clicks), "🖐️ MANOS")
-
-        def tool_hotkey(args, ctx):
-            if not self.hands or not args:
-                return ToolResult(False, "Actuadores no disponibles o faltan argumentos.", "🖐️ MANOS")
-            return ToolResult(True, self.hands.hotkey(*args), "🖐️ MANOS")
-
-        def tool_wait(args, ctx):
-            if not args or not self.hands:
-                return ToolResult(False, "Falta argumento para wait(segundos).", "🖐️ MANOS")
-            try:
-                seconds = float(args[0])
-                return ToolResult(True, self.hands.wait(seconds), "🖐️ MANOS")
-            except:
-                return ToolResult(False, "Argumento de wait debe ser un número.", "🖐️ MANOS")
-
-        def tool_move(args, ctx):
-            if len(args) < 2 or not self.hands:
-                return ToolResult(False, "Faltan coordenadas para move(x, y).", "🖐️ MANOS")
-            try:
-                x, y = int(args[0]), int(args[1])
-                return ToolResult(True, self.hands.move_to(x, y), "🖐️ MANOS")
-            except Exception as e:
-                return ToolResult(False, f"Error en move: {e}", "🖐️ MANOS")
-
-        def tool_get_info(args, ctx):
-            import datetime
-            import platform
-            tipo = args[0].lower() if args else "time"
-            if tipo == "time":
-                now = datetime.datetime.now().strftime("%H:%M:%S")
-                return ToolResult(True, f"La hora actual es: {now}", "⚙️ SISTEMA")
-            elif tipo == "date":
-                today = datetime.datetime.now().strftime("%d/%m/%Y")
-                return ToolResult(True, f"La fecha de hoy es: {today}", "⚙️ SISTEMA")
-            elif tipo == "os":
-                info = f"{platform.system()} {platform.release()}"
-                return ToolResult(True, f"Información del sistema: {info}", "⚙️ SISTEMA")
-            else:
-                return ToolResult(False, f"Tipo de información '{tipo}' no soportado.", "⚠️ ERROR CORE")
-
-        self.tool_router.register_tool("remember", tool_remember)
-        self.tool_router.register_tool("forget", tool_forget)
-        self.tool_router.register_tool("screenshot", tool_screenshot)
-        self.tool_router.register_tool("type", tool_type)
-        self.tool_router.register_tool("press", tool_press)
-        self.tool_router.register_tool("click", tool_click)
-        self.tool_router.register_tool("hotkey", tool_hotkey)
-        self.tool_router.register_tool("wait", tool_wait)
-        self.tool_router.register_tool("move", tool_move)
-        self.tool_router.register_tool("read_file", tool_read_file)
-        self.tool_router.register_tool("write_file", tool_write_file)
-        self.tool_router.register_tool("get_info", tool_get_info)
+        # Core tools extracted to lucy_c/tools/core_tools.py
+        core_tools = create_core_tools(self)
+        for name, func in core_tools.items():
+            self.tool_router.register_tool(name, func)
+        
+        # Manually register aliases for core tools
         self.tool_router.register_tool("check_shipping", tool_check_shipping)
         self.tool_router.register_tool("process_payment", tool_process_payment)
         self.tool_router.register_tool("generate_budget_pdf", tool_generate_budget_pdf)
@@ -286,7 +189,7 @@ class Moltbot:
         self.tool_router.register_tool("google_search", tool_web_search)
         self.tool_router.register_tool("web_search", tool_web_search)
         self.tool_router.register_tool("browser.run", tool_os_run)
-        self.tool_router.register_tool("browser.screenshot", tool_screenshot)
+        self.tool_router.register_tool("browser.screenshot", core_tools["screenshot"])
         
         # n8n orchestration tools
         n8n_tools = create_n8n_tools(self.cfg.n8n)
@@ -302,44 +205,12 @@ class Moltbot:
             self.tool_router.register_tool("memorize_file", knowledge_tools["memorize_file"])
             self.tool_router.register_tool("recall", knowledge_tools["recall"])
             self.tool_router.register_tool("memory_stats", knowledge_tools["memory_stats"])
-        
-        # We handle 'assistant' specially if it's used as a generic wrapper
-        def tool_assistant(args, ctx):
-            if not args: return ToolResult(False, "No args for assistant wrapper", "⚠️")
             
-            inner_tool = args[0]
-            inner_args = args[1:]
-            
-            # Robustness: sometimes models put the tool name in quotes or as a key
-            if not inner_tool and inner_args:
-                # Handle case where first arg is empty but more follow
-                inner_tool = inner_args[0]
-                inner_args = inner_args[1:]
-
-            if inner_tool in self.tool_router.tools:
-                return self.tool_router.tools[inner_tool](inner_args, ctx)
-                
-            return ToolResult(False, f"Inner tool '{inner_tool}' not found or invalid.", "⚠️")
-            
-        self.tool_router.register_tool("assistant", tool_assistant)
-        
         # Vision UI tools (OCR-based intelligent interaction)
         self.tool_router.register_tool("scan_ui", tool_scan_ui)
         self.tool_router.register_tool("click_text", tool_click_text)
         self.tool_router.register_tool("peek", tool_peek_desktop)
         self.tool_router.register_tool("peek_desktop", tool_peek_desktop)
-        
-        # Scroll tool
-        def tool_scroll(args, ctx):
-            if not self.hands or not args:
-                return ToolResult(False, "Falta argumento para scroll(clicks).", "🖐️ MANOS")
-            try:
-                clicks = int(args[0])
-                return ToolResult(True, self.hands.scroll(clicks), "🖐️ MANOS")
-            except:
-                return ToolResult(False, "Argumento de scroll debe ser un número.", "🖐️ MANOS")
-        
-        self.tool_router.register_tool("scroll", tool_scroll)
 
     def _execute_tools(self, text: str, *, session_user: str | None = None, context: dict | None = None) -> str:
         """Execute tools found in text and return text with results appended."""
