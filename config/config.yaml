@@ -1,0 +1,30 @@
+# Lucy-C configuration
+asr:
+  model: "Systran/faster-whisper-large-v3"
+  device: "cuda"
+  compute_type: "float16"
+  language: "es"
+  task: "transcribe"
+  force_language: true
+
+llm:
+  provider: "ollama"
+
+ollama:
+  host: "http://127.0.0.1:11434"
+  model: "lucy:32b"
+
+clawdbot:
+  host: "http://127.0.0.1:18789"
+  agent_id: "lucy"
+
+tts:
+  voice: "es_ES/m-ailabs_low#karen_savage"
+
+audio:
+  sample_rate: 16000
+
+n8n:
+  base_url: "http://localhost:5678"
+  webhook_prefix: "lucy-"
+  timeout: 30.0

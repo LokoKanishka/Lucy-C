@@ -1,8 +1,21 @@
+.env
 .env.fusion
-*.log
+.DS_Store
+
 .venv/
 .venv-mcp/
+venv/
+__pycache__/
+*.pyc
 **/__pycache__/
 **/*.pyc
 **/node_modules/
+
+# runtime data
+/data/
+*.log
+diagnosis.log
+server_verification*.log
+smoke_results*.txt
+verify_output*.txt
 integration/workspace/antigravity_runs/
