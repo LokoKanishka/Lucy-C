@@ -24,7 +24,7 @@
 
     <section class="app-grid">
       <aside class="panel sidebar">
-        <h2 class="panel-title">Operaciones</h2>
+        <h2 class="panel-title">Operaciones A la Izquierda</h2>
 
         <div class="block">
           <h3>Puerta de Enlace</h3>
@@ -40,11 +40,14 @@
         </div>
 
         <div class="block">
-          <h3>Botonera Principal</h3>
+          <h3>Botonera A (Clon NiN)</h3>
           <div class="stack">
-            <form method="post" action="/ops/smoke"><input type="hidden" name="which" value="both" /><button type="submit">Smoke Completo</button></form>
-            <form method="post" action="/ops/smoke"><input type="hidden" name="which" value="webhook_smoke" /><button type="submit">Smoke Webhook</button></form>
-            <form method="post" action="/ops/smoke"><input type="hidden" name="which" value="gateway_e2e" /><button type="submit">Smoke Gateway</button></form>
+            <form method="post" action="/ops/smoke"><input type="hidden" name="which" value="both" /><button type="submit">Fumar Ambos</button></form>
+            <form method="post" action="/ops/smoke"><input type="hidden" name="which" value="webhook_smoke" /><button type="submit">Webhook de Humo</button></form>
+            <form method="post" action="/ops/smoke"><input type="hidden" name="which" value="gateway_e2e" /><button type="submit">Puerta de Humo</button></form>
+            <a class="btn-link" href="/browse/inbox">Explorar la Bandeja de Entrada</a>
+            <a class="btn-link" href="/browse/outbox">Explorar la Bandeja de Salida</a>
+            <a class="btn-link" href="/browse/deadletter">Explorar Deadletter</a>
           </div>
         </div>
       </aside>
@@ -67,6 +70,18 @@
         </form>
 
         <section class="block">
+          <h3>Botonera Clonada del Otro Panel</h3>
+          <div class="stack">
+            <form method="post" action="/ops/smoke"><input type="hidden" name="which" value="both" /><button type="submit">Fumar Ambos</button></form>
+            <form method="post" action="/ops/smoke"><input type="hidden" name="which" value="webhook_smoke" /><button type="submit">Webhook de Humo</button></form>
+            <form method="post" action="/ops/smoke"><input type="hidden" name="which" value="gateway_e2e" /><button type="submit">Puerta de Humo</button></form>
+            <a class="btn-link" href="/browse/inbox">Bandeja de Entrada</a>
+            <a class="btn-link" href="/browse/outbox">Bandeja de Salida</a>
+            <a class="btn-link" href="/browse/deadletter">Carta Muerta</a>
+          </div>
+        </section>
+
+        <section class="block">
           <h3>Bandejas</h3>
           <div class="tray-grid">
             <article class="tray">
@@ -86,22 +101,16 @@
       </section>
 
       <aside class="panel sidebar right">
-        <h2 class="panel-title">Accesos Rápidos</h2>
+        <h2 class="panel-title">Operaciones Correctas</h2>
 
         <div class="block">
-          <h3>Botonera Duplicada</h3>
+          <h3>Botonera B (Clon NiN)</h3>
           <div class="stack">
-            <form method="post" action="/ops/smoke"><input type="hidden" name="which" value="both" /><button type="submit">Smoke Completo</button></form>
-            <form method="post" action="/ops/smoke"><input type="hidden" name="which" value="webhook_smoke" /><button type="submit">Smoke Webhook</button></form>
-            <form method="post" action="/ops/smoke"><input type="hidden" name="which" value="gateway_e2e" /><button type="submit">Smoke Gateway</button></form>
-          </div>
-        </div>
-
-        <div class="block">
-          <h3>Navegación</h3>
-          <div class="stack">
-            <a class="btn-link" href="/browse/inbox">Explorar Entrada</a>
-            <a class="btn-link" href="/browse/outbox">Explorar Salida</a>
+            <form method="post" action="/ops/smoke"><input type="hidden" name="which" value="both" /><button type="submit">Fumar Ambos</button></form>
+            <form method="post" action="/ops/smoke"><input type="hidden" name="which" value="webhook_smoke" /><button type="submit">Webhook de Humo</button></form>
+            <form method="post" action="/ops/smoke"><input type="hidden" name="which" value="gateway_e2e" /><button type="submit">Puerta de Humo</button></form>
+            <a class="btn-link" href="/browse/inbox">Explorar la Bandeja de Entrada</a>
+            <a class="btn-link" href="/browse/outbox">Explorar la Bandeja de Salida</a>
             <a class="btn-link" href="/browse/deadletter">Explorar Deadletter</a>
           </div>
         </div>
