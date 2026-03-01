@@ -77,3 +77,20 @@ Or use the helper script included in this repo:
 ./scripts/git_sync_main.sh
 ./scripts/git_sync_main.sh --force-with-lease
 ```
+
+## Bitacora y memoria de personalidad
+
+Se agrego una bitacora de proyecto y un agente CLI simple para guardar notas de personalidad/preferencias humanas:
+
+- Bitacora: `docs/BITACORA_PROYECTO.md`
+- Perfil del agente: `config/personality_agent.json`
+- CLI: `scripts/personality_agent.py`
+
+Ejemplos:
+
+```bash
+python3 scripts/personality_agent.py show
+python3 scripts/personality_agent.py add-note --text "Mantener explicaciones cortas y claras."
+python3 scripts/personality_agent.py add-preference --preference "Confirmar antes de force-push."
+python3 scripts/personality_agent.py log --cambio "Ajuste de UI" --detalle "Refactor de layout panel NiN." --estado hecho
+```
