@@ -9,36 +9,60 @@ HTML = r"""<!doctype html>
   <title>Molbot Direct Chat</title>
   <style>
     :root {
-      --bg: #050506;
-      --panel: #0d0a0b;
-      --muted: #79ff88;
-      --text: #39ff5a;
-      --user: #2b0a11;
-      --assistant: #1a0b0f;
-      --accent: #ff2343;
-      --border: #641321;
+      --bg: #02030a;
+      --panel: #070b1a;
+      --muted: #8ea3bf;
+      --text: #eaf4ff;
+      --user: rgba(22, 33, 61, 0.92);
+      --assistant: rgba(14, 24, 46, 0.92);
+      --accent: #2fe5ff;
+      --accent-2: #ff3fa2;
+      --border: rgba(86, 214, 255, 0.3);
+      --input-bg: #0c1227;
+      --input-border: rgba(86, 214, 255, 0.26);
+      --chip-bg: rgba(10, 16, 34, 0.9);
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-family: "Outfit", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color: var(--text);
-      background: radial-gradient(1200px 700px at 20% -10%, #6b0f21 0%, transparent 55%), var(--bg);
+      background:
+        radial-gradient(circle at 12% -8%, rgba(70, 120, 255, 0.22) 0%, transparent 34%),
+        radial-gradient(circle at 88% 2%, rgba(255, 43, 145, 0.12) 0%, transparent 30%),
+        linear-gradient(180deg, #040510 0%, #02030a 42%, #06091a 100%);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 16px;
     }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.2;
+      background:
+        repeating-linear-gradient(to bottom,
+          rgba(86, 214, 255, 0.06) 0px,
+          rgba(86, 214, 255, 0.06) 1px,
+          transparent 2px,
+          transparent 4px);
+    }
     .app {
       width: min(1100px, 100%);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      background: var(--panel);
+      border-radius: 18px;
+      background: linear-gradient(145deg, rgba(9, 14, 31, 0.94), rgba(5, 9, 24, 0.92));
       display: grid;
       grid-template-rows: auto auto 1fr auto;
       height: min(92vh, 940px);
       overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(255, 46, 166, 0.08),
+        0 18px 44px rgba(0, 0, 0, 0.55),
+        inset 0 0 26px rgba(77, 238, 234, 0.04);
     }
     .top {
       padding: 10px 14px;
@@ -67,9 +91,9 @@ HTML = r"""<!doctype html>
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      border: 1px solid #ff405f;
-      color: #9dffad;
-      background: linear-gradient(135deg, rgba(132, 13, 35, 0.98), rgba(62, 6, 17, 0.98));
+      border: 1px solid rgba(255, 63, 162, 0.55);
+      color: #d7eaff;
+      background: linear-gradient(135deg, rgba(67, 22, 87, 0.98), rgba(17, 14, 44, 0.98));
       border-radius: 999px;
       padding: 6px 12px;
       font-size: 12px;
@@ -77,25 +101,25 @@ HTML = r"""<!doctype html>
       letter-spacing: 0.06em;
       cursor: pointer;
       text-transform: uppercase;
-      box-shadow: 0 0 0 1px rgba(255, 58, 89, 0.35) inset, 0 0 12px rgba(255, 58, 89, 0.25);
+      box-shadow: 0 0 0 1px rgba(255, 63, 162, 0.3) inset, 0 0 12px rgba(255, 63, 162, 0.2);
     }
     .voice-toggle[data-on="0"] {
-      border-color: #5d3b41;
-      color: #8f9b92;
-      background: linear-gradient(135deg, rgba(28, 24, 25, 0.98), rgba(17, 14, 15, 0.98));
-      box-shadow: inset 0 0 0 1px rgba(110, 90, 94, 0.35);
+      border-color: rgba(86, 214, 255, 0.2);
+      color: #7e8da2;
+      background: linear-gradient(135deg, rgba(14, 20, 39, 0.98), rgba(9, 13, 27, 0.98));
+      box-shadow: inset 0 0 0 1px rgba(86, 214, 255, 0.18);
       opacity: 0.82;
     }
     .voice-dot {
       width: 9px;
       height: 9px;
       border-radius: 50%;
-      background: #ff3a59;
-      box-shadow: 0 0 10px rgba(255, 58, 89, 0.9);
+      background: var(--accent-2);
+      box-shadow: 0 0 10px rgba(255, 63, 162, 0.85);
       transition: transform 0.12s ease;
     }
     .voice-toggle[data-on="0"] .voice-dot {
-      background: #6b585c;
+      background: #50607a;
       box-shadow: none;
     }
     .voice-toggle.speaking .voice-dot {
@@ -110,7 +134,7 @@ HTML = r"""<!doctype html>
       font-size: 12px;
       color: var(--muted);
       border: 1px solid var(--border);
-      background: rgba(35, 10, 15, 0.88);
+      background: var(--chip-bg);
       border-radius: 999px;
       padding: 6px 10px;
       white-space: nowrap;
@@ -142,21 +166,21 @@ HTML = r"""<!doctype html>
     }
     textarea, input, select {
       color: var(--text);
-      background: #13090c;
-      border: 1px solid var(--border);
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
       border-radius: 10px;
       padding: 8px 10px;
     }
     option {
       color: var(--text);
-      background: #2a090f;
+      background: #0f1530;
     }
     input[type="checkbox"] { accent-color: var(--accent); }
     input[type="file"]::file-selector-button,
     input[type="file"]::-webkit-file-upload-button {
-      color: #320108;
-      background: #ff2b4a;
-      border: 1px solid #a3162b;
+      color: #08132e;
+      background: #56d6ff;
+      border: 1px solid #2b7ea6;
       border-radius: 8px;
       padding: 6px 10px;
       font-weight: 700;
@@ -164,7 +188,7 @@ HTML = r"""<!doctype html>
     }
     textarea { min-height: 74px; resize: vertical; width: 100%; }
     button {
-      color: #032a09;
+      color: #08132e;
       background: var(--accent);
       border: 0;
       border-radius: 10px;
@@ -173,15 +197,15 @@ HTML = r"""<!doctype html>
       cursor: pointer;
     }
     button.alt {
-      background: linear-gradient(135deg, rgba(44, 10, 16, 0.95), rgba(25, 8, 11, 0.98));
-      border: 1px solid #902336;
-      color: #ff4f6d;
+      background: linear-gradient(135deg, rgba(14, 20, 39, 0.95), rgba(10, 15, 32, 0.98));
+      border: 1px solid rgba(255, 63, 162, 0.5);
+      color: #ffc4e7;
       font-weight: 600;
     }
     button.alt:hover {
-      background: linear-gradient(135deg, rgba(62, 12, 21, 0.98), rgba(33, 8, 13, 0.98));
-      border-color: #b92b43;
-      color: #ff6c86;
+      background: linear-gradient(135deg, rgba(23, 31, 58, 0.98), rgba(14, 21, 44, 0.98));
+      border-color: rgba(255, 63, 162, 0.75);
+      color: #ffe3f5;
     }
     .small { font-size: 12px; color: var(--muted); }
   </style>

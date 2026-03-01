@@ -1,14 +1,14 @@
 :root {
-  --bg-0: #05010a;
-  --bg-1: #10021a;
-  --panel: rgba(20, 7, 32, 0.88);
-  --panel-2: rgba(33, 8, 49, 0.9);
-  --line: rgba(255, 0, 128, 0.55);
-  --line-strong: #ff2c9b;
-  --text: #ffe3f4;
-  --muted: #ca8bb1;
-  --green: #00ff9b;
-  --purple: #b100ff;
+  --bg-0: #02030a;
+  --bg-1: #070918;
+  --panel: rgba(10, 14, 31, 0.9);
+  --panel-2: rgba(7, 11, 27, 0.92);
+  --line: rgba(86, 214, 255, 0.32);
+  --line-strong: #56d6ff;
+  --text: #edf5ff;
+  --muted: #8ea3bf;
+  --green: #3bf7c0;
+  --purple: #ff3fa2;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -18,11 +18,11 @@
 
 body {
   margin: 0;
-  font-family: "Rajdhani", "Orbitron", "Iosevka", monospace;
+  font-family: "Outfit", "Rajdhani", "Iosevka", sans-serif;
   color: var(--text);
   background:
-    radial-gradient(circle at 10% 10%, rgba(177, 0, 255, 0.24), transparent 30%),
-    radial-gradient(circle at 84% 14%, rgba(0, 255, 155, 0.14), transparent 24%),
+    radial-gradient(circle at 12% -8%, rgba(70, 120, 255, 0.22), transparent 34%),
+    radial-gradient(circle at 88% 2%, rgba(255, 43, 145, 0.12), transparent 30%),
     linear-gradient(180deg, var(--bg-0), var(--bg-1));
   min-height: 100vh;
 }
@@ -55,7 +55,7 @@ body {
   gap: 0.8rem;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, #13031d, #220936 70%);
+  background: linear-gradient(135deg, rgba(9, 14, 31, 0.95), rgba(5, 9, 24, 0.92) 70%);
   padding: 0.7rem 0.9rem;
   margin-bottom: 0.9rem;
 }
@@ -63,7 +63,7 @@ body {
 .chrome {
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, #13031d, #220936 70%);
+  background: linear-gradient(135deg, rgba(9, 14, 31, 0.95), rgba(5, 9, 24, 0.92) 70%);
   padding: 0.7rem 0.9rem;
   margin-bottom: 0.9rem;
 }
@@ -87,14 +87,14 @@ body {
 
 .title {
   margin: 0;
-  color: #ff49b8;
+  color: #d9e8ff;
   text-transform: uppercase;
   letter-spacing: 0.13em;
   font-size: 1.65rem;
   text-align: center;
   text-shadow:
-    0 0 9px rgba(255, 44, 155, 0.55),
-    0 0 20px rgba(177, 0, 255, 0.35);
+    0 0 9px rgba(86, 214, 255, 0.4),
+    0 0 20px rgba(255, 63, 162, 0.2);
 }
 
 .app-grid {
@@ -109,8 +109,8 @@ body {
   border-radius: var(--radius-lg);
   padding: 0.8rem;
   box-shadow:
-    0 0 0 1px rgba(177, 0, 255, 0.14) inset,
-    0 0 20px rgba(255, 0, 128, 0.11);
+    0 0 0 1px rgba(255, 46, 166, 0.08) inset,
+    0 0 20px rgba(86, 214, 255, 0.12);
 }
 
 .card {
@@ -120,24 +120,24 @@ body {
   padding: 0.8rem;
   margin-bottom: 0.8rem;
   box-shadow:
-    0 0 0 1px rgba(177, 0, 255, 0.14) inset,
-    0 0 20px rgba(255, 0, 128, 0.11);
+    0 0 0 1px rgba(255, 46, 166, 0.08) inset,
+    0 0 20px rgba(86, 214, 255, 0.12);
 }
 
 .panel-title {
   margin: 0 0 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.11em;
-  color: #ff5abf;
+  color: #d4e4ff;
 }
 
 .sidebar .block,
 .main-panel .block {
-  border: 1px solid rgba(255, 0, 128, 0.36);
+  border: 1px solid rgba(86, 214, 255, 0.25);
   border-radius: var(--radius-md);
   padding: 0.62rem;
   margin-bottom: 0.65rem;
-  background: rgba(0, 0, 0, 0.16);
+  background: rgba(5, 9, 24, 0.36);
 }
 
 .block h3 {
@@ -161,26 +161,26 @@ button,
 .btn-link {
   font: inherit;
   color: var(--text);
-  border: 1px solid rgba(255, 0, 128, 0.5);
+  border: 1px solid rgba(86, 214, 255, 0.4);
   border-radius: var(--radius-sm);
-  background: #090013;
+  background: #0c1227;
   padding: 0.58rem 0.62rem;
 }
 
 textarea,
 input,
 select {
-  box-shadow: 0 0 0 1px rgba(0, 255, 155, 0.08) inset;
+  box-shadow: 0 0 0 1px rgba(86, 214, 255, 0.08) inset;
 }
 
 textarea:focus,
 input:focus,
 select:focus {
   outline: none;
-  border-color: var(--green);
+  border-color: var(--line-strong);
   box-shadow:
-    0 0 0 1px rgba(0, 255, 155, 0.35),
-    0 0 12px rgba(0, 255, 155, 0.32);
+    0 0 0 1px rgba(86, 214, 255, 0.34),
+    0 0 12px rgba(86, 214, 255, 0.28);
 }
 
 button {
@@ -188,9 +188,9 @@ button {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   cursor: pointer;
-  color: #ffecf7;
+  color: #07132e;
   border-color: transparent;
-  background: linear-gradient(135deg, #92006d, #ff008e);
+  background: linear-gradient(135deg, #56d6ff, #48b8ff);
 }
 
 button:hover { filter: brightness(1.1) saturate(1.12); }
@@ -199,12 +199,12 @@ button:hover { filter: brightness(1.1) saturate(1.12); }
   display: block;
   text-decoration: none;
   text-align: center;
-  color: #89fff0;
+  color: #a8e7ff;
 }
 
 .btn-link:hover {
-  border-color: var(--green);
-  color: var(--green);
+  border-color: var(--line-strong);
+  color: var(--line-strong);
 }
 
 .tray-grid {
@@ -214,10 +214,10 @@ button:hover { filter: brightness(1.1) saturate(1.12); }
 }
 
 .tray {
-  border: 1px solid rgba(255, 0, 128, 0.35);
+  border: 1px solid rgba(86, 214, 255, 0.26);
   border-radius: var(--radius-md);
   padding: 0.55rem;
-  background: rgba(0, 0, 0, 0.18);
+  background: rgba(5, 9, 24, 0.32);
 }
 
 .tray h4 {
@@ -237,15 +237,15 @@ button:hover { filter: brightness(1.1) saturate(1.12); }
 pre {
   overflow: auto;
   white-space: pre-wrap;
-  background: #05040a;
-  color: #8fffe5;
-  border: 1px solid rgba(0, 255, 155, 0.38);
+  background: #060a1b;
+  color: #a9e8ff;
+  border: 1px solid rgba(86, 214, 255, 0.35);
   border-radius: var(--radius-sm);
   padding: 0.7rem;
 }
 
 .error-block {
-  border-color: rgba(255, 83, 148, 0.8);
+  border-color: rgba(255, 63, 162, 0.75);
 }
 
 .muted { color: var(--muted); }
@@ -261,7 +261,7 @@ table {
 th,
 td {
   text-align: left;
-  border-bottom: 1px solid rgba(255, 0, 128, 0.28);
+  border-bottom: 1px solid rgba(86, 214, 255, 0.24);
   padding: 0.42rem;
 }
 
@@ -272,13 +272,13 @@ td {
   width: 58px;
   height: 58px;
   border-radius: 999px;
-  background: radial-gradient(circle at 38% 35%, #ff9ab0 0%, #ff2f5f 38%, #7a001f 100%);
-  border: 1px solid rgba(255, 90, 134, 0.9);
+  background: radial-gradient(circle at 38% 35%, #ffb5da 0%, #ff3fa2 38%, #48123d 100%);
+  border: 1px solid rgba(255, 63, 162, 0.92);
   display: grid;
   place-items: center;
   box-shadow:
-    0 0 14px rgba(255, 47, 95, 0.7),
-    0 0 34px rgba(255, 47, 95, 0.36);
+    0 0 14px rgba(255, 63, 162, 0.7),
+    0 0 34px rgba(86, 214, 255, 0.28);
 }
 
 .ghost-shortcut svg {
