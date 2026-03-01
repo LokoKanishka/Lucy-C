@@ -1,0 +1,175 @@
+services:
+  socket-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: lucy_fusion_socket_proxy
+    restart: unless-stopped
+    environment:
+      - POST=1
+      - CONTAINERS=0
+      - ALLOW_START=1
+      - ALLOW_STOP=1
+      - ALLOW_RESTARTS=1
+      - INFO=1
+      - VERSION=1
+      - PING=1
+      - EXEC=0
+      - IMAGES=0
+      - NETWORKS=0
+      - VOLUMES=0
+      - AUTH=0
+      - SECRETS=0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "127.0.0.1:${DOCKER_PROXY_PORT:-2377}:2375"
+    networks:
+      - fusion_internal
+
+  n8n:
+    image: n8nio/n8n:2.4.4
+    container_name: lucy_fusion_n8n
+    restart: unless-stopped
+    depends_on:
+      - socket-proxy
+      - antigravity
+    ports:
+      - "127.0.0.1:${N8N_PORT:-5690}:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:${N8N_PORT:-5690}/
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-America/Argentina/Buenos_Aires}
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_VERSION_NOTIFICATIONS_ENABLED=false
+      - N8N_TEMPLATES_ENABLED=false
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - N8N_PUBLIC_API_DISABLED=false
+      - N8N_RESTRICT_FILE_ACCESS_TO=/data/fusion;/data/nin;/data/cunningham;/home/node/.n8n-files
+      - DOCKER_HOST=tcp://socket-proxy:2375
+      - NODE_FUNCTION_ALLOW_BUILTIN=fs,path,crypto
+      - NODE_FUNCTION_ALLOW_EXTERNAL=
+      - ANTIGRAVITY_URL=http://antigravity:5000
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./integration/workflows_fusion:/data/fusion/workflows:rw
+      - ./integration/workspace:/data/fusion/workspace:rw
+      - ./upstream/NiN/workflows:/data/nin/workflows:ro
+      - ./upstream/NiN/data:/data/nin/data:ro
+      - ./upstream/cunningham-Espejo:/data/cunningham:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:5678/healthz || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+    networks:
+      - fusion_internal
+
+  qdrant:
+    image: qdrant/qdrant@sha256:0425e3e03e7fd9b3dc95c4214546afe19de2eb2e28ca621441a56663ac6e1f46
+    container_name: lucy_fusion_qdrant
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${QDRANT_PORT:-6339}:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - fusion_internal
+
+  redis:
+    image: redis@sha256:6cbef353e480a8a6e7f10ec545f13d7d3fa85a212cdcc5ffaf5a1c818b9d3798
+    container_name: lucy_fusion_redis
+    restart: unless-stopped
+    networks:
+      - fusion_internal
+
+  searxng:
+    image: searxng/searxng@sha256:9c071b8685d6586692072df2eaa48a0adb8e53d13e18cb53e21924837c5803d7
+    container_name: lucy_fusion_searxng
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${SEARXNG_PORT:-8088}:8080"
+    environment:
+      - SEARXNG_BASE_URL=http://localhost:${SEARXNG_PORT:-8088}/
+    volumes:
+      - ./upstream/NiN/searxng:/etc/searxng:ro
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    networks:
+      - fusion_internal
+
+  antigravity:
+    build: ./upstream/cunningham-Espejo/antigravity
+    image: lucy_fusion_antigravity:local
+    container_name: lucy_fusion_antigravity
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${ANTIGRAVITY_PORT:-5001}:5000"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=128m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    environment:
+      - ANTIGRAVITY_DEFAULT_TIMEOUT_S=30
+      - ANTIGRAVITY_MAX_TIMEOUT_S=30
+      - ANTIGRAVITY_WORKSPACE=/workspace
+    volumes:
+      - ./integration/workspace:/workspace:rw
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/healthz', timeout=2)\" || exit 1",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+    networks:
+      - fusion_internal
+
+  lucy_ui_panel:
+    build: ./upstream/cunningham-Espejo/apps/lucy_panel
+    image: lucy_fusion_ui_panel:local
+    container_name: lucy_fusion_ui_panel
+    restart: unless-stopped
+    depends_on:
+      n8n:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${LUCY_PANEL_PORT:-5111}:5100"
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5100"]
+    environment:
+      - GATEWAY_URL=http://n8n:5678/webhook/lucy-input
+      - IPC_ROOT=/data/lucy_ipc
+      - REPO_ROOT=/repo/upstream/cunningham-Espejo
+    volumes:
+      - ./upstream/cunningham-Espejo/apps/lucy_panel/app:/app/app:rw
+      - ./integration/workspace:/data/lucy_ipc:rw
+      - ./:/repo:rw
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:5100/', timeout=2)\" || exit 1",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+    networks:
+      - fusion_internal
+
+volumes:
+  n8n_data:
+  qdrant_data:
+
+networks:
+  fusion_internal:
+    driver: bridge

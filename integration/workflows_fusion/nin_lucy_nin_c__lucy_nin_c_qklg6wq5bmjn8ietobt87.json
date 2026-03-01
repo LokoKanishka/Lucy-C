@@ -1,0 +1,158 @@
+{
+  "name": "NIN | Lucy nin c",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -256,
+        -208
+      ],
+      "id": "8fd81b31-a019-41d6-9f60-5d13939d109d",
+      "name": "When chat message received",
+      "webhookId": "0c154b4e-e4c4-43a6-af05-6a4e42e39f40"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "res LUCY. No expliques lo que vas a hacer ni uses etiquetas <think>. Usa la herramienta 'Cerebro Central LUCY' inmediatamente pasando la ruta exacta en el parámetro input. Omite explicaciones previas."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        32,
+        -208
+      ],
+      "id": "8c2c357c-0219-41d9-adb4-35e2d209e4cb",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "huihui_ai/qwq-abliterated:32b-Q6_K",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        16
+      ],
+      "id": "8fb23250-8710-4e06-b5af-389bf74fc840",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "7l3V3KyozpH1jUVu",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        96,
+        16
+      ],
+      "id": "e5f419bb-77e4-4d17-a30e-4a4bede55581",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "description": "Usa esta herramienta para leer el contenido de archivos locales en el disco duro. Debes proporcionar la ruta o el nombre del archivo que quieres leer.",
+        "workflowId": {
+          "__rl": true,
+          "value": "BgVWal7bDgPEy8DYn1Nom",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/BgVWal7bDgPEy8DYn1Nom",
+          "cachedResultName": "My workflow 2"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "input": "=={{ $fromAI('input') }}"
+          },
+          "matchingColumns": [
+            "input"
+          ],
+          "schema": [
+            {
+              "id": "input",
+              "displayName": "input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        16
+      ],
+      "id": "b4f5ec9b-2443-4f12-bab6-052528557b5f",
+      "name": "Cerebro Central LUCY"
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cerebro Central LUCY": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  }
+}

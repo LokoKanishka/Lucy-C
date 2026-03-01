@@ -1,0 +1,19 @@
+# Models
+models/
+*.gguf
+
+# Python scripts (Setup helpers)
+find_models.py
+find_gpt_oss.py
+list_openai_models.py
+find_gpt_oss_v2.py
+find_gpt_oss_gguf.py
+list_repo_files.py
+download_model.py
+
+# Environment / OS
+.env
+.DS_Store
+__pycache__/
+*.pyc
+.env

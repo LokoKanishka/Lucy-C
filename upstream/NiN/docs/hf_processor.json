@@ -1,0 +1,50 @@
+{
+  "name": "Tool: Hugging Face Universal",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hf-inference",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "wh-hf",
+      "webhookId": "hf-inference",
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const https = require('https');\nconst defaultModel = 'distilbert-base-uncased-finetuned-sst-2-english';\nconst modelId = (items[0].json && items[0].json.model_id) ? items[0].json.model_id : defaultModel;\nconst payload = (items[0].json && items[0].json.payload) ? items[0].json.payload : { inputs: 'I love you' };\nconst apiKey = 'HF_API_KEY_PROTECTED';\n\nconst data = JSON.stringify(payload);\nconst options = {\n  hostname: 'router.huggingface.co',\n  port: 443,\n  path: '/hf-inference/models/' + modelId, \n  method: 'POST',\n  headers: {\n    'Authorization': 'Bearer ' + apiKey,\n    'Content-Type': 'application/json',\n    'Content-Length': Buffer.byteLength(data)\n  }\n};\n\nreturn new Promise((resolve) => {\n  const req = https.request(options, (res) => {\n    let body = '';\n    res.on('data', (d) => body += d);\n    res.on('end', () => {\n      try { resolve([{ json: JSON.parse(body) }]); } \n      catch (e) { resolve([{ json: { error: 'Parse Error', raw: body } }]); }\n    });\n  });\n  req.on('error', (e) => resolve([{ json: { error: e.message } }]));\n  req.write(data);\n  req.end();\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        250,
+        0
+      ],
+      "id": "code-hf"
+    }
+  ],
+  "connections": {
+    "wh-hf": {
+      "main": [
+        [
+          {
+            "node": "code-hf",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

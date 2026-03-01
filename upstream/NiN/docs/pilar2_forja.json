@@ -1,0 +1,127 @@
+{
+    "name": "Pilar 2: La Forja (Prompt-to-Workflow)",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "forja-arquitectura",
+                "responseMode": "onReceived",
+                "options": {}
+            },
+            "id": "e4f8a91b-2234-4567-890a-bcdef1234560",
+            "name": "Webhook (Entrada)",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "webhookId": "9b1c2d3e-4f5g-6h7i-8j9k-l0m1n2o3p4q5"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "http://host.docker.internal:11434/api/chat",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "model",
+                            "value": "qwq-abliterated:32b"
+                        },
+                        {
+                            "name": "stream",
+                            "value": "false"
+                        },
+                        {
+                            "name": "messages",
+                            "value": "={{ [\n  {\n    \"role\": \"system\",\n    \"content\": \"Eres LUCY, el Arquitecto de n8n. Tu único objetivo es recibir una solicitud en lenguaje natural y retornar UNICAMENTE un objeto JSON válido y limpio que represente un flujo de n8n para esa tarea. No agregues formatos markdown, sin explicaciones, solo el JSON puro.\"\n  },\n  {\n    \"role\": \"user\",\n    \"content\": $json.body.prompt\n  }\n] }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "e4f8a91b-2234-4567-890a-bcdef1234561",
+            "name": "Ollama (Arquitecto JSON)",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                450,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "http://localhost:5678/api/v1/workflows",
+                "authentication": "headerAuth",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "name",
+                            "value": "={{ 'Auto-Generated: ' + $('Webhook (Entrada)').item.json.body.prompt.substring(0, 30) }}"
+                        },
+                        {
+                            "name": "nodes",
+                            "value": "={{ JSON.parse($json.message.content).nodes }}"
+                        },
+                        {
+                            "name": "connections",
+                            "value": "={{ JSON.parse($json.message.content).connections }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "e4f8a91b-2234-4567-890a-bcdef1234562",
+            "name": "n8n API (Auto-Import)",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                650,
+                300
+            ],
+            "credentials": {
+                "httpHeaderAuth": {
+                    "id": "TU_N8N_API_KEY_ID",
+                    "name": "n8n Local API Key"
+                }
+            }
+        }
+    ],
+    "pinData": {},
+    "connections": {
+        "Webhook (Entrada)": {
+            "main": [
+                [
+                    {
+                        "node": "Ollama (Arquitecto JSON)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Ollama (Arquitecto JSON)": {
+            "main": [
+                [
+                    {
+                        "node": "n8n API (Auto-Import)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "f0a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c6",
+    "meta": {
+        "templateCredsSetupCompleted": true
+    },
+    "id": "la_forja_002"
+}

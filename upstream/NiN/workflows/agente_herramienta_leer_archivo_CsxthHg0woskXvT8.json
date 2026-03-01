@@ -1,0 +1,89 @@
+{
+  "updatedAt": "2026-02-27T05:08:05.374Z",
+  "createdAt": "2026-02-27T05:08:05.374Z",
+  "id": "CsxthHg0woskXvT8",
+  "name": "Agente Herramienta: Leer Archivo",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "leer",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        0
+      ],
+      "id": "wh-leer",
+      "name": "Webhook Leer",
+      "webhookId": "agente-leer"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.body.ruta }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        50,
+        0
+      ],
+      "id": "read-file",
+      "name": "Leer Archivo"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst binary = item.binary;\nconst key = Object.keys(binary)[0];\nconst b64 = binary[key].data;\nconst text = Buffer.from(b64, 'base64').toString('utf-8');\nreturn [{ json: { contenido: text, ruta: $('Webhook Leer').first().json.body.ruta } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        0
+      ],
+      "id": "decode-file",
+      "name": "Decodificar Texto"
+    }
+  ],
+  "connections": {
+    "Webhook Leer": {
+      "main": [
+        [
+          {
+            "node": "Leer Archivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Archivo": {
+      "main": [
+        [
+          {
+            "node": "Decodificar Texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": null,
+  "versionId": "a74e6299-79b7-47d0-a1b6-d432ebc5453e",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0
+}

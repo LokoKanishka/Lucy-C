@@ -1,0 +1,64 @@
+{
+  "updatedAt": "2026-02-27T05:09:37.435Z",
+  "createdAt": "2026-02-27T05:09:37.435Z",
+  "id": "ua0t8LIeyN5WxWPi",
+  "name": "Agente: Escanear Directorio",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agente-escanear",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        0
+      ],
+      "id": "wh-scan",
+      "name": "Webhook",
+      "webhookId": "agente-escanear-002"
+    },
+    {
+      "parameters": {
+        "command": "find \"{{ $json.body.ruta }}\" -maxdepth 2 -not -path '*/.git/*' -printf '%y %p\\n' 2>/dev/null | head -80"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        50,
+        0
+      ],
+      "id": "cmd-scan",
+      "name": "List Dir"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "List Dir",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": null,
+  "versionId": "dbf41d54-fa14-4f87-a43b-e8804d893455",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0
+}

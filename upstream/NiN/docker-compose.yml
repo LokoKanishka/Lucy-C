@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n-lucy
+    restart: always
+    ports:
+      - "127.0.0.1:5688:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://localhost:5688/
+      - GENERIC_TIMEZONE=America/Santiago
+      - N8N_USER_MANAGEMENT_JWT_SECRET=cf205e3acd53f369b6311e0faf363698b2dcf295b6390746944bc678a1ac02b3
+      - N8N_AUTH_COOKIE_SECURE=false
+      - N8N_PUBLIC_API_DISABLED=false
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - "N8N_RESTRICT_FILE_ACCESS_TO=/mnt/Cerebro;/home/node/.n8n-files;/home/node/.n8n;~/.n8n-files;/home/lucy-ubuntu"
+      - N8N_BLOCK_FS_WRITE_ACCESS=false
+      - NODE_FUNCTION_ALLOW_BUILTIN=*
+      - NODE_FUNCTION_ALLOW_EXTERNAL=*
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./data:/home/node/.n8n-files
+      - ~/.n8n-custom-extension:/home/node/.n8n/custom
+      - ~/Escritorio/Cerebro:/mnt/Cerebro
+      - /home/lucy-ubuntu:/home/lucy-ubuntu
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker
+    group_add:
+      - "983" # GID del grupo 'docker' del host para acceso a docker.sock
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant-lucy
+    restart: always
+    ports:
+      - "127.0.0.1:6335:6333"
+      - "127.0.0.1:6336:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  searxng:
+    image: searxng/searxng:latest
+    container_name: searxng-lucy
+    restart: always
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./searxng:/etc/searxng
+    environment:
+      - SEARXNG_BASE_URL=http://localhost:8080/
+
+volumes:
+  n8n_data:
+  qdrant_data:

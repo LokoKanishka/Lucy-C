@@ -1,0 +1,126 @@
+{
+    "name": "Architect Generated - PDF Analysis",
+    "nodes": [
+        {
+            "parameters": {},
+            "name": "Start",
+            "type": "n8n-nodes-base.start",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "fileSelector": "/data/*.pdf"
+            },
+            "name": "Read PDFs",
+            "type": "n8n-nodes-base.readBinaryFiles",
+            "typeVersion": 1,
+            "position": [
+                450,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "keepOnlySet": true,
+                "values": {
+                    "string": [
+                        {
+                            "name": "text",
+                            "value": "={{ $json.data }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "name": "Extract Text",
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 1,
+            "position": [
+                650,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "model": "qwen2.5:32b",
+                "prompt": "Analyze the following text and extract quotes about teleology:\n\n{{ $json.text }}"
+            },
+            "name": "Analyze with LUCY",
+            "type": "@n8n/n8n-nodes-langchain.chainLlm",
+            "typeVersion": 1,
+            "position": [
+                850,
+                300
+            ],
+            "credentials": {
+                "openAiApi": {
+                    "id": "1",
+                    "name": "LM Studio - 120B"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "fileName": "/data/analysis_output.md",
+                "dataPropertyName": "text"
+            },
+            "name": "Save to Markdown",
+            "type": "n8n-nodes-base.writeBinaryFile",
+            "typeVersion": 1,
+            "position": [
+                1050,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Start": {
+            "main": [
+                [
+                    {
+                        "node": "Read PDFs",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Read PDFs": {
+            "main": [
+                [
+                    {
+                        "node": "Extract Text",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Extract Text": {
+            "main": [
+                [
+                    {
+                        "node": "Analyze with LUCY",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Analyze with LUCY": {
+            "main": [
+                [
+                    {
+                        "node": "Save to Markdown",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

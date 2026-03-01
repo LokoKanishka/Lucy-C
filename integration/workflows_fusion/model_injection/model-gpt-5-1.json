@@ -1,0 +1,50 @@
+{
+  "name": "FUSION | Model Injection | GPT-5.1",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "model-gpt-5-1",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        0
+      ],
+      "id": "wh-model-gpt-5-1",
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const incoming = $json;\nconst model = \"gpt-5.1\";\nconst label = \"GPT-5.1\";\nreturn {\n  injected: true,\n  model_label: label,\n  model_id: model,\n  payload: incoming,\n  ts: new Date().toISOString()\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        40,
+        0
+      ],
+      "id": "code-model-gpt-5-1",
+      "name": "Inject Model Profile"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Inject Model Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Browse {{ box }}</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="scanlines"></div>
+  <main class="wrap">
+    <section class="chrome hud">
+      <div>
+        <h1 class="neon-title">BOX BROWSER // {{ box }}</h1>
+      </div>
+      <p><a href="/">Back</a></p>
+    </section>
+
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+    <section class="card">
+      <table>
+        <thead><tr><th>file</th><th>cid</th><th>size</th><th>mtime</th></tr></thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              <td>{{ row.name }}</td>
+              <td><a href="/cid/{{ row.cid }}">{{ row.cid }}</a></td>
+              <td>{{ row.size }}</td>
+              <td>{{ row.mtime }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="4">empty</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <a class="ghost-shortcut" href="/" title="Ghost Home">
+    <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 6c-11.6 0-21 8.9-21 19.8V58l9-6 7 6 5-6 5 6 7-6 9 6V25.8C53 14.9 43.6 6 32 6zm-8 24a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm16 0a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/></svg>
+  </a>
+</body>
+</html>

@@ -1,0 +1,64 @@
+{
+  "updatedAt": "2026-02-27T05:09:14.989Z",
+  "createdAt": "2026-02-27T05:09:14.989Z",
+  "id": "bwTZIyK3wDDCTR0S",
+  "name": "Agente: Buscar Patron (Grep)",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agente-grep",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        0
+      ],
+      "id": "wh-grep",
+      "name": "Webhook",
+      "webhookId": "agente-grep-003"
+    },
+    {
+      "parameters": {
+        "command": "grep -rn \"{{ $json.body.patron }}\" \"{{ $json.body.directorio || '/home/lucy-ubuntu/Escritorio/NIN' }}\" --include='*.py' --include='*.md' --include='*.json' 2>/dev/null | head -50"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        50,
+        0
+      ],
+      "id": "cmd-grep",
+      "name": "Grep"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Grep",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": null,
+  "versionId": "e0cd5379-59c8-458e-99e8-56854defabac",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0
+}

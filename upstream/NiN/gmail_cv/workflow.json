@@ -1,0 +1,176 @@
+{
+  "name": "Envío Automático de CV a Colegios",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "42 0 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger-1",
+      "name": "Reloj (00:42)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fileSelector": "/home/lucy-ubuntu/Escritorio/NIN/gmail_cv/data/colegios.xlsx"
+      },
+      "id": "read-excel-1",
+      "name": "Leer Archivo Excel",
+      "type": "n8n-nodes-base.readBinaryFiles",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "id": "extract-csv-1",
+      "name": "Convertir a Datos",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json['Nº de Comuna'] }}",
+              "value2": "Comuna 1"
+            }
+          ]
+        }
+      },
+      "id": "filter-comuna",
+      "name": "Filtro (Solo Comuna 1)",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 1,
+      "position": [
+        600,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fileSelector": "/home/lucy-ubuntu/Escritorio/NIN/gmail_cv/data/Mi_Curriculum.pdf",
+        "dataPropertyName": "adjunto_cv"
+      },
+      "id": "read-cv-1",
+      "name": "Cargar CV Local",
+      "type": "n8n-nodes-base.readBinaryFiles",
+      "typeVersion": 1,
+      "position": [
+        800,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "chatjepetex4@gmail.com",
+        "toEmail": "={{ $('Filtro (Solo Comuna 1)').item.json['Correo Electrónico'].replace(/\\s*\\/\\s*/g, ', ') }}",
+        "subject": "Postulación docente - Diego Leonardo Succi",
+        "options": {
+          "appendAttachements": false,
+          "attachments": "adjunto_cv"
+        },
+        "html": "=A las autoridades de la institución {{ $('Filtro (Solo Comuna 1)').item.json['Nombre de la Institución'] }}:<br><br>Me dirijo a ustedes para poner a disposición mi currículum vitae a fin de que lo tengan en cuenta en futuras oportunidades en la institución.<br><br>Poseo título habilitante, experiencia en el manejo de grupos y una amplia disponibilidad horaria.<br><br>Atte: Profesor Diego Leonardo Succi.",
+        "text": "=A las autoridades de la institución {{ $('Filtro (Solo Comuna 1)').item.json['Nombre de la Institución'] }}:\n\nMe dirijo a ustedes para poner a disposición mi currículum vitae a fin de que lo tengan en cuenta en futuras oportunidades en la institución.\n\nPoseo título habilitante, experiencia en el manejo de grupos y una amplia disponibilidad horaria.\n\nAtte: Profesor Diego Leonardo Succi.",
+        "emailFormat": "html"
+      },
+      "id": "smtp-send-1",
+      "name": "Enviar Correo SMTP",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        300
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "Vjq1Vkk3HMWqCsCO",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Leer Archivo Excel": {
+      "main": [
+        [
+          {
+            "node": "Convertir a Datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convertir a Datos": {
+      "main": [
+        [
+          {
+            "node": "Filtro (Solo Comuna 1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cargar CV Local": {
+      "main": [
+        [
+          {
+            "node": "Enviar Correo SMTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reloj (18:05)": {
+      "main": [
+        [
+          {
+            "node": "Leer Archivo Excel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtro (Solo Comuna 1)": {
+      "main": [
+        [
+          {
+            "node": "Cargar CV Local",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  }
+}

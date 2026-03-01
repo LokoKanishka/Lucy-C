@@ -1,0 +1,238 @@
+{
+  "written": 29,
+  "skipped": 0,
+  "items": [
+    {
+      "source": "nin",
+      "input": "upstream/NiN/workflows/agente_buscar_patron_grep_bwTZIyK3wDDCTR0S.json",
+      "output": "integration/workflows_fusion/nin_agente_buscar_patron_grep__agente_buscar_patron_grep_bwtziyk3wddctr0s.json",
+      "status": "ok",
+      "workflow_name": "NIN | Agente: Buscar Patron (Grep)",
+      "node_count": 2
+    },
+    {
+      "source": "nin",
+      "input": "upstream/NiN/workflows/agente_escanear_directorio_ua0t8LIeyN5WxWPi.json",
+      "output": "integration/workflows_fusion/nin_agente_escanear_directorio__agente_escanear_directorio_ua0t8lieyn5wxwpi.json",
+      "status": "ok",
+      "workflow_name": "NIN | Agente: Escanear Directorio",
+      "node_count": 2
+    },
+    {
+      "source": "nin",
+      "input": "upstream/NiN/workflows/agente_estado_del_sistema_sjxo2K1BPdF3LLtG.json",
+      "output": "integration/workflows_fusion/nin_agente_estado_del_sistema__agente_estado_del_sistema_sjxo2k1bpdf3lltg.json",
+      "status": "ok",
+      "workflow_name": "NIN | Agente: Estado del Sistema",
+      "node_count": 2
+    },
+    {
+      "source": "nin",
+      "input": "upstream/NiN/workflows/agente_herramienta_leer_archivo_CsxthHg0woskXvT8.json",
+      "output": "integration/workflows_fusion/nin_agente_herramienta_leer_archivo__agente_herramienta_leer_archivo_csxthhg0woskxvt8.json",
+      "status": "ok",
+      "workflow_name": "NIN | Agente Herramienta: Leer Archivo",
+      "node_count": 3
+    },
+    {
+      "source": "nin",
+      "input": "upstream/NiN/workflows/agente_leer_archivo_PIG1XG1R7N4TjG2L.json",
+      "output": "integration/workflows_fusion/nin_agente_leer_archivo__agente_leer_archivo_pig1xg1r7n4tjg2l.json",
+      "status": "ok",
+      "workflow_name": "NIN | Agente: Leer Archivo",
+      "node_count": 3
+    },
+    {
+      "source": "nin",
+      "input": "upstream/NiN/workflows/agente_secreto_-_mapeador_8RwngQmsa4ObRh2I.json",
+      "output": "integration/workflows_fusion/nin_agente_secreto_mapeador__agente_secreto_mapeador_8rwngqmsa4obrh2i.json",
+      "status": "ok",
+      "workflow_name": "NIN | Agente Secreto - Mapeador",
+      "node_count": 5
+    },
+    {
+      "source": "nin",
+      "input": "upstream/NiN/workflows/cyberclimate_logger_v20_eyKAN96qfocCJ7XT.json",
+      "output": "integration/workflows_fusion/nin_cyberclimate_logger_v2_0__cyberclimate_logger_v20_eykan96qfoccj7xt.json",
+      "status": "ok",
+      "workflow_name": "NIN | CyberClimate Logger v2.0",
+      "node_count": 3
+    },
+    {
+      "source": "nin",
+      "input": "upstream/NiN/workflows/envío_automático_de_cv_a_colegios_qiN136ZrDDS8Pg2L.json",
+      "output": "integration/workflows_fusion/nin_env_o_autom_tico_de_cv_a_colegios__env_o_autom_tico_de_cv_a_colegios_qin136zrdds8pg2l.json",
+      "status": "ok",
+      "workflow_name": "NIN | Envío Automático de CV a Colegios",
+      "node_count": 6
+    },
+    {
+      "source": "nin",
+      "input": "upstream/NiN/workflows/lucy_nin_c_qkLg6wQ5BMJN8IETobT87.json",
+      "output": "integration/workflows_fusion/nin_lucy_nin_c__lucy_nin_c_qklg6wq5bmjn8ietobt87.json",
+      "status": "ok",
+      "workflow_name": "NIN | Lucy nin c",
+      "node_count": 5
+    },
+    {
+      "source": "nin",
+      "input": "upstream/NiN/workflows/my_workflow_3_fP7J-TO3EeIUJ4D_k4dHx.json",
+      "output": "integration/workflows_fusion/nin_my_workflow_3__my_workflow_3_fp7j_to3eeiuj4d_k4dhx.json",
+      "status": "ok",
+      "workflow_name": "NIN | My workflow 3",
+      "node_count": 4
+    },
+    {
+      "source": "nin",
+      "input": "upstream/NiN/workflows/pilar_1_sistema_inmunológico_doctor_mSjsiVaTv5sfb99E.json",
+      "output": "integration/workflows_fusion/nin_pilar_1_sistema_inmunol_gico_doctor__pilar_1_sistema_inmunol_gico_doctor_msjsivatv5sfb99e.json",
+      "status": "ok",
+      "workflow_name": "NIN | Pilar 1: Sistema Inmunológico (Doctor)",
+      "node_count": 3
+    },
+    {
+      "source": "nin",
+      "input": "upstream/NiN/workflows/pilar_5_búnker_de_memoria_rag_cyberpunk_BSgAk06gicLgm7zfPpd3_.json",
+      "output": "integration/workflows_fusion/nin_pilar_5_b_nker_de_memoria_rag_cyberpunk__pilar_5_b_nker_de_memoria_rag_cyberpunk_bsgak06giclgm7zfppd3.json",
+      "status": "ok",
+      "workflow_name": "NIN | Pilar 5: Búnker de Memoria (RAG Cyberpunk)",
+      "node_count": 6
+    },
+    {
+      "source": "nin",
+      "input": "upstream/NiN/workflows/prueba_x1_-_test_de_antigravity_BgVWal7bDgPEy8DYn1Nom.json",
+      "output": "integration/workflows_fusion/nin_prueba_x1_test_de_antigravity__prueba_x1_test_de_antigravity_bgvwal7bdgpey8dyn1nom.json",
+      "status": "ok",
+      "workflow_name": "NIN | Prueba x1 - Test de Antigravity",
+      "node_count": 3
+    },
+    {
+      "source": "nin",
+      "input": "upstream/NiN/workflows/prueba_x1_-_test_de_antigravity_Hbaw5LeIXONOebOR.json",
+      "output": "integration/workflows_fusion/nin_prueba_x1_test_de_antigravity_prueba_x1_test_de_antigravity_hbaw5leixonoebor__prueba_x1_test_de_antigravity_hbaw5leixonoebor.json",
+      "status": "ok",
+      "workflow_name": "NIN | Prueba x1 - Test de Antigravity [prueba_x1_-_test_de_antigravity_Hbaw5LeIXONOebOR]",
+      "node_count": 2
+    },
+    {
+      "source": "nin",
+      "input": "upstream/NiN/workflows/prueba_x1_-_test_de_antigravity_QVRjF43TDO4rNJC9.json",
+      "output": "integration/workflows_fusion/nin_prueba_x1_test_de_antigravity_prueba_x1_test_de_antigravity_qvrjf43tdo4rnjc9__prueba_x1_test_de_antigravity_qvrjf43tdo4rnjc9.json",
+      "status": "ok",
+      "workflow_name": "NIN | Prueba x1 - Test de Antigravity [prueba_x1_-_test_de_antigravity_QVRjF43TDO4rNJC9]",
+      "node_count": 2
+    },
+    {
+      "source": "nin",
+      "input": "upstream/NiN/workflows/prueba_x1_-_workflow_de_test_q0DuvkETX8yqYAPj.json",
+      "output": "integration/workflows_fusion/nin_prueba_x1_workflow_de_test__prueba_x1_workflow_de_test_q0duvketx8yqyapj.json",
+      "status": "ok",
+      "workflow_name": "NIN | Prueba x1 - Workflow de Test",
+      "node_count": 2
+    },
+    {
+      "source": "nin",
+      "input": "upstream/NiN/workflows/sync_memoria_a_google_drive_HNQ5b1fTiIPCvC3X.json",
+      "output": "integration/workflows_fusion/nin_sync_memoria_a_google_drive__sync_memoria_a_google_drive_hnq5b1ftiipcvc3x.json",
+      "status": "ok",
+      "workflow_name": "NIN | Sync: Memoria a Google Drive",
+      "node_count": 3
+    },
+    {
+      "source": "nin",
+      "input": "upstream/NiN/workflows/tool_notebook_YcDDnv32fwxV3eSk.json",
+      "output": "integration/workflows_fusion/nin_tool_notebook__tool_notebook_ycddnv32fwxv3esk.json",
+      "status": "ok",
+      "workflow_name": "NIN | Tool: Notebook",
+      "node_count": 3
+    },
+    {
+      "source": "nin",
+      "input": "upstream/NiN/workflows/tool_ping_0b3wCNRSmVHeHs41.json",
+      "output": "integration/workflows_fusion/nin_tool_ping__tool_ping_0b3wcnrsmvhehs41.json",
+      "status": "ok",
+      "workflow_name": "NIN | Tool: Ping",
+      "node_count": 2
+    },
+    {
+      "source": "cunningham",
+      "input": "upstream/cunningham-Espejo/workflow_alpha.json",
+      "output": "integration/workflows_fusion/cunningham_cerebro_voz_alpha__workflow_alpha.json",
+      "status": "ok",
+      "workflow_name": "CUNNINGHAM | Cerebro_Voz_Alpha",
+      "node_count": 3
+    },
+    {
+      "source": "cunningham",
+      "input": "upstream/cunningham-Espejo/workflow_alpha_v2.json",
+      "output": "integration/workflows_fusion/cunningham_cerebro_voz_alpha_workflow_alpha_v2__workflow_alpha_v2.json",
+      "status": "ok",
+      "workflow_name": "CUNNINGHAM | Cerebro_Voz_Alpha [workflow_alpha_v2]",
+      "node_count": 3
+    },
+    {
+      "source": "cunningham",
+      "input": "upstream/cunningham-Espejo/workflow_alpha_v3.json",
+      "output": "integration/workflows_fusion/cunningham_cerebro_voz_alpha_workflow_alpha_v3__workflow_alpha_v3.json",
+      "status": "ok",
+      "workflow_name": "CUNNINGHAM | Cerebro_Voz_Alpha [workflow_alpha_v3]",
+      "node_count": 3
+    },
+    {
+      "source": "cunningham",
+      "input": "upstream/cunningham-Espejo/workflow_alpha_v4.json",
+      "output": "integration/workflows_fusion/cunningham_cerebro_voz_alpha_workflow_alpha_v4__workflow_alpha_v4.json",
+      "status": "ok",
+      "workflow_name": "CUNNINGHAM | Cerebro_Voz_Alpha [workflow_alpha_v4]",
+      "node_count": 3
+    },
+    {
+      "source": "cunningham",
+      "input": "upstream/cunningham-Espejo/workflow_beta_local_fixed.json",
+      "output": "integration/workflows_fusion/cunningham_cerebro_voz_beta__workflow_beta_local_fixed.json",
+      "status": "ok",
+      "workflow_name": "CUNNINGHAM | Cerebro_Voz_Beta",
+      "node_count": 9
+    },
+    {
+      "source": "cunningham",
+      "input": "upstream/cunningham-Espejo/workflow_beta_router.json",
+      "output": "integration/workflows_fusion/cunningham_cerebro_voz_beta_workflow_beta_router__workflow_beta_router.json",
+      "status": "ok",
+      "workflow_name": "CUNNINGHAM | Cerebro_Voz_Beta [workflow_beta_router]",
+      "node_count": 9
+    },
+    {
+      "source": "cunningham",
+      "input": "upstream/cunningham-Espejo/workflow_gamma_blindado.json",
+      "output": "integration/workflows_fusion/cunningham_cerebro_voz_gamma__workflow_gamma_blindado.json",
+      "status": "ok",
+      "workflow_name": "CUNNINGHAM | Cerebro_Voz_Gamma",
+      "node_count": 12
+    },
+    {
+      "source": "cunningham",
+      "input": "upstream/cunningham-Espejo/workflow_gamma_hybrid.json",
+      "output": "integration/workflows_fusion/cunningham_cerebro_voz_gamma_workflow_gamma_hybrid__workflow_gamma_hybrid.json",
+      "status": "ok",
+      "workflow_name": "CUNNINGHAM | Cerebro_Voz_Gamma [workflow_gamma_hybrid]",
+      "node_count": 12
+    },
+    {
+      "source": "cunningham",
+      "input": "upstream/cunningham-Espejo/workflow_gamma_stable.json",
+      "output": "integration/workflows_fusion/cunningham_cerebro_voz_gamma_workflow_gamma_stable__workflow_gamma_stable.json",
+      "status": "ok",
+      "workflow_name": "CUNNINGHAM | Cerebro_Voz_Gamma [workflow_gamma_stable]",
+      "node_count": 12
+    },
+    {
+      "source": "cunningham",
+      "input": "upstream/cunningham-Espejo/workflow_test_manos.json",
+      "output": "integration/workflows_fusion/cunningham_test_manos__workflow_test_manos.json",
+      "status": "ok",
+      "workflow_name": "CUNNINGHAM | Test_Manos",
+      "node_count": 5
+    }
+  ]
+}

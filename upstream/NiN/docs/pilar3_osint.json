@@ -1,0 +1,193 @@
+{
+    "name": "Pilar 3: Red de Inteligencia Ciega (OSINT)",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "osint-query",
+                "responseMode": "onReceived",
+                "options": {}
+            },
+            "id": "e4f8a91b-3234-4567-890a-bcdef1234560",
+            "name": "Webhook (Entrada OSINT)",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "webhookId": "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6"
+        },
+        {
+            "parameters": {
+                "url": "={{ 'http://searxng-lucy:8080/search?q=' + encodeURIComponent($json.body.query) + '&format=json' }}",
+                "options": {}
+            },
+            "id": "e4f8a91b-3234-4567-890a-bcdef1234561",
+            "name": "SearXNG (Búsqueda API)",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                450,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "fieldToSplitOut": "results",
+                "options": {}
+            },
+            "id": "e4f8a91b-3234-4567-890a-bcdef1234562",
+            "name": "Item Lists (Separar URLs)",
+            "type": "n8n-nodes-base.itemLists",
+            "typeVersion": 3,
+            "position": [
+                650,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "url": "={{ $json.url }}",
+                "options": {
+                    "allowUnauthorizedCerts": true,
+                    "response": {
+                        "response": {
+                            "responseFormat": "text"
+                        }
+                    }
+                }
+            },
+            "id": "e4f8a91b-3234-4567-890a-bcdef1234563",
+            "name": "HTTP Request (Descargar HTML)",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                850,
+                300
+            ],
+            "continueOnFail": true
+        },
+        {
+            "parameters": {
+                "extractionValues": {
+                    "values": [
+                        {
+                            "key": "texto_crudo",
+                            "cssSelector": "body",
+                            "returnValue": "text"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "e4f8a91b-3234-4567-890a-bcdef1234564",
+            "name": "HTML Extract (Limpiar DOM)",
+            "type": "n8n-nodes-base.htmlExtract",
+            "typeVersion": 1,
+            "position": [
+                1050,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "http://host.docker.internal:11434/api/chat",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "model",
+                            "value": "qwq-abliterated:32b"
+                        },
+                        {
+                            "name": "stream",
+                            "value": "false"
+                        },
+                        {
+                            "name": "messages",
+                            "value": "={{ [\n  {\n    \"role\": \"system\",\n    \"content\": \"Eres un analista de inteligencia OSINT. Tu tarea es extraer de este texto las entidades clave, hallazgos importantes y un resumen estructurado.\"\n  },\n  {\n    \"role\": \"user\",\n    \"content\": \"Extrae lo relevante de esto: \\n\" + $json.texto_crudo.substring(0, 15000)\n  }\n] }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "e4f8a91b-3234-4567-890a-bcdef1234565",
+            "name": "Ollama (OSINT Analyst)",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                1250,
+                300
+            ]
+        }
+    ],
+    "pinData": {},
+    "connections": {
+        "Webhook (Entrada OSINT)": {
+            "main": [
+                [
+                    {
+                        "node": "SearXNG (Búsqueda API)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "SearXNG (Búsqueda API)": {
+            "main": [
+                [
+                    {
+                        "node": "Item Lists (Separar URLs)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Item Lists (Separar URLs)": {
+            "main": [
+                [
+                    {
+                        "node": "HTTP Request (Descargar HTML)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "HTTP Request (Descargar HTML)": {
+            "main": [
+                [
+                    {
+                        "node": "HTML Extract (Limpiar DOM)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "HTML Extract (Limpiar DOM)": {
+            "main": [
+                [
+                    {
+                        "node": "Ollama (OSINT Analyst)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "f0a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c7",
+    "meta": {
+        "templateCredsSetupCompleted": true
+    },
+    "id": "osint_ciega_003"
+}

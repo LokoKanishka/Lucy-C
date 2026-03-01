@@ -1,0 +1,50 @@
+{
+  "name": "Tool: Consultar Cerebro",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "consultar-cerebro",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "wh-cerebro",
+      "webhookId": "consultar-cerebro",
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const http = require('http');\n\nconst query = (items[0].json && items[0].json.query) ? items[0].json.query : '\u00bfQu\u00e9 es NiN?';\nconst OLLAMA_HOST = '172.24.0.1';\nconst OLLAMA_PORT = 11434;\nconst QDRANT_HOST = '172.24.0.1';\nconst QDRANT_PORT = 6335;\n\n// 1. Obtener Embedding de Ollama\nconst getEmbedding = () => new Promise((resolve, reject) => {\n  const reqPayload = JSON.stringify({ model: 'nomic-embed-text:latest', prompt: query });\n  const req = http.request({ hostname: OLLAMA_HOST, port: OLLAMA_PORT, path: '/api/embeddings', method: 'POST', headers: {'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(reqPayload)} }, (res) => {\n    let body = ''; res.on('data', chunk => body += chunk); res.on('end', () => {\n      try { resolve(JSON.parse(body).embedding); } catch(e) { reject('Error parseando Ollama'); }\n    });\n  });\n  req.on('error', reject); req.write(reqPayload); req.end();\n});\n\n// 2. Buscar en Qdrant\nconst searchQdrant = (vector) => new Promise((resolve, reject) => {\n  const reqPayload = JSON.stringify({\n    vector: vector, limit: 3, with_payload: true\n  });\n  const req = http.request({ hostname: QDRANT_HOST, port: QDRANT_PORT, path: '/collections/cerebro_lucy/points/search', method: 'POST', headers: {'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(reqPayload)} }, (res) => {\n    let body = ''; res.on('data', chunk => body += chunk); res.on('end', () => {\n      try { resolve(JSON.parse(body).result); } catch(e) { reject('Error parseando Qdrant'); }\n    });\n  });\n  req.on('error', reject); req.write(reqPayload); req.end();\n});\n\ntry {\n  const embedding = await getEmbedding();\n  const qdrantResults = await searchQdrant(embedding);\n  \n  if (!qdrantResults || qdrantResults.length === 0) return [{ json: { output: '\ud83d\udd0d No se encontraron fragmentos relevantes en el Cerebro NIN.' } }];\n\n  const formatted = qdrantResults.map((r, i) => {\n    const meta = r.payload && r.payload.metadata ? r.payload.metadata : {};\n    const content = r.payload ? (r.payload.pageContent || '') : '';\n    return `${i+1}. [${meta.source || 'Doc'}] (Score: ${r.score})\\n   ${content.substring(0, 500)}...`;\n  }).join('\\n\\n---\\n\\n');\n\n  return [{ json: { output: `\ud83d\udd0d Resultados de b\u00fasqueda en el Cerebro NIN:\\n\\n${formatted}` } }];\n} catch (error) {\n  return [{ json: { output: `Error interno al consultar Cerebro: ${error.message || error}` } }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        250,
+        0
+      ],
+      "id": "code-cerebro"
+    }
+  ],
+  "connections": {
+    "wh-cerebro": {
+      "main": [
+        [
+          {
+            "node": "code-cerebro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

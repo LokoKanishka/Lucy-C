@@ -1,0 +1,38 @@
+{
+    "name": "Tool: Consultar Colmena",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "consultar-colmena",
+                "responseMode": "lastNode",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [-400, 0],
+            "id": "wh-consult",
+            "name": "Webhook",
+            "webhookId": "consultar-colmena"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=AIzaSyAPbfPtq-q35ixuc3xu1U_7txnEeRO1Jhs",
+                "sendBody": true,
+                "body": "={{JSON.stringify({ 'contents': [{ 'parts': [{ 'text': items[0].json.query }] }] })}}",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 1,
+            "position": [-200, 0],
+            "id": "http-gemini",
+            "name": "Google Gemini (Raw API)"
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [[{ "node": "Google Gemini (Raw API)", "type": "main", "index": 0 }]]
+        }
+    }
+}

@@ -1,0 +1,57 @@
+{
+  "updatedAt": "2026-02-26T00:31:19.000Z",
+  "createdAt": "2026-02-25T21:39:45.387Z",
+  "id": "Hbaw5LeIXONOebOR",
+  "name": "Prueba x1 - Test de Antigravity",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start-1",
+      "name": "Inicio Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json: {mensaje: \"🟢 Prueba x1 exitosa! Antigravity puede publicar workflows en n8n.\", timestamp: new Date().toISOString()}}];"
+      },
+      "id": "code-1",
+      "name": "Test Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Inicio Manual": {
+      "main": [
+        [
+          {
+            "node": "Test Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": null,
+  "versionId": "7e1535d7-ced7-405a-a06f-7ec77526393a",
+  "activeVersionId": null,
+  "versionCounter": 2,
+  "triggerCount": 0
+}

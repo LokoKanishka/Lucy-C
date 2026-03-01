@@ -1,0 +1,15 @@
+{
+  "": {
+    "value": "",
+    "score": 7.5,
+    "updated_at": "2026-03-01T04:06:46.818Z",
+    "last_applied": "2026-03-01T04:06:55.028Z",
+    "last_feedback": "2026-03-01T04:07:37.720Z"
+  },
+  "test_2026_02_28_final": {
+    "value": "Test final de persistencia",
+    "score": 0.7,
+    "updated_at": "2026-02-28T22:03:38.038Z",
+    "last_feedback": "2026-02-28T22:03:38.095Z"
+  }
+}

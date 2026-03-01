@@ -1,0 +1,64 @@
+{
+  "updatedAt": "2026-02-27T05:09:16.236Z",
+  "createdAt": "2026-02-27T05:09:16.236Z",
+  "id": "sjxo2K1BPdF3LLtG",
+  "name": "Agente: Estado del Sistema",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agente-sistema",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        0
+      ],
+      "id": "wh-sis",
+      "name": "Webhook",
+      "webhookId": "agente-sistema-004"
+    },
+    {
+      "parameters": {
+        "command": "echo \"RAM:\" && free -h | head -2 && echo \"CPU:\" && top -bn1 | grep -E \"Cpu\" && echo \"DISCO:\" && df -h / && echo \"DOCKER:\" && docker ps --format \"{{.Names}} {{.Status}}\" 2>/dev/null"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        50,
+        0
+      ],
+      "id": "cmd-sis",
+      "name": "Stats"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": null,
+  "versionId": "8a519f17-4cae-4190-a202-4b8f2fc34f87",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0
+}

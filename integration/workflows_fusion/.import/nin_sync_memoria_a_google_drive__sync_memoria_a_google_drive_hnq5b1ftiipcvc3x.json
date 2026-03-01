@@ -1,0 +1,91 @@
+{
+  "name": "NIN | Sync: Memoria a Google Drive",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        0
+      ],
+      "id": "trigger-sync",
+      "name": "Cada 30 min"
+    },
+    {
+      "parameters": {
+        "fileSelector": "/home/lucy-ubuntu/Escritorio/NIN/memoria/bitacora.md"
+      },
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        0
+      ],
+      "id": "read-bitacora",
+      "name": "Leer Bitacora"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "operation": "upload",
+        "fileName": "bitacora_nin.md",
+        "parentID": "",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        50,
+        0
+      ],
+      "id": "upload-drive",
+      "name": "Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "PENDING_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Cada 30 min": {
+      "main": [
+        [
+          {
+            "node": "Leer Bitacora",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Bitacora": {
+      "main": [
+        [
+          {
+            "node": "Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  }
+}

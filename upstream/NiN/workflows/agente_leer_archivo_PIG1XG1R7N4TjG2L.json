@@ -1,0 +1,89 @@
+{
+  "updatedAt": "2026-02-27T05:23:51.350Z",
+  "createdAt": "2026-02-27T05:09:12.644Z",
+  "id": "PIG1XG1R7N4TjG2L",
+  "name": "Agente: Leer Archivo",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agente-leer",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        0
+      ],
+      "id": "wh-leer",
+      "name": "Webhook",
+      "webhookId": "agente-leer-001"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ .body.ruta }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        50,
+        0
+      ],
+      "id": "read-file",
+      "name": "Read File"
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = .first().binary; if (!b) return {contenido: \"No se pudo leer el archivo\"}; const k = Object.keys(b)[0]; return { contenido: Buffer.from(b[k].data, \"base64\").toString(\"utf-8\") };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        0
+      ],
+      "id": "decode",
+      "name": "Decode"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Read File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read File": {
+      "main": [
+        [
+          {
+            "node": "Decode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": null,
+  "versionId": "f8e3d728-c590-444e-98ac-0173293a87a3",
+  "activeVersionId": "f8e3d728-c590-444e-98ac-0173293a87a3",
+  "versionCounter": 6,
+  "triggerCount": 1
+}

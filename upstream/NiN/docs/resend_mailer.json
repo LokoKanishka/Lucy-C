@@ -1,0 +1,50 @@
+{
+  "name": "Tool: Resend Mailer",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "resend-mail",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "wh-resend",
+      "webhookId": "resend-mail",
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const https = require('https');\n\nconst to_email = (items[0].json && items[0].json.to) ? items[0].json.to : 'delivered@resend.dev';\nconst subject = (items[0].json && items[0].json.subject) ? items[0].json.subject : 'Mensaje autom\u00e1tico de NiN';\nconst html = (items[0].json && items[0].json.html) ? items[0].json.html : '<p>Hola desde tu Agente NiN</p>';\nconst apiKey = 'RESEND_API_KEY_PROTECTED';\n\nconst payload = {\n  from: 'NiN Agent <onboarding@resend.dev>',\n  to: [to_email],\n  subject: subject,\n  html: html\n};\n\nconst data = JSON.stringify(payload);\nconst options = {\n  hostname: 'api.resend.com',\n  port: 443,\n  path: '/emails', \n  method: 'POST',\n  headers: {\n    'Authorization': 'Bearer ' + process.env.RESEND_API_KEY || apiKey,\n    'Content-Type': 'application/json',\n    'Content-Length': Buffer.byteLength(data)\n  }\n};\n\nreturn new Promise((resolve) => {\n  const req = https.request(options, (res) => {\n    let body = '';\n    res.on('data', (d) => body += d);\n    res.on('end', () => {\n      try { resolve([{ json: JSON.parse(body) }]); } \n      catch (e) { resolve([{ json: { error: 'Parse Error', raw: body } }]); }\n    });\n  });\n  req.on('error', (e) => resolve([{ json: { error: e.message } }]));\n  req.write(data);\n  req.end();\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        250,
+        0
+      ],
+      "id": "code-resend"
+    }
+  ],
+  "connections": {
+    "wh-resend": {
+      "main": [
+        [
+          {
+            "node": "code-resend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

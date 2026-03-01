@@ -1,0 +1,46 @@
+{
+  "name": "NIN | Prueba x1 - Workflow de Test",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start-node-1",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{json: {mensaje: \"🟢 Prueba x1 exitosa! Antigravity puede publicar workflows en n8n.\", timestamp: new Date().toISOString()}}];"
+      },
+      "id": "code-node-1",
+      "name": "Test Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        500,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Test Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  }
+}

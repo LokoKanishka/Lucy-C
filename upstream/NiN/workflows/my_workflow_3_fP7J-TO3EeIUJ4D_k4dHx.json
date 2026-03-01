@@ -1,0 +1,132 @@
+{
+  "updatedAt": "2026-02-25T04:54:15.822Z",
+  "createdAt": "2026-02-25T03:24:53.781Z",
+  "id": "fP7J-TO3EeIUJ4D_k4dHx",
+  "name": "My workflow 3",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gpt-gateway",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "97a6f112-034f-4b7e-a77f-7611bd199b02",
+      "name": "Webhook",
+      "webhookId": "9b2c157a-b755-4476-af7f-0496b490285d"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1463ed45-322d-4a0f-951a-9d37d77ed598",
+              "leftValue": "=={{$json.body.api_key}}",
+              "rightValue": "d4f9e4df00d1bf8cad6e7f958d16eea14b32d03d1cfddf62b7df557d80d06794",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "acacdaac-0c49-40a2-a657-5b8e094beb55",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"ok\": false, \"message\": \"bad key\"}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        416,
+        64
+      ],
+      "id": "7533cd66-3b1b-4669-8a07-0ea085c93a79",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"ok\": true,\n  \"message\": \"passed\",\n  \"task\": \"={{$json.body.task}}\",\n  \"payload_json\": \"={{$json.body.payload_json}}\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        416,
+        -50.5
+      ],
+      "id": "1bef2653-cc07-48d9-a034-5942e596e05a",
+      "name": "Respond to Webhook1"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "versionId": "ecd79430-64ec-4214-b586-25d482da26c4",
+  "activeVersionId": "ecd79430-64ec-4214-b586-25d482da26c4",
+  "versionCounter": 56,
+  "triggerCount": 1
+}

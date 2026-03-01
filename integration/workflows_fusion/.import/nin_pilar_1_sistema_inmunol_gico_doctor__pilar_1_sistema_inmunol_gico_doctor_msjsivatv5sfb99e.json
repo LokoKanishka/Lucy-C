@@ -1,0 +1,94 @@
+{
+  "name": "NIN | Pilar 1: Sistema Inmunológico (Doctor)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "e4f8a91b-1234-4567-890a-bcdef1234560",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:11434/api/chat",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "qwq-abliterated:32b"
+            },
+            {
+              "name": "stream",
+              "value": "false"
+            },
+            {
+              "name": "messages",
+              "value": "={{ [\n  {\n    \"role\": \"system\",\n    \"content\": \"Eres LUCY, el Arquitecto del Sistema y Doctor Autónomo. Analiza el siguiente error de un flujo de n8n y proporciona un diagnóstico breve y la solución técnica directa.\"\n  },\n  {\n    \"role\": \"user\",\n    \"content\": \"Flujo fallido: \" + $json.execution.workflowData.name + \"\\nNodo: \" + $json.execution.lastNodeExecuted + \"\\nError: \" + JSON.stringify($json.execution.error)\n  }\n] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e4f8a91b-1234-4567-890a-bcdef1234561",
+      "name": "Ollama (QwQ-32B)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "={{ $json.message.content }}",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "🚨 *LUCY Doctor Autónomo* 🚨\n\n*Flujo:* {{ $('Error Trigger').item.json.execution.workflowData.name }}\n*Nodo Crash:* {{ $('Error Trigger').item.json.execution.lastNodeExecuted }}\n\n*Diagnóstico:* \n{{ $json.message.content }}"
+      },
+      "id": "e4f8a91b-1234-4567-890a-bcdef1234562",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [
+        650,
+        300
+      ],
+      "notesInFlow": true,
+      "notes": "Reemplazar con credenciales de Telegram o cambiar por un nodo Write to File para logs locales"
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Ollama (QwQ-32B)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama (QwQ-32B)": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  }
+}

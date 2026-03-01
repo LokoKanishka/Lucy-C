@@ -1,0 +1,102 @@
+{
+    "name": "Tool: Research Colmena",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "research-colmena",
+                "responseMode": "lastNode",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                -400,
+                0
+            ],
+            "id": "wh-research",
+            "name": "Webhook",
+            "webhookId": "research-colmena"
+        },
+        {
+            "parameters": {
+                "jsCode": "const url = items[0].json.url;\nfunction getID(u) {\n    const r = /(?:v=|\\/)([0-9A-Za-z_-]{11}).*/;\n    const m = u.match(r);\n    return m ? m[1] : null;\n}\nlet t = \"General web link.\";\nif (url && url.indexOf('youtube') !== -1) {\n    const id = getID(url);\n    if (id) t = \"YouTube ID: \" + id + \" (Legacy JS)\";\n}\nreturn [{ json: { url: url, transcript: t } }];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                -200,
+                0
+            ],
+            "id": "code-fetcher",
+            "name": "Fetch Source"
+        },
+        {
+            "parameters": {
+                "authentication": "oAuth2",
+                "requestMethod": "POST",
+                "url": "https://www.googleapis.com/upload/drive/v3/files?uploadType=media",
+                "jsonParameters": true,
+                "options": {
+                    "headerParametersUI": {
+                        "parameter": [
+                            {
+                                "name": "Content-Type",
+                                "value": "text/plain"
+                            }
+                        ]
+                    }
+                },
+                "bodyParametersUI": {
+                    "parameter": [
+                        {
+                            "name": "data",
+                            "value": "={{$node[\"Fetch Source\"].json[\"transcript\"]}}"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 1,
+            "position": [
+                50,
+                0
+            ],
+            "id": "upload-drive-http",
+            "name": "Upload to Drive",
+            "credentials": {
+                "googleDriveOAuth2Api": {
+                    "id": "ZpjTlDInDqs6MZ8z",
+                    "name": "Google Drive account"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch Source",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch Source": {
+            "main": [
+                [
+                    {
+                        "node": "Upload to Drive",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {
+        "executionOrder": "v1"
+    }
+}

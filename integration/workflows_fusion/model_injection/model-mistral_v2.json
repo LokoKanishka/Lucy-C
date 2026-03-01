@@ -1,0 +1,51 @@
+{
+  "name": "FUSION | Model Injection | Mistral [v2]",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "model-mistral",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        0
+      ],
+      "id": "wh-model-mistral-v2",
+      "name": "Webhook",
+      "webhookId": "mdl-mistral-001"
+    },
+    {
+      "parameters": {
+        "jsCode": "const incoming = $json;\nconst model = \"mistral\";\nconst label = \"Mistral\";\nreturn {\n  injected: true,\n  version: \"v2\",\n  model_label: label,\n  model_id: model,\n  payload: incoming,\n  ts: new Date().toISOString()\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        40,
+        0
+      ],
+      "id": "code-model-mistral-v2",
+      "name": "Inject Model Profile"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Inject Model Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

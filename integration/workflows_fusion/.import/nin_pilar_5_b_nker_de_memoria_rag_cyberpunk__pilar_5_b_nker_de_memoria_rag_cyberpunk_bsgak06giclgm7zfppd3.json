@@ -1,0 +1,165 @@
+{
+  "name": "NIN | Pilar 5: Búnker de Memoria (RAG Cyberpunk)",
+  "nodes": [
+    {
+      "parameters": {
+        "filePath": "=={{ $json.path }}"
+      },
+      "id": "51e7a8ee-3354-483d-8580-9dc2c2abcb38",
+      "name": "Read Binary File",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        128,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a8bdd776-ed2f-4b08-a63e-d04c93d08f9b",
+      "name": "Extract Content (PDF/Doc)",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        480,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "id": "bc256886-718f-4ce1-91c5-e5290a308f87",
+      "name": "Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        560,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:latest"
+      },
+      "id": "fb78308c-3cbe-4195-9937-69d2dd104bfd",
+      "name": "Ollama Embeddings",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        352,
+        400
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "QjvfuLtZqaWrXior",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": "cerebro_lucy",
+        "options": {}
+      },
+      "id": "cbba058b-0e7b-4406-880f-0367a4e294a4",
+      "name": "Qdrant Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1,
+      "position": [
+        384,
+        176
+      ],
+      "credentials": {
+        "qdrantApi": {
+          "id": "JvOsiZzpaVy3x4JI",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "triggerOn": "folder",
+        "path": "/mnt/Cerebro",
+        "events": [
+          "add",
+          "change"
+        ],
+        "options": {}
+      },
+      "id": "2019cbd5-23b8-48c3-b9d2-866187f057f9",
+      "name": "Local File Trigger1",
+      "type": "n8n-nodes-base.localFileTrigger",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        176
+      ]
+    }
+  ],
+  "connections": {
+    "Read Binary File": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Content (PDF/Doc)": {
+      "ai_document": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Extract Content (PDF/Doc)",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Local File Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Read Binary File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  }
+}

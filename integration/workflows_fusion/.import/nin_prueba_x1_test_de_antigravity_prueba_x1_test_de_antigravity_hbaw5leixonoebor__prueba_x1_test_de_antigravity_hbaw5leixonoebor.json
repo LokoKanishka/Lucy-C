@@ -1,0 +1,46 @@
+{
+  "name": "NIN | Prueba x1 - Test de Antigravity [prueba_x1_-_test_de_antigravity_Hbaw5LeIXONOebOR]",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start-1",
+      "name": "Inicio Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json: {mensaje: \"🟢 Prueba x1 exitosa! Antigravity puede publicar workflows en n8n.\", timestamp: new Date().toISOString()}}];"
+      },
+      "id": "code-1",
+      "name": "Test Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Inicio Manual": {
+      "main": [
+        [
+          {
+            "node": "Test Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  }
+}

@@ -1,0 +1,8 @@
+.env.fusion
+*.log
+.venv/
+.venv-mcp/
+**/__pycache__/
+**/*.pyc
+**/node_modules/
+integration/workspace/antigravity_runs/

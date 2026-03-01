@@ -1,0 +1,179 @@
+{
+    "name": "Pilar 4: El Enjambre Cognitivo",
+    "nodes": [
+        {
+            "parameters": {},
+            "id": "e4f8a91b-4234-4567-890a-bcdef1234560",
+            "name": "Chat Trigger",
+            "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "webhookId": "9c8b7a6d-5e4f-3g2h-1i0j-k9l8m7n6o5p4"
+        },
+        {
+            "parameters": {
+                "options": {}
+            },
+            "id": "e4f8a91b-4234-4567-890a-bcdef1234561",
+            "name": "Agent",
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 1,
+            "position": [
+                450,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "model": "qwq-abliterated:32b",
+                "baseUrl": "http://host.docker.internal:11434",
+                "options": {}
+            },
+            "id": "e4f8a91b-4234-4567-890a-bcdef1234562",
+            "name": "Ollama Chat Model (Arquitecto)",
+            "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+            "typeVersion": 1,
+            "position": [
+                450,
+                500
+            ]
+        },
+        {
+            "parameters": {},
+            "id": "e4f8a91b-4234-4567-890a-bcdef1234563",
+            "name": "Window Buffer Memory",
+            "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+            "typeVersion": 1,
+            "position": [
+                550,
+                500
+            ]
+        },
+        {
+            "parameters": {
+                "name": "search_tool",
+                "description": "Herramienta de búsqueda OSINT para el agente investigador",
+                "url": "http://searxng-lucy:8080/search",
+                "method": "POST",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "q",
+                            "value": "={{ $fromAI('query') }}"
+                        },
+                        {
+                            "name": "format",
+                            "value": "json"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "e4f8a91b-4234-4567-890a-bcdef1234564",
+            "name": "Tool (Investigador OSINT)",
+            "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+            "typeVersion": 1,
+            "position": [
+                650,
+                500
+            ]
+        },
+        {
+            "parameters": {
+                "name": "file_reader_tool",
+                "description": "Lee el contenido del disco duro local",
+                "url": "http://host.docker.internal:5678/webhook/read-file",
+                "method": "POST",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "path",
+                            "value": "={{ $fromAI('path') }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "e4f8a91b-4234-4567-890a-bcdef1234565",
+            "name": "Tool (Local Data)",
+            "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+            "typeVersion": 1,
+            "position": [
+                750,
+                500
+            ]
+        }
+    ],
+    "pinData": {},
+    "connections": {
+        "Chat Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Agent",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Ollama Chat Model (Arquitecto)": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "Agent",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Window Buffer Memory": {
+            "ai_memory": [
+                [
+                    {
+                        "node": "Agent",
+                        "type": "ai_memory",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Tool (Investigador OSINT)": {
+            "ai_tool": [
+                [
+                    {
+                        "node": "Agent",
+                        "type": "ai_tool",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Tool (Local Data)": {
+            "ai_tool": [
+                [
+                    {
+                        "node": "Agent",
+                        "type": "ai_tool",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "f0a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c8",
+    "meta": {
+        "templateCredsSetupCompleted": true
+    },
+    "id": "enjambre_004"
+}

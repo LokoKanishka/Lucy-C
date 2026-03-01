@@ -1,0 +1,81 @@
+{
+  "name": "NIN | Prueba x1 - Test de Antigravity",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "input",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "trigger-sub",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.input }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        250,
+        0
+      ],
+      "id": "read-file",
+      "name": "Read Local File"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json: {text: $input.first().binary.data.data}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        0
+      ],
+      "id": "extract-text",
+      "name": "Extract Text"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Read Local File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Local File": {
+      "main": [
+        [
+          {
+            "node": "Extract Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}
