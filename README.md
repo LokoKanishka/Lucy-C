@@ -48,3 +48,32 @@ Fusion panel endpoint: `http://127.0.0.1:5111`
 - `N8N_API_KEY` is only required for API sync scripts such as `scripts/upsert_workflows.py`.
 - CLI import (`scripts/import_workflows_cli.sh`) does not require that key.
 - Fusion assets and scripts are isolated under `fusion/lucy-fusion`.
+
+## Git Sync And Troubleshooting
+
+If you see `fatal: not a git repository`, you are outside the repo root.
+
+Use this from the repository root:
+
+```bash
+git status
+git branch --show-current
+git fetch origin
+git rebase origin/main
+git push --force-with-lease
+```
+
+From any directory, use `git -C`:
+
+```bash
+git -C "/home/lucy-ubuntu/Escritorio/lucy c demon/fusion/lucy-fusion" status
+git -C "/home/lucy-ubuntu/Escritorio/lucy c demon/fusion/lucy-fusion" fetch origin
+git -C "/home/lucy-ubuntu/Escritorio/lucy c demon/fusion/lucy-fusion" rebase origin/main
+```
+
+Or use the helper script included in this repo:
+
+```bash
+./scripts/git_sync_main.sh
+./scripts/git_sync_main.sh --force-with-lease
+```
